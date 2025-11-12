@@ -1,0 +1,162 @@
+import { TTSResponse } from "@/types";
+import { supabase } from "@/integrations/supabase/client";
+
+export async function textToSpeech(
+  text: string,
+  voice: string = "George",
+  style: string = "neutral"
+): Promise<TTSResponse> {
+  console.log(`[TTS] Starting: "${text.substring(0, 50)}..." voice: ${voice}, style: ${style}`);
+
+  try {
+    const { data, error } = await supabase.functions.invoke('elevenlabs-tts', {
+      body: {
+        text,
+        voice,
+        style
+      }
+    });
+
+    if (error) {
+      console.error('[TTS] Edge function error:', error);
+      throw new Error(`TTS Error: ${error.message || 'Unknown error'}`);
+    }
+
+    if (!data || !data.audio_b64) {
+      console.error('[TTS] No audio data received:', data);
+      throw new Error('No audio data in response');
+    }
+    
+    console.log('[TTS] ✓ Success! Audio length:', data.audio_b64.length, 'bytes');
+    return data as TTSResponse;
+  } catch (error) {
+    console.error('[TTS] ✗ Failed:', error);
+    throw error; // Re-throw instead of silently returning null
+  }
+}
+
+// Global audio context to unlock on first user interaction
+let audioContextUnlocked = false;
+let globalAudioElement: HTMLAudioElement | null = null;
+
+// Call this on user interaction (button click) to unlock audio
+export function unlockAudio() {
+  if (!audioContextUnlocked) {
+    globalAudioElement = new Audio();
+    globalAudioElement.volume = 1.0;
+    // Play and immediately pause to unlock audio context
+    globalAudioElement.play().then(() => {
+      globalAudioElement?.pause();
+      audioContextUnlocked = true;
+      console.log('[Audio] ✓ Audio context unlocked');
+    }).catch(() => {
+      console.log('[Audio] Audio unlock attempted');
+    });
+  }
+}
+
+export function playAudioFromBase64(
+  base64Audio: string,
+  mimeType: string,
+  onEnded?: () => void,
+  onAmplitude?: (amplitude: number) => void
+): HTMLAudioElement | null {
+  console.log('[Audio] Starting playback, data size:', base64Audio?.length || 0, 'bytes');
+  
+  if (!base64Audio) {
+    console.error('[Audio] ✗ No audio data provided!');
+    onEnded?.();
+    return null;
+  }
+
+  try {
+    // Convert base64 to blob
+    console.log('[Audio] Decoding base64...');
+    const binaryString = atob(base64Audio);
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    
+    console.log('[Audio] Creating blob, size:', bytes.length, 'bytes');
+    const blob = new Blob([bytes], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    console.log('[Audio] Blob URL created:', url);
+
+    // Create audio element
+    const audio = new Audio(url);
+    audio.volume = 1.0;
+    
+    // Enable autoplay by setting the required attributes
+    audio.setAttribute('autoplay', 'true');
+    audio.setAttribute('playsinline', 'true');
+    
+    // Set up audio context for amplitude tracking
+    if (onAmplitude) {
+      try {
+        const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+        const source = audioContext.createMediaElementSource(audio);
+        const analyser = audioContext.createAnalyser();
+        analyser.fftSize = 256;
+        
+        source.connect(analyser);
+        analyser.connect(audioContext.destination);
+        
+        const dataArray = new Uint8Array(analyser.frequencyBinCount);
+        
+        const checkAmplitude = () => {
+          if (audio.paused) return;
+          
+          analyser.getByteFrequencyData(dataArray);
+          const average = dataArray.reduce((a, b) => a + b) / dataArray.length;
+          const normalized = average / 255;
+          onAmplitude(normalized);
+          
+          requestAnimationFrame(checkAmplitude);
+        };
+        
+        audio.onplay = () => {
+          console.log('[Audio] ▶ Playing...');
+          checkAmplitude();
+        };
+      } catch (audioCtxError) {
+        console.warn('[Audio] Could not create AudioContext:', audioCtxError);
+        // Continue without amplitude tracking
+      }
+    }
+    
+    audio.onended = () => {
+      console.log('[Audio] ✓ Playback ended');
+      URL.revokeObjectURL(url);
+      if (onAmplitude) onAmplitude(0);
+      onEnded?.();
+    };
+    
+    audio.onerror = (err) => {
+      console.error("[Audio] ✗ Playback error:", err);
+      URL.revokeObjectURL(url);
+      if (onAmplitude) onAmplitude(0);
+      onEnded?.();
+    };
+    
+    // Start playback
+    console.log('[Audio] Attempting to play...');
+    audio.play()
+      .then(() => {
+        console.log('[Audio] ✓ Play started successfully');
+      })
+      .catch((err) => {
+        console.error("[Audio] ✗ Play failed:", err);
+        URL.revokeObjectURL(url);
+        if (onAmplitude) onAmplitude(0);
+        onEnded?.();
+      });
+    
+    return audio;
+  } catch (error) {
+    console.error("[Audio] ✗ Critical error in playAudioFromBase64:", error);
+    if (onAmplitude) onAmplitude(0);
+    onEnded?.();
+    return null;
+  }
+}
