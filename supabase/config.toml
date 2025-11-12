@@ -1,0 +1,10 @@
+project_id = "ylptmhebzazguvbevcaw"
+
+[functions.claude-intent]
+verify_jwt = false
+
+[functions.elevenlabs-tts]
+verify_jwt = false
+
+[functions.generate-character]
+verify_jwt = false
