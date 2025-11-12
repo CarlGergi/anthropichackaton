@@ -1,0 +1,135 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    --background: 0 0% 98%;
+    --foreground: 200 15% 15%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 200 15% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 200 15% 15%;
+
+    --primary: 180 70% 45%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 200 12% 94%;
+    --secondary-foreground: 200 15% 20%;
+
+    --muted: 200 10% 92%;
+    --muted-foreground: 200 8% 50%;
+
+    --accent: 15 85% 60%;
+    --accent-foreground: 0 0% 100%;
+
+    --success: 145 65% 45%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 40 95% 55%;
+    --warning-foreground: 200 15% 15%;
+
+    --destructive: 0 75% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 200 12% 88%;
+    --input: 200 12% 88%;
+    --ring: 180 70% 45%;
+
+    --radius: 0.75rem;
+
+    --voice-idle: 260 70% 60%;
+    --voice-listening: 142 70% 55%;
+    --voice-thinking: 280 70% 60%;
+    --voice-speaking: 260 80% 65%;
+    
+    --finora-gradient-start: 260 80% 60%;
+    --finora-gradient-end: 280 70% 70%;
+    --glow-primary: 260 100% 70%;
+    --glow-secondary: 180 80% 60%;
+
+    /* Budget status colors */
+    --budget-safe: 145 65% 45%;
+    --budget-warning: 40 95% 55%;
+    --budget-danger: 0 75% 60%;
+
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(180 70% 45%), hsl(180 70% 55%));
+    --gradient-accent: linear-gradient(135deg, hsl(15 85% 60%), hsl(25 85% 65%));
+    --gradient-success: linear-gradient(135deg, hsl(145 65% 45%), hsl(145 65% 55%));
+
+    /* Shadows */
+    --shadow-soft: 0 2px 8px hsl(200 15% 15% / 0.06);
+    --shadow-medium: 0 4px 16px hsl(200 15% 15% / 0.1);
+    --shadow-glow: 0 0 32px hsl(180 70% 45% / 0.3);
+
+    /* Animations */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  }
+
+  @keyframes gradient-shift {
+    0%, 100% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+  }
+  
+  .animate-gradient-shift {
+    background-size: 200% 200%;
+    animation: gradient-shift 15s ease infinite;
+  }
+
+  .dark {
+    --background: 200 20% 8%;
+    --foreground: 200 10% 95%;
+
+    --card: 200 18% 12%;
+    --card-foreground: 200 10% 95%;
+
+    --popover: 200 18% 12%;
+    --popover-foreground: 200 10% 95%;
+
+    --primary: 180 70% 50%;
+    --primary-foreground: 200 20% 8%;
+
+    --secondary: 200 15% 16%;
+    --secondary-foreground: 200 10% 90%;
+
+    --muted: 200 15% 16%;
+    --muted-foreground: 200 8% 60%;
+
+    --accent: 15 85% 60%;
+    --accent-foreground: 0 0% 100%;
+
+    --border: 200 15% 20%;
+    --input: 200 15% 20%;
+    --ring: 180 70% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    background: linear-gradient(135deg, 
+      hsl(240, 60%, 8%) 0%,
+      hsl(260, 50%, 15%) 30%,
+      hsl(280, 40%, 20%) 60%,
+      hsl(180, 45%, 18%) 100%
+    );
+    background-attachment: fixed;
+    min-height: 100vh;
+  }
+}
