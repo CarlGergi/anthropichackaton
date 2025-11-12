@@ -1,0 +1,142 @@
+[
+  {
+    "name": "Freshii",
+    "category": "food",
+    "est_cost": 12,
+    "description": "Healthy bowls and salads",
+    "location": "Multiple locations"
+  },
+  {
+    "name": "Banh Mi Boys",
+    "category": "food",
+    "est_cost": 10,
+    "description": "Vietnamese sandwiches",
+    "location": "Queen West"
+  },
+  {
+    "name": "Pai",
+    "category": "food",
+    "est_cost": 18,
+    "description": "Thai street food",
+    "location": "Duncan Street"
+  },
+  {
+    "name": "Pizza Pizza",
+    "category": "food",
+    "est_cost": 8,
+    "description": "Quick pizza slices",
+    "location": "Everywhere"
+  },
+  {
+    "name": "Kupfert & Kim",
+    "category": "food",
+    "est_cost": 14,
+    "description": "Plant-based meals",
+    "location": "Financial District"
+  },
+  {
+    "name": "TTC Day Pass",
+    "category": "transport",
+    "est_cost": 13.5,
+    "description": "Unlimited daily transit",
+    "location": "Toronto Transit"
+  },
+  {
+    "name": "Presto Monthly Pass",
+    "category": "transport",
+    "est_cost": 156,
+    "description": "Monthly unlimited",
+    "location": "Toronto Transit"
+  },
+  {
+    "name": "Bike Share Day Pass",
+    "category": "transport",
+    "est_cost": 7,
+    "description": "24h bike access",
+    "location": "Bike Share Toronto"
+  },
+  {
+    "name": "TIFF Cinematheque",
+    "category": "fun",
+    "est_cost": 13,
+    "description": "Student film tickets",
+    "location": "King West"
+  },
+  {
+    "name": "Royal Ontario Museum",
+    "category": "fun",
+    "est_cost": 15,
+    "description": "Student admission",
+    "location": "Bloor Street"
+  },
+  {
+    "name": "Sneaky Dee's",
+    "category": "fun",
+    "est_cost": 20,
+    "description": "Live music and nachos",
+    "location": "College Street"
+  },
+  {
+    "name": "Trinity Bellwoods Park",
+    "category": "fun",
+    "est_cost": 0,
+    "description": "Free hangout spot",
+    "location": "Queen West"
+  },
+  {
+    "name": "Comedy Bar",
+    "category": "fun",
+    "est_cost": 12,
+    "description": "Stand-up shows",
+    "location": "Bloor West"
+  },
+  {
+    "name": "Hot Docs Cinema",
+    "category": "fun",
+    "est_cost": 14,
+    "description": "Documentary films",
+    "location": "Bloor Street"
+  },
+  {
+    "name": "Value Village",
+    "category": "clothes",
+    "est_cost": 25,
+    "description": "Thrift shopping",
+    "location": "Multiple locations"
+  },
+  {
+    "name": "Uniqlo",
+    "category": "clothes",
+    "est_cost": 35,
+    "description": "Affordable basics",
+    "location": "Eaton Centre"
+  },
+  {
+    "name": "Kensington Market Vintage",
+    "category": "clothes",
+    "est_cost": 30,
+    "description": "Unique vintage finds",
+    "location": "Kensington Market"
+  },
+  {
+    "name": "Bulk Barn",
+    "category": "essentials",
+    "est_cost": 15,
+    "description": "Buy-in-bulk groceries",
+    "location": "Multiple locations"
+  },
+  {
+    "name": "No Frills",
+    "category": "essentials",
+    "est_cost": 40,
+    "description": "Budget grocery shopping",
+    "location": "Multiple locations"
+  },
+  {
+    "name": "Dollarama",
+    "category": "essentials",
+    "est_cost": 10,
+    "description": "Budget household items",
+    "location": "Everywhere"
+  }
+]
