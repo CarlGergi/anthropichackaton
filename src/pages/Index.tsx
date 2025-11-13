@@ -683,12 +683,21 @@ const Index = () => {
 
       {/* Recommendations Panel */}
       <AnimatePresence>
-        {showRecommendations && lastClaudeResponse?.recs && lastClaudeResponse.recs.length > 0 && (
-          <RecommendationsPanel
-            recommendations={lastClaudeResponse.recs}
-            onClose={() => setShowRecommendations(false)}
-          />
-        )}
+        {(() => {
+          console.log('[Index] Recommendations check:', {
+            showRecommendations,
+            hasResponse: !!lastClaudeResponse,
+            hasRecs: !!lastClaudeResponse?.recs,
+            recsLength: lastClaudeResponse?.recs?.length || 0
+          });
+
+          return showRecommendations && lastClaudeResponse?.recs && lastClaudeResponse.recs.length > 0 ? (
+            <RecommendationsPanel
+              recommendations={lastClaudeResponse.recs}
+              onClose={() => setShowRecommendations(false)}
+            />
+          ) : null;
+        })()}
       </AnimatePresence>
     </div>
   );

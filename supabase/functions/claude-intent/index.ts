@@ -97,13 +97,23 @@ INTENTS:
 - AFFORDABILITY: "Can I afford X?"
 - STATUS: "How am I doing?"
 - ADVICE: General money advice
+- RECS: User asks for recommendations ("where can I eat?", "what can I do?", "give me recommendations")
 - SMALL_TALK: Casual conversation
 - ASK_CLARIFY: Need more info
 
+RECOMMENDATIONS (RECS):
+When user asks for recommendations (places to eat, things to do, etc.), YOU MUST:
+1. Set intent to "RECS"
+2. Populate the "recs" array with 2-4 venues from the venues list that match:
+   - Their budget (affordable options)
+   - The category they're asking about (food, fun, transport)
+   - Sort by est_cost (cheapest first)
+3. Mention these recommendations in your speech response
+
 RESPONSE FORMAT (JSON):
 {
-  "intent": "SET_BUDGET"|"ADD_EXPENSE"|"AFFORDABILITY"|"STATUS"|"ADVICE"|"SMALL_TALK"|"ASK_CLARIFY",
-  "entities": { 
+  "intent": "SET_BUDGET"|"ADD_EXPENSE"|"AFFORDABILITY"|"STATUS"|"ADVICE"|"RECS"|"SMALL_TALK"|"ASK_CLARIFY",
+  "entities": {
     "amount": number|null,
     "currency": "CAD"|"USD"|null,
     "date": "YYYY-MM-DD"|null,
@@ -120,7 +130,7 @@ RESPONSE FORMAT (JSON):
     "buffer": number|null,
     "notes": string
   },
-  "recs": [],
+  "recs": [{ "name": "Venue Name", "est_cost": 12, "category": "food" }],
   "speech": "Your short, funny, voice-friendly response here",
   "tone": "playful"|"neutral"|"serious",
   "gesture": "THINK"|"THUMBS_UP"|"SHRUG"|"STOP"|"CLAP",
