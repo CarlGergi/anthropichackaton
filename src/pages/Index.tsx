@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { logger } from "@/lib/logger";
 import { toast } from "sonner";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Mic, Loader2, Volume2, Settings, Hand, Sparkles } from "lucide-react";
 import DebugPanel from "@/components/DebugPanel";
 import VoiceSettings from "@/components/VoiceSettings";
@@ -682,12 +682,14 @@ const Index = () => {
       </AlertDialog>
 
       {/* Recommendations Panel */}
-      {showRecommendations && lastClaudeResponse?.recs && (
-        <RecommendationsPanel
-          recommendations={lastClaudeResponse.recs}
-          onClose={() => setShowRecommendations(false)}
-        />
-      )}
+      <AnimatePresence>
+        {showRecommendations && lastClaudeResponse?.recs && lastClaudeResponse.recs.length > 0 && (
+          <RecommendationsPanel
+            recommendations={lastClaudeResponse.recs}
+            onClose={() => setShowRecommendations(false)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };
