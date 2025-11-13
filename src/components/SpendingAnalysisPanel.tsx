@@ -36,6 +36,12 @@ export function SpendingAnalysisPanel({ analysis, onClose }: SpendingAnalysisPan
     return null;
   }
 
+  // Safety checks to prevent crashes
+  if (!analysis.top_category || !analysis.insights || analysis.insights.length === 0) {
+    console.warn('[SpendingAnalysisPanel] Invalid analysis data:', analysis);
+    return null;
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, x: 30, scale: 0.95 }}
