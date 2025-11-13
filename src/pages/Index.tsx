@@ -7,6 +7,7 @@ import DebugPanel from "@/components/DebugPanel";
 import VoiceSettings from "@/components/VoiceSettings";
 import { FinoraCharacter } from "@/components/FinoraCharacter";
 import { RecommendationsPanel } from "@/components/RecommendationsPanel";
+import { SpendingAnalysisPanel } from "@/components/SpendingAnalysisPanel";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -60,6 +61,7 @@ const Index = () => {
   const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null);
   const [showResetDialog, setShowResetDialog] = useState(false);
   const [showRecommendations, setShowRecommendations] = useState(true);
+  const [showAnalysis, setShowAnalysis] = useState(true);
 
   // Handle voice change
   const handleVoiceChange = useCallback((voice: string) => {
@@ -184,6 +186,11 @@ const Index = () => {
         // Show recommendations panel if there are recommendations
         if (claudeResponse.recs && claudeResponse.recs.length > 0) {
           setShowRecommendations(true);
+        }
+
+        // Show analysis panel if there is analysis data
+        if (claudeResponse.analysis) {
+          setShowAnalysis(true);
         }
 
         logger.log('[Finora] Claude response:', {
@@ -474,6 +481,16 @@ const Index = () => {
                 />
               ) : null;
             })()}
+          </AnimatePresence>
+
+          {/* Spending Analysis Panel - appears to the right of character */}
+          <AnimatePresence>
+            {showAnalysis && lastClaudeResponse?.analysis ? (
+              <SpendingAnalysisPanel
+                analysis={lastClaudeResponse.analysis}
+                onClose={() => setShowAnalysis(false)}
+              />
+            ) : null}
           </AnimatePresence>
 
           {/* Character in center */}

@@ -4,15 +4,16 @@ export type GestureType = "THINK" | "THUMBS_UP" | "SHRUG" | "STOP" | "CLAP";
 
 export type CategoryType = "food" | "transport" | "fun" | "essentials" | "clothes" | "other";
 
-export type IntentType = 
-  | "AFFORDABILITY" 
-  | "ADD_EXPENSE" 
-  | "ADVICE" 
-  | "RECS" 
-  | "SET_BUDGET" 
-  | "ASK_CLARIFY" 
+export type IntentType =
+  | "AFFORDABILITY"
+  | "ADD_EXPENSE"
+  | "ADVICE"
+  | "RECS"
+  | "SET_BUDGET"
+  | "ASK_CLARIFY"
   | "SMALL_TALK"
-  | "GREETING";
+  | "GREETING"
+  | "ANALYSIS";
 
 export type DecisionType = "YES" | "MAYBE" | "NO" | "ACK" | "ASK_CLARIFY";
 
@@ -73,6 +74,13 @@ export interface ClaudeResponse {
     est_cost: number;
     category: string;
   }>;
+  analysis?: {
+    top_category: string;
+    top_amount: number;
+    daily_avg: number;
+    trend: "increasing" | "decreasing" | "stable";
+    insights: string[];
+  };
   speech: string;
   tone: ToneType;
   gesture: GestureType;
