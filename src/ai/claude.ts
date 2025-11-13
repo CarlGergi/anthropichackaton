@@ -1,4 +1,6 @@
-hort { FinoraState } from "@/state/finoraState";
+import { BudgetState, ClaudeResponse, Venue } from "@/types";
+import { supabase } from "@/integrations/supabase/client";
+import { FinoraState } from "@/state/finoraState";
 import { 
   calculateRemaining, 
   calculateRemainingTotal, 
