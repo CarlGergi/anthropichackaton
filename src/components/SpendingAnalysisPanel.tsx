@@ -36,11 +36,25 @@ export function SpendingAnalysisPanel({ analysis, onClose }: SpendingAnalysisPan
     return null;
   }
 
-  // Safety checks to prevent crashes
-  if (!analysis.top_category || !analysis.insights || analysis.insights.length === 0) {
-    console.warn('[SpendingAnalysisPanel] Invalid analysis data:', analysis);
+  // Comprehensive safety checks to prevent crashes
+  const isValidData =
+    analysis.top_category &&
+    typeof analysis.top_amount === 'number' &&
+    typeof analysis.daily_avg === 'number' &&
+    analysis.trend &&
+    analysis.insights &&
+    Array.isArray(analysis.insights) &&
+    analysis.insights.length > 0;
+
+  if (!isValidData) {
+    console.warn('[SpendingAnalysisPanel] Invalid or incomplete analysis data:', analysis);
     return null;
   }
+
+  // Ensure trend is valid
+  const validTrend = (analysis.trend === 'increasing' || analysis.trend === 'decreasing' || analysis.trend === 'stable')
+    ? analysis.trend
+    : 'stable';
 
   return (
     <motion.div
@@ -126,13 +140,13 @@ export function SpendingAnalysisPanel({ analysis, onClose }: SpendingAnalysisPan
               initial={{ opacity: 0, x: 10 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2 }}
-              className={`rounded-lg p-3 border ${trendColors[analysis.trend]}`}
+              className={`rounded-lg p-3 border ${trendColors[validTrend]}`}
             >
               <p className="text-xs font-medium mb-1">Trend</p>
               <div className="flex items-center gap-1">
-                {trendIcons[analysis.trend]}
+                {trendIcons[validTrend]}
                 <p className="text-sm font-bold capitalize">
-                  {analysis.trend}
+                  {validTrend}
                 </p>
               </div>
             </motion.div>

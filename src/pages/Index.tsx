@@ -485,12 +485,19 @@ const Index = () => {
 
           {/* Spending Analysis Panel - appears to the right of character */}
           <AnimatePresence>
-            {showAnalysis && lastClaudeResponse?.analysis ? (
-              <SpendingAnalysisPanel
-                analysis={lastClaudeResponse.analysis}
-                onClose={() => setShowAnalysis(false)}
-              />
-            ) : null}
+            {(() => {
+              try {
+                return showAnalysis && lastClaudeResponse?.analysis ? (
+                  <SpendingAnalysisPanel
+                    analysis={lastClaudeResponse.analysis}
+                    onClose={() => setShowAnalysis(false)}
+                  />
+                ) : null;
+              } catch (error) {
+                logger.error('[Index] SpendingAnalysisPanel error:', error);
+                return null;
+              }
+            })()}
           </AnimatePresence>
 
           {/* Character in center */}
