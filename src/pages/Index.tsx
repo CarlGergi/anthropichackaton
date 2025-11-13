@@ -7,6 +7,7 @@ import DebugPanel from "@/components/DebugPanel";
 import VoiceSettings from "@/components/VoiceSettings";
 import { FinoraCharacter } from "@/components/FinoraCharacter";
 import { RecommendationsPanel } from "@/components/RecommendationsPanel";
+import { SpendingAnalysisPanel } from "@/components/SpendingAnalysisPanel";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -60,6 +61,7 @@ const Index = () => {
   const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null);
   const [showResetDialog, setShowResetDialog] = useState(false);
   const [showRecommendations, setShowRecommendations] = useState(true);
+  const [showAnalysis, setShowAnalysis] = useState(true);
 
   // Handle voice change
   const handleVoiceChange = useCallback((voice: string) => {
@@ -184,6 +186,11 @@ const Index = () => {
         // Show recommendations panel if there are recommendations
         if (claudeResponse.recs && claudeResponse.recs.length > 0) {
           setShowRecommendations(true);
+        }
+
+        // Show analysis panel if there is analysis data
+        if (claudeResponse.analysis) {
+          setShowAnalysis(true);
         }
 
         logger.log('[Finora] Claude response:', {
@@ -455,12 +462,44 @@ const Index = () => {
           initial={{ scale: 0.8, opacity: 0, y: 20 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="w-full max-w-md px-4"
+          className="relative w-full max-w-5xl px-4 flex items-center justify-center"
         >
-          <FinoraCharacter 
-            voiceState={voiceState} 
-            gesture={lastClaudeResponse?.gesture}
-          />
+          {/* Recommendations Panel - appears to the left of character */}
+          <AnimatePresence>
+            {(() => {
+              console.log('[Index] Recommendations check:', {
+                showRecommendations,
+                hasResponse: !!lastClaudeResponse,
+                hasRecs: !!lastClaudeResponse?.recs,
+                recsLength: lastClaudeResponse?.recs?.length || 0
+              });
+
+              return showRecommendations && lastClaudeResponse?.recs && lastClaudeResponse.recs.length > 0 ? (
+                <RecommendationsPanel
+                  recommendations={lastClaudeResponse.recs}
+                  onClose={() => setShowRecommendations(false)}
+                />
+              ) : null;
+            })()}
+          </AnimatePresence>
+
+          {/* Spending Analysis Panel - appears to the right of character */}
+          <AnimatePresence>
+            {showAnalysis && lastClaudeResponse?.analysis ? (
+              <SpendingAnalysisPanel
+                analysis={lastClaudeResponse.analysis}
+                onClose={() => setShowAnalysis(false)}
+              />
+            ) : null}
+          </AnimatePresence>
+
+          {/* Character in center */}
+          <div className="w-full max-w-md">
+            <FinoraCharacter
+              voiceState={voiceState}
+              gesture={lastClaudeResponse?.gesture}
+            />
+          </div>
         </motion.div>
       )}
 
@@ -680,16 +719,6 @@ const Index = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      {/* Recommendations Panel */}
-      <AnimatePresence>
-        {showRecommendations && lastClaudeResponse?.recs && lastClaudeResponse.recs.length > 0 && (
-          <RecommendationsPanel
-            recommendations={lastClaudeResponse.recs}
-            onClose={() => setShowRecommendations(false)}
-          />
-        )}
-      </AnimatePresence>
     </div>
   );
 };
