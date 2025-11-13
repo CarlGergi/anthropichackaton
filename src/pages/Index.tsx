@@ -6,6 +6,7 @@ import { Mic, Loader2, Volume2, Settings, Hand, Sparkles } from "lucide-react";
 import DebugPanel from "@/components/DebugPanel";
 import VoiceSettings from "@/components/VoiceSettings";
 import { FinoraCharacter } from "@/components/FinoraCharacter";
+import { RecommendationsPanel } from "@/components/RecommendationsPanel";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -58,6 +59,7 @@ const Index = () => {
   });
   const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null);
   const [showResetDialog, setShowResetDialog] = useState(false);
+  const [showRecommendations, setShowRecommendations] = useState(true);
 
   // Handle voice change
   const handleVoiceChange = useCallback((voice: string) => {
@@ -178,11 +180,17 @@ const Index = () => {
 
         const claudeResponse = await getIntent(text, budget, venuesData, finoraState);
         setLastClaudeResponse(claudeResponse);
-        
+
+        // Show recommendations panel if there are recommendations
+        if (claudeResponse.recs && claudeResponse.recs.length > 0) {
+          setShowRecommendations(true);
+        }
+
         logger.log('[Finora] Claude response:', {
           intent: claudeResponse.intent,
           speech: claudeResponse.speech.substring(0, 50) + '...',
-          state_patch: claudeResponse.state_patch
+          state_patch: claudeResponse.state_patch,
+          recommendations: claudeResponse.recs?.length || 0
         });
 
         // Handle state_patch from Claude
@@ -655,7 +663,7 @@ const Index = () => {
           <AlertDialogHeader>
             <AlertDialogTitle className="text-white text-xl">Reset Finora?</AlertDialogTitle>
             <AlertDialogDescription className="text-white/70">
-              This will erase your budget data, categories, and all transaction history. 
+              This will erase your budget data, categories, and all transaction history.
               Finora will start fresh and ask for your budget again.
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -672,6 +680,14 @@ const Index = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Recommendations Panel */}
+      {showRecommendations && lastClaudeResponse?.recs && (
+        <RecommendationsPanel
+          recommendations={lastClaudeResponse.recs}
+          onClose={() => setShowRecommendations(false)}
+        />
+      )}
     </div>
   );
 };
