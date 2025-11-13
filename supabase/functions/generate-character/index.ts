@@ -11,36 +11,36 @@ serve(async (req) => {
   }
 
   try {
-    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
-    if (!lovableApiKey) {
-      throw new Error('LOVABLE_API_KEY not found');
+    const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
+    if (!openaiApiKey) {
+      throw new Error('OPENAI_API_KEY not found');
     }
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const { prompt } = await req.json().catch(() => ({}));
+    const imagePrompt = prompt || "Generate a friendly cartoon character in a business suit. The character should be professional but approachable, with a warm smile. Style: modern 3D cartoon/Pixar-like with smooth shading. The character should be standing straight, facing forward, full body visible. Business attire with tie. Friendly and trustworthy appearance. Clean transparent or light background.";
+
+    const response = await fetch("https://api.openai.com/v1/images/generations", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${lovableApiKey}`,
+        Authorization: `Bearer ${openaiApiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash-image-preview",
-        messages: [
-          {
-            role: "user",
-            content: "Generate a friendly cartoon character in a business suit. The character should be professional but approachable, with a warm smile. Style: modern 3D cartoon/Pixar-like with smooth shading. The character should be standing straight, facing forward, full body visible. Business attire with tie. Friendly and trustworthy appearance. Clean transparent or light background."
-          }
-        ],
-        modalities: ["image", "text"]
+        model: "dall-e-3",
+        prompt: imagePrompt,
+        n: 1,
+        size: "1024x1024",
+        quality: "standard"
       })
     });
 
     if (!response.ok) {
       const error = await response.text();
-      throw new Error(`AI Gateway error: ${error}`);
+      throw new Error(`OpenAI API error: ${error}`);
     }
 
     const data = await response.json();
-    const imageUrl = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+    const imageUrl = data.data?.[0]?.url;
 
     if (!imageUrl) {
       throw new Error('No image generated');

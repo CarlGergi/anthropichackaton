@@ -1,4 +1,5 @@
 import { BudgetState, Transaction, CategoryType } from "@/types";
+import { logger } from "@/lib/logger";
 
 const STORAGE_KEY = "pennypal_budget";
 const TRANSACTIONS_KEY = "pennypal_transactions";
@@ -36,7 +37,7 @@ export function loadBudget(): BudgetState {
       return JSON.parse(stored);
     }
   } catch (e) {
-    console.error("Failed to load budget:", e);
+    logger.error("Failed to load budget:", e);
   }
   return getDefaultBudget();
 }
@@ -45,7 +46,7 @@ export function saveBudget(budget: BudgetState): void {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(budget));
   } catch (e) {
-    console.error("Failed to save budget:", e);
+    logger.error("Failed to save budget:", e);
   }
 }
 
@@ -56,7 +57,7 @@ export function loadTransactions(): Transaction[] {
       return JSON.parse(stored);
     }
   } catch (e) {
-    console.error("Failed to load transactions:", e);
+    logger.error("Failed to load transactions:", e);
   }
   return [];
 }
@@ -65,7 +66,7 @@ export function saveTransactions(transactions: Transaction[]): void {
   try {
     localStorage.setItem(TRANSACTIONS_KEY, JSON.stringify(transactions));
   } catch (e) {
-    console.error("Failed to save transactions:", e);
+    logger.error("Failed to save transactions:", e);
   }
 }
 

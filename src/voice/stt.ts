@@ -1,4 +1,5 @@
 // Speech-to-Text using Web Speech API
+import { logger } from "@/lib/logger";
 
 export type STTCallback = (transcript: string, isFinal: boolean) => void;
 
@@ -131,7 +132,7 @@ export class SpeechToText {
     };
 
     this.recognition.onerror = (event: any) => {
-      console.error("[STT] Speech recognition error:", event.error);
+      logger.error("[STT] Speech recognition error:", event.error);
       this.lastError = event.error;
       
       const errorCode = event.error;
@@ -159,20 +160,20 @@ export class SpeechToText {
           // Retry on network errors
           if (this.retryCount < this.maxRetries) {
             this.retryCount++;
-            console.log(`[STT] Network error, retrying (${this.retryCount}/${this.maxRetries})...`);
+            logger.log(`[STT] Network error, retrying (${this.retryCount}/${this.maxRetries})...`);
             this.retryTimeout = window.setTimeout(() => {
               if (this.isListening && this.recognition) {
                 try {
                   this.recognition.start();
                 } catch (e) {
-                  console.error('[STT] Retry failed:', e);
+                  logger.error('[STT] Retry failed:', e);
                   this.onError?.('Web Speech API failed. Please try again.', 'network-failed');
                   this.stop();
                 }
               }
             }, 500 * this.retryCount);
           } else {
-            console.error('[STT] Max retries reached.');
+            logger.error('[STT] Max retries reached.');
             this.onError?.('Web Speech API failed after retries. Please try again.', errorCode);
             this.stop();
           }
@@ -194,7 +195,7 @@ export class SpeechToText {
         try {
           this.recognition.start();
         } catch (e) {
-          console.error('Auto-restart failed:', e);
+          logger.error('Auto-restart failed:', e);
         }
       } else {
         this.stop();
@@ -205,40 +206,40 @@ export class SpeechToText {
   }
 
   async start(onTranscript: STTCallback, onError?: (error: string, code?: string) => void): Promise<void> {
-    console.log('[STT] Starting speech recognition...');
+    logger.log('[STT] Starting speech recognition...');
     this.onTranscript = onTranscript;
     this.onError = onError || null;
     this.retryCount = 0;
     this.lastError = null;
 
     // Request mic permission first
-    console.log('[STT] Requesting microphone permission...');
+    logger.log('[STT] Requesting microphone permission...');
     const permitted = await this.requestMicPermission();
     if (!permitted) {
-      console.error('[STT] Microphone permission denied');
+      logger.error('[STT] Microphone permission denied');
       return;
     }
-    console.log('[STT] ✓ Microphone permission granted');
+    logger.log('[STT] ✓ Microphone permission granted');
 
     // Initialize Web Speech API
-    console.log('[STT] Initializing Web Speech API...');
+    logger.log('[STT] Initializing Web Speech API...');
     const success = this.initWebSpeech();
     if (!success) {
-      console.error('[STT] Web Speech API initialization failed');
+      logger.error('[STT] Web Speech API initialization failed');
       return;
     }
-    console.log('[STT] ✓ Web Speech API ready');
+    logger.log('[STT] ✓ Web Speech API ready');
 
     this.isListening = true;
     this.config.onEngineChange?.('webspeech');
 
     if (this.recognition) {
       try {
-        console.log('[STT] Starting Web Speech recognition...');
+        logger.log('[STT] Starting Web Speech recognition...');
         this.recognition.start();
-        console.log('[STT] ✓ Recognition started successfully');
+        logger.log('[STT] ✓ Recognition started successfully');
       } catch (e: any) {
-        console.error("[STT] ✗ Failed to start recognition:", e);
+        logger.error("[STT] ✗ Failed to start recognition:", e);
         onError?.('Failed to start: ' + e.message, 'start-error');
       }
     }

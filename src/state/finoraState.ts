@@ -1,3 +1,5 @@
+import { logger } from "@/lib/logger";
+
 export interface FinoraState {
   introShown: boolean;
   monthly_budget: number | null;
@@ -40,7 +42,7 @@ export function loadFinoraState(): FinoraState {
       return JSON.parse(stored);
     }
   } catch (e) {
-    console.error("Failed to load finora_state:", e);
+    logger.error("Failed to load finora_state:", e);
   }
   return getDefaultFinoraState();
 }
@@ -49,9 +51,9 @@ export function saveFinoraState(state: FinoraState): void {
   try {
     state.lastUpdated = new Date().toISOString();
     localStorage.setItem(FINORA_STATE_KEY, JSON.stringify(state));
-    console.log("Saved finora_state:", state);
+    logger.log("Saved finora_state:", state);
   } catch (e) {
-    console.error("Failed to save finora_state:", e);
+    logger.error("Failed to save finora_state:", e);
   }
 }
 

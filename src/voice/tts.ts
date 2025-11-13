@@ -1,4 +1,5 @@
 import { TTSResponse } from "@/types";
+import { logger } from "@/lib/logger";
 import { supabase } from "@/integrations/supabase/client";
 
 export async function textToSpeech(
@@ -6,7 +7,7 @@ export async function textToSpeech(
   voice: string = "George",
   style: string = "neutral"
 ): Promise<TTSResponse> {
-  console.log(`[TTS] Starting: "${text.substring(0, 50)}..." voice: ${voice}, style: ${style}`);
+  logger.log(`[TTS] Starting: "${text.substring(0, 50)}..." voice: ${voice}, style: ${style}`);
 
   try {
     const { data, error } = await supabase.functions.invoke('elevenlabs-tts', {
@@ -18,19 +19,19 @@ export async function textToSpeech(
     });
 
     if (error) {
-      console.error('[TTS] Edge function error:', error);
+      logger.error('[TTS] Edge function error:', error);
       throw new Error(`TTS Error: ${error.message || 'Unknown error'}`);
     }
 
     if (!data || !data.audio_b64) {
-      console.error('[TTS] No audio data received:', data);
+      logger.error('[TTS] No audio data received:', data);
       throw new Error('No audio data in response');
     }
     
-    console.log('[TTS] ✓ Success! Audio length:', data.audio_b64.length, 'bytes');
+    logger.log('[TTS] ✓ Success! Audio length:', data.audio_b64.length, 'bytes');
     return data as TTSResponse;
   } catch (error) {
-    console.error('[TTS] ✗ Failed:', error);
+    logger.error('[TTS] ✗ Failed:', error);
     throw error; // Re-throw instead of silently returning null
   }
 }
@@ -48,9 +49,9 @@ export function unlockAudio() {
     globalAudioElement.play().then(() => {
       globalAudioElement?.pause();
       audioContextUnlocked = true;
-      console.log('[Audio] ✓ Audio context unlocked');
+      logger.log('[Audio] ✓ Audio context unlocked');
     }).catch(() => {
-      console.log('[Audio] Audio unlock attempted');
+      logger.log('[Audio] Audio unlock attempted');
     });
   }
 }
@@ -61,27 +62,27 @@ export function playAudioFromBase64(
   onEnded?: () => void,
   onAmplitude?: (amplitude: number) => void
 ): HTMLAudioElement | null {
-  console.log('[Audio] Starting playback, data size:', base64Audio?.length || 0, 'bytes');
+  logger.log('[Audio] Starting playback, data size:', base64Audio?.length || 0, 'bytes');
   
   if (!base64Audio) {
-    console.error('[Audio] ✗ No audio data provided!');
+    logger.error('[Audio] ✗ No audio data provided!');
     onEnded?.();
     return null;
   }
 
   try {
     // Convert base64 to blob
-    console.log('[Audio] Decoding base64...');
+    logger.log('[Audio] Decoding base64...');
     const binaryString = atob(base64Audio);
     const bytes = new Uint8Array(binaryString.length);
     for (let i = 0; i < binaryString.length; i++) {
       bytes[i] = binaryString.charCodeAt(i);
     }
     
-    console.log('[Audio] Creating blob, size:', bytes.length, 'bytes');
+    logger.log('[Audio] Creating blob, size:', bytes.length, 'bytes');
     const blob = new Blob([bytes], { type: mimeType });
     const url = URL.createObjectURL(blob);
-    console.log('[Audio] Blob URL created:', url);
+    logger.log('[Audio] Blob URL created:', url);
 
     // Create audio element
     const audio = new Audio(url);
@@ -116,37 +117,37 @@ export function playAudioFromBase64(
         };
         
         audio.onplay = () => {
-          console.log('[Audio] ▶ Playing...');
+          logger.log('[Audio] ▶ Playing...');
           checkAmplitude();
         };
       } catch (audioCtxError) {
-        console.warn('[Audio] Could not create AudioContext:', audioCtxError);
+        logger.warn('[Audio] Could not create AudioContext:', audioCtxError);
         // Continue without amplitude tracking
       }
     }
     
     audio.onended = () => {
-      console.log('[Audio] ✓ Playback ended');
+      logger.log('[Audio] ✓ Playback ended');
       URL.revokeObjectURL(url);
       if (onAmplitude) onAmplitude(0);
       onEnded?.();
     };
     
     audio.onerror = (err) => {
-      console.error("[Audio] ✗ Playback error:", err);
+      logger.error("[Audio] ✗ Playback error:", err);
       URL.revokeObjectURL(url);
       if (onAmplitude) onAmplitude(0);
       onEnded?.();
     };
     
     // Start playback
-    console.log('[Audio] Attempting to play...');
+    logger.log('[Audio] Attempting to play...');
     audio.play()
       .then(() => {
-        console.log('[Audio] ✓ Play started successfully');
+        logger.log('[Audio] ✓ Play started successfully');
       })
       .catch((err) => {
-        console.error("[Audio] ✗ Play failed:", err);
+        logger.error("[Audio] ✗ Play failed:", err);
         URL.revokeObjectURL(url);
         if (onAmplitude) onAmplitude(0);
         onEnded?.();
@@ -154,7 +155,7 @@ export function playAudioFromBase64(
     
     return audio;
   } catch (error) {
-    console.error("[Audio] ✗ Critical error in playAudioFromBase64:", error);
+    logger.error("[Audio] ✗ Critical error in playAudioFromBase64:", error);
     if (onAmplitude) onAmplitude(0);
     onEnded?.();
     return null;
