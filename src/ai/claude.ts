@@ -1,12 +1,13 @@
 import { BudgetState, ClaudeResponse, Venue } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
 import { FinoraState } from "@/state/finoraState";
-import { 
-  calculateRemaining, 
-  calculateRemainingTotal, 
-  calculateDaysLeft, 
-  calculateForecast, 
-  calculateBuffer 
+import { logger } from "@/lib/logger";
+import {
+  calculateRemaining,
+  calculateRemainingTotal,
+  calculateDaysLeft,
+  calculateForecast,
+  calculateBuffer
 } from "@/state/budget";
 
 export async function getIntent(
@@ -15,7 +16,7 @@ export async function getIntent(
   venues: Venue[],
   finoraState: FinoraState
 ): Promise<ClaudeResponse> {
-  console.log('Calling Claude API with transcript:', transcript);
+  logger.log('Calling Claude API with transcript:', transcript);
 
   // Build budget context for Claude
   const budgetContext = {
@@ -49,14 +50,14 @@ export async function getIntent(
     });
 
     if (error) {
-      console.error('Edge function error:', error);
+      logger.error('Edge function error:', error);
       throw error;
     }
-    
-    console.log('Claude response:', data);
+
+    logger.log('Claude response:', data);
     return data as ClaudeResponse;
   } catch (error) {
-    console.error('Error calling Claude:', error);
+    logger.error('Error calling Claude:', error);
     // Fallback to basic response on error
     return getFallbackResponse(transcript, budgetContext);
   }
