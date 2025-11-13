@@ -455,12 +455,34 @@ const Index = () => {
           initial={{ scale: 0.8, opacity: 0, y: 20 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="w-full max-w-md px-4"
+          className="relative w-full max-w-5xl px-4 flex items-center justify-center"
         >
-          <FinoraCharacter 
-            voiceState={voiceState} 
-            gesture={lastClaudeResponse?.gesture}
-          />
+          {/* Recommendations Panel - appears to the left of character */}
+          <AnimatePresence>
+            {(() => {
+              console.log('[Index] Recommendations check:', {
+                showRecommendations,
+                hasResponse: !!lastClaudeResponse,
+                hasRecs: !!lastClaudeResponse?.recs,
+                recsLength: lastClaudeResponse?.recs?.length || 0
+              });
+
+              return showRecommendations && lastClaudeResponse?.recs && lastClaudeResponse.recs.length > 0 ? (
+                <RecommendationsPanel
+                  recommendations={lastClaudeResponse.recs}
+                  onClose={() => setShowRecommendations(false)}
+                />
+              ) : null;
+            })()}
+          </AnimatePresence>
+
+          {/* Character in center */}
+          <div className="w-full max-w-md">
+            <FinoraCharacter
+              voiceState={voiceState}
+              gesture={lastClaudeResponse?.gesture}
+            />
+          </div>
         </motion.div>
       )}
 
@@ -680,25 +702,6 @@ const Index = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      {/* Recommendations Panel */}
-      <AnimatePresence>
-        {(() => {
-          console.log('[Index] Recommendations check:', {
-            showRecommendations,
-            hasResponse: !!lastClaudeResponse,
-            hasRecs: !!lastClaudeResponse?.recs,
-            recsLength: lastClaudeResponse?.recs?.length || 0
-          });
-
-          return showRecommendations && lastClaudeResponse?.recs && lastClaudeResponse.recs.length > 0 ? (
-            <RecommendationsPanel
-              recommendations={lastClaudeResponse.recs}
-              onClose={() => setShowRecommendations(false)}
-            />
-          ) : null;
-        })()}
-      </AnimatePresence>
     </div>
   );
 };
