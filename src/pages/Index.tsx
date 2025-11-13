@@ -105,7 +105,7 @@ const Index = () => {
       setVoiceState("speaking");
       
       try {
-        const greetingText = "Hey there! I'm Finora — your finance buddy. Let's get your budget set up. What's your total for this month?";
+        const greetingText = "Yooo what's good! I'm Finora, your AI budget bestie. I'm here to make sure you don't go broke before finals week, bro. First things first - what's your monthly budget looking like?";
         const ttsResponse = await textToSpeech(greetingText, selectedVoice, "cheerful");
         
           if (ttsResponse.audio_b64) {
