@@ -1,4 +1,4 @@
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Sparkles, DollarSign, Tag, X } from "lucide-react";
 import { ClaudeResponse } from "@/types";
 import { Badge } from "@/components/ui/badge";
@@ -25,14 +25,13 @@ export function RecommendationsPanel({ recommendations, onClose }: Recommendatio
   }
 
   return (
-    <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0, y: 50, scale: 0.9 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: 50, scale: 0.9 }}
-        transition={{ duration: 0.4, type: "spring", bounce: 0.3 }}
-        className="fixed bottom-24 right-6 z-40 max-w-md"
-      >
+    <motion.div
+      initial={{ opacity: 0, y: 50, scale: 0.9 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: 50, scale: 0.9 }}
+      transition={{ duration: 0.4, type: "spring", bounce: 0.3 }}
+      className="fixed bottom-24 right-6 z-40 max-w-md"
+    >
         <Card className="relative overflow-hidden border-2 border-purple-200 bg-gradient-to-br from-purple-50 via-white to-blue-50 shadow-2xl backdrop-blur-sm">
           {/* Header */}
           <div className="relative border-b border-purple-200 bg-gradient-to-r from-purple-500 to-blue-500 p-4 text-white">
@@ -116,6 +115,5 @@ export function RecommendationsPanel({ recommendations, onClose }: Recommendatio
           </div>
         </Card>
       </motion.div>
-    </AnimatePresence>
   );
 }
