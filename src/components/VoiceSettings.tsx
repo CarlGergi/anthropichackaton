@@ -1,4 +1,5 @@
 import { Settings, Globe, Volume2, Play, Loader2 } from "lucide-react";
+import { logger } from "@/lib/logger";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -96,7 +97,7 @@ export default function VoiceSettings({
         setPlayingVoice(null);
       }
     } catch (error) {
-      console.error('Sample playback failed:', error);
+      logger.error('Sample playback failed:', error);
       toast.error('Sample playback failed');
       setPlayingVoice(null);
     }

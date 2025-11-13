@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { logger } from "@/lib/logger";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { Mic, Loader2, Volume2, Settings, Hand, Sparkles } from "lucide-react";
@@ -68,7 +69,7 @@ const Index = () => {
 
   // Start conversation handler
   const handleStartConversation = useCallback(async () => {
-    console.log('[Finora] Starting conversation...');
+    logger.log('[Finora] Starting conversation...');
     
     // Unlock audio on user interaction
     unlockAudio();
@@ -85,7 +86,7 @@ const Index = () => {
       await navigator.mediaDevices.getUserMedia({ audio: true });
       setSttSupport(prev => ({ ...prev, hasMicPermission: true }));
     } catch (error) {
-      console.error('[Finora] Mic permission denied:', error);
+      logger.error('[Finora] Mic permission denied:', error);
       toast.error('Microphone access blocked — please enable it and try again');
       setSttSupport(prev => ({ ...prev, hasMicPermission: false }));
       return;
@@ -95,7 +96,7 @@ const Index = () => {
     
     // Greet only if first time AND intro not shown
     if (!finoraState.introShown) {
-      console.log('[Finora] First time user - playing intro greeting');
+      logger.log('[Finora] First time user - playing intro greeting');
       await new Promise(resolve => setTimeout(resolve, 500));
       setVoiceState("speaking");
       
@@ -114,7 +115,7 @@ const Index = () => {
                 const updatedState = mergeStatePatch(finoraState, { introShown: true });
                 setFinoraState(updatedState);
                 saveFinoraState(updatedState);
-                console.log('[Finora] Intro shown, state updated');
+                logger.log('[Finora] Intro shown, state updated');
               }
             );
             setCurrentAudio(audio);
@@ -122,11 +123,11 @@ const Index = () => {
             setVoiceState("idle");
           }
       } catch (error) {
-        console.error('[Finora] Greeting failed:', error);
+        logger.error('[Finora] Greeting failed:', error);
         setVoiceState("idle");
       }
     } else {
-      console.log('[Finora] Returning user - skipping intro (introShown=true)');
+      logger.log('[Finora] Returning user - skipping intro (introShown=true)');
     }
   }, [finoraState]);
 
@@ -167,8 +168,8 @@ const Index = () => {
   const processTranscript = useCallback(
     async (text: string) => {
       try {
-        console.log('[Finora] Processing transcript:', text);
-        console.log('[Finora] Current state:', { 
+        logger.log('[Finora] Processing transcript:', text);
+        logger.log('[Finora] Current state:', { 
           introShown: finoraState.introShown, 
           monthly_budget: finoraState.monthly_budget 
         });
@@ -178,7 +179,7 @@ const Index = () => {
         const claudeResponse = await getIntent(text, budget, venuesData, finoraState);
         setLastClaudeResponse(claudeResponse);
         
-        console.log('[Finora] Claude response:', {
+        logger.log('[Finora] Claude response:', {
           intent: claudeResponse.intent,
           speech: claudeResponse.speech.substring(0, 50) + '...',
           state_patch: claudeResponse.state_patch
@@ -189,7 +190,7 @@ const Index = () => {
           const updatedState = mergeStatePatch(finoraState, claudeResponse.state_patch);
           setFinoraState(updatedState);
           saveFinoraState(updatedState);
-          console.log('[Finora] State updated:', updatedState);
+          logger.log('[Finora] State updated:', updatedState);
           
           // Update budget if monthly_budget changed
           if (claudeResponse.state_patch.monthly_budget !== undefined) {
@@ -239,12 +240,12 @@ const Index = () => {
             setVoiceState("idle");
           }
         } catch (ttsError) {
-          console.error('[Finora] TTS failed:', ttsError);
+          logger.error('[Finora] TTS failed:', ttsError);
           toast.error('Speech generation failed');
           setVoiceState("idle");
         }
       } catch (error) {
-        console.error("Processing error:", error);
+        logger.error("Processing error:", error);
         toast.error("Oops! Something went wrong");
         setVoiceState("idle");
       }
@@ -281,7 +282,7 @@ const Index = () => {
             }
           },
           (error, code) => {
-            console.error("[Voice] STT Error:", error, code);
+            logger.error("[Voice] STT Error:", error, code);
             toast.error(error, { duration: 5000 });
             setVoiceState("idle");
             
@@ -293,7 +294,7 @@ const Index = () => {
         
         setSttSupport(prev => ({ ...prev, hasMicPermission: true }));
       } catch (error) {
-        console.error('[Voice] Failed to start:', error);
+        logger.error('[Voice] Failed to start:', error);
         toast.error('Failed to start voice input');
         setVoiceState("idle");
       }
@@ -327,7 +328,7 @@ const Index = () => {
 
   // Handle reset
   const handleReset = useCallback(() => {
-    console.log('[Finora] Resetting all data...');
+    logger.log('[Finora] Resetting all data...');
     
     // First end any active conversation
     if (voiceState === "listening") {
@@ -354,7 +355,7 @@ const Index = () => {
     setConversationStarted(false);
     setLastClaudeResponse(undefined);
     
-    console.log('[Finora] Reset complete - fresh state:', freshFinoraState);
+    logger.log('[Finora] Reset complete - fresh state:', freshFinoraState);
     
     setShowResetDialog(false);
     toast.success("Finora forgot everything. Fresh start!");
