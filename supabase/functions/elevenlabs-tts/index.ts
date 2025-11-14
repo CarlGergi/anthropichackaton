@@ -1,12 +1,11 @@
 /**
- * IMPORTANT: Despite the function name "elevenlabs-tts", this function uses OpenAI's TTS API.
- * The name is a legacy artifact from development and was kept for backwards compatibility.
+ * ElevenLabs TTS Function
  *
- * This function:
- * - Uses OpenAI TTS API (not ElevenLabs)
- * - Requires OPENAI_API_KEY environment variable
- * - Supports OpenAI voices: alloy, echo, fable, nova, shimmer, onyx
- * - Returns base64-encoded MP3 audio
+ * This function uses ElevenLabs API for text-to-speech generation.
+ * - Requires ELEVENLABS_API_KEY environment variable
+ * - Supports multiple ElevenLabs voices
+ * - Returns base64-encoded MP3 audio (compatible with frontend)
+ * - Free tier: 10,000 characters per month
  */
 
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
@@ -27,96 +26,96 @@ serve(async (req) => {
     const text = body.text;
     const voice: string = body.voice || "George";
     const style: string = body.style || "neutral";
-    
-    console.log('[OpenAI TTS] Request received:', { textLength: text?.length, voice, style });
-    
+
+    console.log('[ElevenLabs TTS] Request received:', { textLength: text?.length, voice, style });
+
     if (!text) {
       throw new Error('Text is required');
     }
 
-    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
-    if (!OPENAI_API_KEY) {
-      console.error('[OpenAI TTS] API key not configured!');
-      throw new Error('OPENAI_API_KEY not configured');
+    const ELEVENLABS_API_KEY = Deno.env.get('ELEVENLABS_API_KEY');
+    if (!ELEVENLABS_API_KEY) {
+      console.error('[ElevenLabs TTS] API key not configured!');
+      throw new Error('ELEVENLABS_API_KEY not configured');
     }
-    
-    console.log('[OpenAI TTS] API key present');
 
-    // Map voice names to OpenAI voice IDs
-    // Support both old names (for backwards compatibility) and new direct voice IDs
+    console.log('[ElevenLabs TTS] API key present');
+
+    // Map voice names to ElevenLabs voice IDs
+    // Using popular ElevenLabs voices
     const voiceIds: Record<string, string> = {
-      // New direct voice IDs
-      "alloy": "alloy",
-      "echo": "echo", 
-      "fable": "fable",
-      "nova": "nova",
-      "shimmer": "shimmer",
+      // Direct voice names
+      "alloy": "21m00Tcm4TlvDq8ikWAM",     // Rachel - warm American female
+      "echo": "ErXwobaYiN019PkySvjV",      // Antoni - well-rounded male
+      "fable": "MF3mGyEYCl7XYWbV9V6O",     // Elli - emotional young female
+      "nova": "EXAVITQu4vr4xnSDxMaL",      // Bella - soft American female
+      "shimmer": "pNInz6obpgDQGcFmaJgB",   // Adam - deep male
+      "onyx": "VR6AewLTigWG4xSOukaG",      // Arnold - crisp male
       // Old names for backwards compatibility
-      "George": "alloy",
-      "Daniel": "echo",
-      "Callum": "fable",
-      "Eric": "echo",
-      "Brian": "alloy"
+      "George": "21m00Tcm4TlvDq8ikWAM",    // Rachel
+      "Daniel": "ErXwobaYiN019PkySvjV",    // Antoni
+      "Callum": "MF3mGyEYCl7XYWbV9V6O",    // Elli
+      "Eric": "ErXwobaYiN019PkySvjV",      // Antoni
+      "Brian": "21m00Tcm4TlvDq8ikWAM"      // Rachel
     };
 
-    const openaiVoice = voiceIds[voice] || "alloy";
+    const elevenLabsVoiceId = voiceIds[voice] || "21m00Tcm4TlvDq8ikWAM";
 
-    // Map style to speed (OpenAI doesn't have direct style control)
-    const styleSettings: Record<string, number> = {
-      "cheerful": 1.05,  // Slightly faster but not too much
-      "calm": 0.95,      // Slightly slower, more relaxed
-      "neutral": 1.0     // Normal speed
+    // Map style to ElevenLabs settings
+    const styleSettings: Record<string, { stability: number; similarity_boost: number }> = {
+      "cheerful": { stability: 0.4, similarity_boost: 0.8 },  // More expressive
+      "calm": { stability: 0.7, similarity_boost: 0.7 },       // More stable
+      "neutral": { stability: 0.5, similarity_boost: 0.75 }    // Balanced
     };
 
-    const speed = styleSettings[style] || 1.0;
+    const voiceSettings = styleSettings[style] || styleSettings["neutral"];
 
-    console.log('[OpenAI TTS] Calling API with voice:', openaiVoice, 'speed:', speed);
-    console.log('[OpenAI TTS] Text to generate:', text.substring(0, 100) + '...');
+    console.log('[ElevenLabs TTS] Calling API with voice ID:', elevenLabsVoiceId);
+    console.log('[ElevenLabs TTS] Text to generate:', text.substring(0, 100) + '...');
 
     const response = await fetch(
-      'https://api.openai.com/v1/audio/speech',
+      `https://api.elevenlabs.io/v1/text-to-speech/${elevenLabsVoiceId}`,
       {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${OPENAI_API_KEY}`,
+          'Accept': 'audio/mpeg',
           'Content-Type': 'application/json',
+          'xi-api-key': ELEVENLABS_API_KEY,
         },
         body: JSON.stringify({
-          model: 'tts-1',
-          input: text,
-          voice: openaiVoice,
-          speed: speed,
-          response_format: 'mp3'
+          text: text,
+          model_id: "eleven_monolingual_v1",
+          voice_settings: voiceSettings
         })
       }
     );
 
-    console.log('[OpenAI TTS] API response status:', response.status);
+    console.log('[ElevenLabs TTS] API response status:', response.status);
 
     if (!response.ok) {
       const error = await response.text();
-      console.error('[OpenAI TTS] API error:', response.status, error);
-      throw new Error(`OpenAI TTS API error: ${response.status} - ${error}`);
+      console.error('[ElevenLabs TTS] API error:', response.status, error);
+      throw new Error(`ElevenLabs TTS API error: ${response.status} - ${error}`);
     }
 
     // Get audio as ArrayBuffer
-    console.log('[OpenAI TTS] Fetching audio buffer...');
+    console.log('[ElevenLabs TTS] Fetching audio buffer...');
     const audioBuffer = await response.arrayBuffer();
-    console.log('[OpenAI TTS] Audio buffer size:', audioBuffer.byteLength, 'bytes');
-    
-    // Convert to base64
+    console.log('[ElevenLabs TTS] Audio buffer size:', audioBuffer.byteLength, 'bytes');
+
+    // Convert to base64 (same format as OpenAI version for frontend compatibility)
     const uint8Array = new Uint8Array(audioBuffer);
     let binary = '';
     const chunkSize = 0x8000;
-    
+
     for (let i = 0; i < uint8Array.length; i += chunkSize) {
       const chunk = uint8Array.subarray(i, Math.min(i + chunkSize, uint8Array.length));
       binary += String.fromCharCode.apply(null, Array.from(chunk));
     }
-    
+
     const audio_b64 = btoa(binary);
 
-    console.log('[OpenAI TTS] ✓ Success! Generated', audio_b64.length, 'bytes of base64 audio');
+    console.log('[ElevenLabs TTS] ✓ Success! Generated', audio_b64.length, 'bytes of base64 audio');
 
     return new Response(
       JSON.stringify({
