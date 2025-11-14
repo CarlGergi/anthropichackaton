@@ -150,7 +150,6 @@ In your Supabase dashboard → Project Settings → Edge Functions → Secrets:
 ```bash
 supabase functions deploy claude-intent
 supabase functions deploy elevenlabs-tts
-# Note: generate-character is optional and not used by the app
 ```
 
 **Important:** The `elevenlabs-tts` function actually uses OpenAI's TTS API (legacy naming from development).
