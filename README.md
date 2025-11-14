@@ -151,7 +151,6 @@ In your Supabase dashboard → Project Settings → Edge Functions → Secrets:
 ```bash
 supabase functions deploy claude-intent
 supabase functions deploy elevenlabs-tts
-supabase functions deploy generate-character
 ```
 
 6. **Start the dev server:**
