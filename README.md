@@ -88,13 +88,12 @@ Uses heavy Gen Z slang in EVERY response:
 - **Vite** - Lightning-fast build tool
 - **TailwindCSS** - Utility-first styling
 - **shadcn/ui** - Beautiful component library
-- **Framer Motion** - Smooth animations for panels
-- **Three.js** + React Three Fiber - 3D character rendering
+- **Framer Motion** - Smooth animations for panels and character
 
 ### AI & Backend
 - **Claude Sonnet 4** (Anthropic) - The brain! Powers all conversations, intent detection, analysis
 - **Supabase Edge Functions** - Serverless backend (Deno runtime)
-- **OpenAI TTS** - Natural voice generation
+- **OpenAI TTS API** - Natural voice generation (voices: alloy, echo, fable, nova, shimmer, onyx)
 - **Web Speech API** - Browser-based speech recognition
 
 ### Key AI Features
@@ -151,8 +150,10 @@ In your Supabase dashboard → Project Settings → Edge Functions → Secrets:
 ```bash
 supabase functions deploy claude-intent
 supabase functions deploy elevenlabs-tts
-supabase functions deploy generate-character
+# Note: generate-character is optional and not used by the app
 ```
+
+**Important:** The `elevenlabs-tts` function actually uses OpenAI's TTS API (legacy naming from development).
 
 6. **Start the dev server:**
 ```bash
@@ -234,7 +235,7 @@ anthropichackaton/
 │   │   └── claude.ts              # Claude API integration
 │   ├── components/
 │   │   ├── ui/                    # shadcn/ui components
-│   │   ├── FinoraCharacter.tsx    # 3D character with Three.js
+│   │   ├── FinoraCharacter.tsx    # Animated character with Framer Motion
 │   │   ├── RecommendationsPanel.tsx  # Left panel (recs)
 │   │   ├── SpendingAnalysisPanel.tsx # Right panel (analysis)
 │   │   ├── VoiceSettings.tsx      # Voice/language settings
@@ -256,8 +257,8 @@ anthropichackaton/
 ├── supabase/
 │   └── functions/
 │       ├── claude-intent/         # 🧠 THE BRAIN - Claude AI processing
-│       ├── elevenlabs-tts/        # Text-to-speech generation
-│       └── generate-character/    # Character image generation
+│       ├── elevenlabs-tts/        # OpenAI TTS generation (legacy name)
+│       └── generate-character/    # Character image generation (unused)
 └── .vscode/
     └── settings.json              # Deno config for Edge Functions
 ```
