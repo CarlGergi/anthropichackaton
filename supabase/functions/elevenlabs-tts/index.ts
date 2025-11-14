@@ -1,3 +1,14 @@
+/**
+ * IMPORTANT: Despite the function name "elevenlabs-tts", this function uses OpenAI's TTS API.
+ * The name is a legacy artifact from development and was kept for backwards compatibility.
+ *
+ * This function:
+ * - Uses OpenAI TTS API (not ElevenLabs)
+ * - Requires OPENAI_API_KEY environment variable
+ * - Supports OpenAI voices: alloy, echo, fable, nova, shimmer, onyx
+ * - Returns base64-encoded MP3 audio
+ */
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
