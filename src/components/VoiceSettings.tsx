@@ -28,35 +28,61 @@ const languages = [
 ];
 
 const voices = [
-  { 
-    id: 'alloy', 
-    name: 'Alloy', 
-    description: 'Neutral, warm, friendly',
+  // Female voices
+  {
+    id: 'rachel',
+    name: 'Rachel',
+    description: 'Calm, friendly (Female)',
     sample: "Hey! I'm Finora, your budget buddy. Let's make smart money moves together!"
   },
-  { 
-    id: 'echo', 
-    name: 'Echo', 
-    description: 'Calm, professional',
-    sample: "I'm here to help you manage your finances with confidence."
+  {
+    id: 'domi',
+    name: 'Domi',
+    description: 'Strong, confident (Female)',
+    sample: "You've got this! I'll help you stay on top of your finances no matter what."
   },
-  { 
-    id: 'fable', 
-    name: 'Fable', 
-    description: 'British accent, upbeat',
-    sample: "Brilliant! Let's get your budget sorted and keep you on track."
+  {
+    id: 'bella',
+    name: 'Bella',
+    description: 'Soft, young (Female)',
+    sample: "Let's work together to make your budget goals achievable and fun!"
   },
-  { 
-    id: 'nova', 
-    name: 'Nova', 
-    description: 'Energetic, young',
-    sample: "You've got this! I'll help you save money and still have fun."
+  {
+    id: 'elli',
+    name: 'Elli',
+    description: 'Emotional, expressive (Female)',
+    sample: "I'm so excited to help you manage your money and reach your dreams!"
   },
-  { 
-    id: 'shimmer', 
-    name: 'Shimmer', 
-    description: 'Soft, gentle',
-    sample: "Let's work together to make your budget goals achievable and stress-free."
+  // Male voices
+  {
+    id: 'antoni',
+    name: 'Antoni',
+    description: 'Versatile, well-rounded (Male)',
+    sample: "I'm here to help you manage your finances with confidence and ease."
+  },
+  {
+    id: 'josh',
+    name: 'Josh',
+    description: 'Deep, authoritative (Male)',
+    sample: "Let's take control of your budget and build a solid financial foundation."
+  },
+  {
+    id: 'arnold',
+    name: 'Arnold',
+    description: 'Crisp, clear (Male)',
+    sample: "I'll keep your finances organized and help you make smart decisions."
+  },
+  {
+    id: 'adam',
+    name: 'Adam',
+    description: 'Narrative, storytelling (Male)',
+    sample: "Every dollar has a story. Let's make sure yours has a happy ending."
+  },
+  {
+    id: 'sam',
+    name: 'Sam',
+    description: 'Dynamic, energetic (Male)',
+    sample: "Ready to crush your budget goals? Let's do this together!"
   },
 ];
 
