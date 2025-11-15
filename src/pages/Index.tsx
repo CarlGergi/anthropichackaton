@@ -56,7 +56,7 @@ const Index = () => {
   const [sttSupport, setSttSupport] = useState<STTSupport>(SpeechToText.checkSupport());
   const [sttLanguage, setSttLanguage] = useState(stt.getConfig().language || 'en-US');
   const [selectedVoice, setSelectedVoice] = useState(() => {
-    return localStorage.getItem('finora_voice') || 'alloy';
+    return localStorage.getItem('finora_voice') || 'rachel';
   });
   const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null);
   const [showResetDialog, setShowResetDialog] = useState(false);

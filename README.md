@@ -93,7 +93,9 @@ Uses heavy Gen Z slang in EVERY response:
 ### AI & Backend
 - **Claude Sonnet 4** (Anthropic) - The brain! Powers all conversations, intent detection, analysis
 - **Supabase Edge Functions** - Serverless backend (Deno runtime)
-- **OpenAI TTS API** - Natural voice generation (voices: alloy, echo, fable, nova, shimmer, onyx)
+- **ElevenLabs TTS API** - Natural voice generation with free tier (10,000 chars/month)
+  - Female voices: Rachel, Domi, Bella, Elli
+  - Male voices: Antoni, Josh, Arnold, Adam, Sam
 - **Web Speech API** - Browser-based speech recognition
 
 ### Key AI Features
@@ -111,9 +113,24 @@ Uses heavy Gen Z slang in EVERY response:
 - **Node.js 18+** and npm
 - **Supabase account** (free tier works!)
 - **API Keys**:
-  - Anthropic API key (for Claude)
-  - OpenAI API key (for TTS)
+  - Anthropic API key (for Claude AI)
+  - ElevenLabs API key (for TTS - free tier available!)
   - Supabase credentials
+
+### Getting Your API Keys
+
+**ElevenLabs API Key (Free Tier - 10,000 characters/month):**
+1. Go to https://elevenlabs.io/
+2. Sign up for a free account
+3. Go to your Profile Settings → API Keys
+4. Click "Create API Key" or copy your existing key
+5. Copy the key (starts with a long alphanumeric string)
+
+**Anthropic API Key:**
+1. Go to https://console.anthropic.com/
+2. Sign up or log in
+3. Go to "API Keys" in the sidebar
+4. Click "Create Key" and copy it (starts with `sk-ant-...`)
 
 ### Installation
 
@@ -144,7 +161,7 @@ VITE_SUPABASE_PROJECT_ID=your_project_id
 
 In your Supabase dashboard → Project Settings → Edge Functions → Secrets:
 - `ANTHROPIC_API_KEY` - Your Anthropic API key
-- `OPENAI_API_KEY` - Your OpenAI API key
+- `ELEVENLABS_API_KEY` - Your ElevenLabs API key (free tier works!)
 
 5. **Deploy Supabase functions:**
 ```bash
@@ -152,7 +169,7 @@ supabase functions deploy claude-intent
 supabase functions deploy elevenlabs-tts
 ```
 
-**Important:** The `elevenlabs-tts` function actually uses OpenAI's TTS API (legacy naming from development).
+**Note:** The `elevenlabs-tts` function uses ElevenLabs API with a free tier (10,000 characters/month).
 
 6. **Start the dev server:**
 ```bash
@@ -256,7 +273,7 @@ anthropichackaton/
 ├── supabase/
 │   └── functions/
 │       ├── claude-intent/         # 🧠 THE BRAIN - Claude AI processing
-│       ├── elevenlabs-tts/        # OpenAI TTS generation (legacy name)
+│       ├── elevenlabs-tts/        # ElevenLabs TTS generation (free tier)
 │       └── generate-character/    # Character image generation (unused)
 └── .vscode/
     └── settings.json              # Deno config for Edge Functions
@@ -306,7 +323,9 @@ anthropichackaton/
 
 ### Voice Settings
 Press **S** or click Settings icon to customize:
-- **Voice**: alloy, echo, fable, nova, shimmer, onyx
+- **Voice**: Rachel, Domi, Bella, Elli, Antoni, Josh, Arnold, Adam, Sam
+  - Female voices: Rachel (calm), Domi (confident), Bella (soft), Elli (expressive)
+  - Male voices: Antoni (versatile), Josh (authoritative), Arnold (clear), Adam (storytelling), Sam (energetic)
 - **Language**: en-US, en-GB, es-ES, fr-FR, etc.
 
 ### Debug Mode
