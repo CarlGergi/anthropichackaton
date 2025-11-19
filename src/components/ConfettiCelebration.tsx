@@ -62,3 +62,4 @@ export function ConfettiCelebration({ trigger, type = 'celebration' }: ConfettiC
   );
 }
 
+
