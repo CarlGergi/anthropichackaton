@@ -102,6 +102,10 @@ export function playAudioFromBase64(
     audio.setAttribute('autoplay', 'true');
     audio.setAttribute('playsinline', 'true');
 
+    // Store nodes for cleanup
+    let source: MediaElementAudioSourceNode | null = null;
+    let analyser: AnalyserNode | null = null;
+
     // Set up audio context for amplitude tracking
     if (onAmplitude) {
       try {
@@ -118,8 +122,8 @@ export function playAudioFromBase64(
         }
 
         // Create new source for this audio element
-        const source = globalAudioContext.createMediaElementSource(audio);
-        const analyser = globalAudioContext.createAnalyser();
+        source = globalAudioContext.createMediaElementSource(audio);
+        analyser = globalAudioContext.createAnalyser();
         analyser.fftSize = 256;
 
         source.connect(analyser);
@@ -128,7 +132,7 @@ export function playAudioFromBase64(
         const dataArray = new Uint8Array(analyser.frequencyBinCount);
 
         const checkAmplitude = () => {
-          if (audio.paused) {
+          if (audio.paused || !analyser) {
             if (onAmplitude) onAmplitude(0);
             return;
           }
@@ -156,6 +160,25 @@ export function playAudioFromBase64(
 
     const cleanup = () => {
       logger.log('[Audio] Cleaning up...');
+
+      // Disconnect Web Audio nodes
+      if (source) {
+        try {
+          source.disconnect();
+          logger.log('[Audio] Source disconnected');
+        } catch (e) {
+          // Already disconnected, ignore
+        }
+      }
+      if (analyser) {
+        try {
+          analyser.disconnect();
+          logger.log('[Audio] Analyser disconnected');
+        } catch (e) {
+          // Already disconnected, ignore
+        }
+      }
+
       URL.revokeObjectURL(url);
       if (animationFrameId !== null) {
         cancelAnimationFrame(animationFrameId);
@@ -175,6 +198,9 @@ export function playAudioFromBase64(
       cleanup();
       onEnded?.();
     };
+
+    // Attach cleanup as a custom property so it can be called externally
+    (audio as any).cleanup = cleanup;
 
     // Start playback
     logger.log('[Audio] Attempting to play...');

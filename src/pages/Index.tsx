@@ -364,6 +364,12 @@ const Index = () => {
           logger.log('[Finora] Stopping previous audio before playing new one');
           currentAudio.pause();
           currentAudio.currentTime = 0;
+
+          // Call cleanup if available to disconnect Web Audio nodes
+          if ((currentAudio as any).cleanup) {
+            (currentAudio as any).cleanup();
+          }
+
           setCurrentAudio(null);
           setAudioAmplitude(0);
         }
