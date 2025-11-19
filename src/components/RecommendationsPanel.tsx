@@ -24,14 +24,9 @@ const categoryColors: Record<string, string> = {
 };
 
 export function RecommendationsPanel({ recommendations, onClose, onAddExpense }: RecommendationsPanelProps) {
-  console.log('[RecommendationsPanel] Rendering with:', recommendations);
-
   if (!recommendations || recommendations.length === 0) {
-    console.log('[RecommendationsPanel] No recommendations, returning null');
     return null;
   }
-
-  console.log('[RecommendationsPanel] Showing', recommendations.length, 'recommendations');
 
   return (
     <motion.div
