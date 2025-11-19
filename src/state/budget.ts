@@ -154,6 +154,27 @@ export function calculateBuffer(budget: BudgetState): number {
   return Math.max(0, remaining - forecast);
 }
 
+export function deleteTransaction(id: string): void {
+  const transactions = loadTransactions();
+  const transaction = transactions.find(tx => tx.id === id);
+  
+  if (!transaction) {
+    logger.error("Transaction not found:", id);
+    return;
+  }
+  
+  // Remove transaction
+  const updatedTransactions = transactions.filter(tx => tx.id !== id);
+  saveTransactions(updatedTransactions);
+  
+  // Update budget - subtract the amount
+  const budget = loadBudget();
+  budget.spent[transaction.category] = Math.max(0, budget.spent[transaction.category] - transaction.amount);
+  saveBudget(budget);
+  
+  logger.log("Transaction deleted:", id);
+}
+
 export function clearAllData(): void {
   // Clear current keys
   localStorage.removeItem(STORAGE_KEY);

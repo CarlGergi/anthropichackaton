@@ -2,12 +2,18 @@ import { useState, useEffect, useCallback } from "react";
 import { logger } from "@/lib/logger";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mic, Loader2, Volume2, Settings, Hand, Sparkles } from "lucide-react";
+import { Mic, Loader2, Volume2, Settings, Hand, Sparkles, History, Download, Upload } from "lucide-react";
 import DebugPanel from "@/components/DebugPanel";
 import VoiceSettings from "@/components/VoiceSettings";
-import { FinoraCharacter } from "@/components/FinoraCharacter";
+import { AnimatedFinoraCharacter } from "@/components/AnimatedFinoraCharacter";
+import { ConfettiCelebration } from "@/components/ConfettiCelebration";
+import { AchievementBadge } from "@/components/AchievementBadge";
 import { RecommendationsPanel } from "@/components/RecommendationsPanel";
 import { SpendingAnalysisPanel } from "@/components/SpendingAnalysisPanel";
+import { QuickStatsDashboard } from "@/components/QuickStatsDashboard";
+import { TransactionHistoryPanel } from "@/components/TransactionHistoryPanel";
+import { KeyboardShortcutsHelp } from "@/components/KeyboardShortcutsHelp";
+import { BudgetProgressIndicators } from "@/components/BudgetProgressIndicators";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,7 +24,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { VoiceState, ClaudeResponse, TTSResponse } from "@/types";
+import { VoiceState, ClaudeResponse, TTSResponse, CategoryType } from "@/types";
 import { SpeechToText, STTSupport } from "@/voice/stt";
 import { textToSpeech, playAudioFromBase64, unlockAudio } from "@/voice/tts";
 import { getIntent } from "@/ai/claude";
@@ -26,10 +32,12 @@ import {
   loadBudget,
   loadTransactions,
   addTransaction,
+  deleteTransaction,
   clearAllData,
   getDefaultBudget,
   calculateRemainingTotal,
-  saveBudget
+  saveBudget,
+  saveTransactions
 } from "@/state/budget";
 import {
   loadFinoraState,
@@ -59,9 +67,14 @@ const Index = () => {
     return localStorage.getItem('finora_voice') || 'rachel';
   });
   const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null);
+  const [audioAmplitude, setAudioAmplitude] = useState(0);
   const [showResetDialog, setShowResetDialog] = useState(false);
   const [showRecommendations, setShowRecommendations] = useState(true);
   const [showAnalysis, setShowAnalysis] = useState(true);
+  const [showTransactionHistory, setShowTransactionHistory] = useState(false);
+  const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
+  const [confettiTrigger, setConfettiTrigger] = useState(false);
+  const [currentAchievement, setCurrentAchievement] = useState<string | null>(null);
 
   // Handle voice change
   const handleVoiceChange = useCallback((voice: string) => {
@@ -105,7 +118,7 @@ const Index = () => {
       setVoiceState("speaking");
       
       try {
-        const greetingText = "Yooo what's good! I'm Finora, your AI budget bestie. I'm here to make sure you don't go broke before finals week, bro. First things first - what's your monthly budget looking like?";
+        const greetingText = "Yooo what's good! I'm Finora, your AI budget bestie. What's your monthly budget looking like?";
         const ttsResponse = await textToSpeech(greetingText, selectedVoice, "cheerful");
         
           if (ttsResponse.audio_b64) {
@@ -144,6 +157,9 @@ const Index = () => {
       if (e.key === "s" || e.key === "S") {
         setSettingsOpen((prev) => !prev);
       }
+      if (e.key === "h" || e.key === "H" || e.key === "?") {
+        setShowShortcutsHelp((prev) => !prev);
+      }
       if (e.key === "Escape") {
         if (voiceState === "listening") {
           stt.stop();
@@ -151,6 +167,8 @@ const Index = () => {
         }
         if (settingsOpen) setSettingsOpen(false);
         if (debugOpen) setDebugOpen(false);
+        if (showShortcutsHelp) setShowShortcutsHelp(false);
+        if (showTransactionHistory) setShowTransactionHistory(false);
       }
     };
 
@@ -160,13 +178,115 @@ const Index = () => {
       window.removeEventListener("keypress", handleKeyPress);
       window.removeEventListener("keydown", handleKeyPress);
     };
-  }, [voiceState, stt, settingsOpen, debugOpen]);
+  }, [voiceState, stt, settingsOpen, debugOpen, showShortcutsHelp, showTransactionHistory]);
 
   // Refresh budget and transactions
   const refreshData = useCallback(() => {
     setBudget(loadBudget());
     setTransactions(loadTransactions());
   }, []);
+
+  // Handle delete transaction
+  const handleDeleteTransaction = useCallback((id: string) => {
+    deleteTransaction(id);
+    refreshData();
+    toast.success("Transaction deleted!");
+  }, [refreshData]);
+
+  // Handle add expense from recommendation
+  const handleAddExpenseFromRecommendation = useCallback((name: string, amount: number, category: string) => {
+    addTransaction({
+      date: new Date().toISOString().split("T")[0],
+      amount,
+      merchant: name,
+      category: category as CategoryType,
+      source: "manual",
+    });
+    refreshData();
+    toast.success(`Added ${name} expense!`);
+    checkAchievements();
+  }, [refreshData]);
+
+  // Check for achievements
+  const checkAchievements = useCallback(() => {
+    const updatedBudget = loadBudget();
+    const updatedTransactions = loadTransactions();
+    const remaining = calculateRemainingTotal(updatedBudget);
+    const totalSpent = Object.values(updatedBudget.spent).reduce((sum, val) => sum + val, 0);
+    
+    // Check food spending (Ramen Master)
+    const foodSpent = updatedBudget.spent.food || 0;
+    if (foodSpent < 20 && !localStorage.getItem('achievement_ramen_master')) {
+      setCurrentAchievement('ramen_master');
+      setConfettiTrigger(true);
+      localStorage.setItem('achievement_ramen_master', 'true');
+      setTimeout(() => setConfettiTrigger(false), 100);
+    }
+    
+    // Check savings (No Cap Saver)
+    const savingsPercent = updatedBudget.total > 0 ? (remaining / updatedBudget.total) * 100 : 0;
+    if (savingsPercent >= 50 && !localStorage.getItem('achievement_no_cap_saver')) {
+      setCurrentAchievement('no_cap_saver');
+      setConfettiTrigger(true);
+      localStorage.setItem('achievement_no_cap_saver', 'true');
+      setTimeout(() => setConfettiTrigger(false), 100);
+    }
+    
+    // Check if under budget (Budget King)
+    if (remaining > 0 && totalSpent > 0 && !localStorage.getItem('achievement_budget_king')) {
+      const daysLeft = Math.ceil((new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate() - new Date().getDate()));
+      if (daysLeft <= 3 && remaining > 0) {
+        setCurrentAchievement('budget_king');
+        setConfettiTrigger(true);
+        localStorage.setItem('achievement_budget_king', 'true');
+        setTimeout(() => setConfettiTrigger(false), 100);
+      }
+    }
+  }, []);
+
+  // Handle export data
+  const handleExportData = useCallback(() => {
+    const data = {
+      budget: loadBudget(),
+      transactions: loadTransactions(),
+      finoraState: loadFinoraState(),
+      exportDate: new Date().toISOString(),
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `finora-backup-${new Date().toISOString().split("T")[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Data exported!");
+  }, []);
+
+  // Handle import data
+  const handleImportData = useCallback(() => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".json";
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const data = JSON.parse(event.target?.result as string);
+          if (data.budget) saveBudget(data.budget);
+          if (data.transactions) saveTransactions(data.transactions);
+          if (data.finoraState) saveFinoraState(data.finoraState);
+          refreshData();
+          toast.success("Data imported!");
+        } catch (error) {
+          toast.error("Invalid file format");
+        }
+      };
+      reader.readAsText(file);
+    };
+    input.click();
+  }, [refreshData]);
 
   // Process transcript with Claude and TTS
   const processTranscript = useCallback(
@@ -228,6 +348,9 @@ const Index = () => {
             rawText: text,
           });
           refreshData();
+          
+          // Check for achievements after adding transaction
+          checkAchievements();
         }
         
         setVoiceState("speaking");
@@ -247,6 +370,10 @@ const Index = () => {
               () => {
                 setVoiceState("idle");
                 setCurrentAudio(null);
+                setAudioAmplitude(0);
+              },
+              (amplitude) => {
+                setAudioAmplitude(amplitude);
               }
             );
             setCurrentAudio(audio);
@@ -427,34 +554,21 @@ const Index = () => {
         <h1 className="text-4xl md:text-5xl font-bold text-white mb-2 tracking-tight">
           Finora — The Voice of Your Wallet 🎙️
         </h1>
-        <p className="text-lg md:text-xl text-white/80 font-inter mb-4">
+        <p className="text-lg md:text-xl text-white/80 font-inter mb-2">
           Talk. Laugh. Save. Repeat. Finora makes adulting kinda fun.
         </p>
-        
-        {/* Intro Paragraph */}
-        <p className="text-sm md:text-base text-white/70 font-inter mb-6 leading-relaxed">
-          <strong className="text-white/90">Built for students who are stressed about money.</strong><br />
-          Finora helps you set a budget, track spending, and stay positive — even when you're broke.<br />
-          She gets it. Rent, food, friends, life — it's a lot.<br />
-          Just press the mic, talk, and let Finora help you figure things out.
+        <p className="text-sm text-white/60 font-inter mb-4">
+          Your AI budget bestie who gets it. Just press the mic and start talking.
         </p>
-        
-        {/* What Finora Does */}
-        <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6">
-          <h2 className="text-lg font-semibold text-white/90 mb-3 font-inter text-center">
-            What Finora Does
-          </h2>
-          <ul className="space-y-2 text-sm md:text-base text-white/70 font-inter text-center">
-            <li>Talks with you (literally) about your budget and spending</li>
-            <li>Tracks every expense through your voice</li>
-            <li>Creates simple, fun plans that keep you on track</li>
-            <li>Encourages you with humor and realistic advice</li>
-          </ul>
-          <p className="text-xs md:text-sm text-white/50 mt-4 italic text-center">
-            All your data stays local on your device. Finora's chill like that 😎.
-          </p>
-        </div>
       </motion.div>
+
+      {/* Quick Stats Dashboard - shows when conversation started and budget is set */}
+      {conversationStarted && budget.total > 0 && (
+        <>
+          <QuickStatsDashboard budget={budget} />
+          <BudgetProgressIndicators budget={budget} />
+        </>
+      )}
 
       {/* 3D Character - shows when conversation started */}
       {conversationStarted && (
@@ -478,6 +592,7 @@ const Index = () => {
                 <RecommendationsPanel
                   recommendations={lastClaudeResponse.recs}
                   onClose={() => setShowRecommendations(false)}
+                  onAddExpense={handleAddExpenseFromRecommendation}
                 />
               ) : null;
             })()}
@@ -502,9 +617,10 @@ const Index = () => {
 
           {/* Character in center */}
           <div className="w-full max-w-md">
-            <FinoraCharacter
+            <AnimatedFinoraCharacter
               voiceState={voiceState}
               gesture={lastClaudeResponse?.gesture}
+              audioAmplitude={audioAmplitude}
             />
           </div>
         </motion.div>
@@ -664,6 +780,42 @@ const Index = () => {
               Reset
             </span>
           </motion.button>
+
+          {/* Export Button */}
+          <motion.button
+            onClick={handleExportData}
+            className="px-6 py-3 rounded-full bg-gradient-to-r from-green-600 to-emerald-600
+              text-white font-bold text-sm
+              hover:shadow-[0_0_30px_rgba(34,197,94,0.5)]
+              transition-all duration-300 ease-out
+              hover:scale-105 active:scale-95
+              border border-white/20"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <span className="flex items-center gap-2">
+              <Download className="w-4 h-4" />
+              Export
+            </span>
+          </motion.button>
+
+          {/* Import Button */}
+          <motion.button
+            onClick={handleImportData}
+            className="px-6 py-3 rounded-full bg-gradient-to-r from-blue-600 to-cyan-600
+              text-white font-bold text-sm
+              hover:shadow-[0_0_30px_rgba(59,130,246,0.5)]
+              transition-all duration-300 ease-out
+              hover:scale-105 active:scale-95
+              border border-white/20"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <span className="flex items-center gap-2">
+              <Upload className="w-4 h-4" />
+              Import
+            </span>
+          </motion.button>
         </motion.div>
       )}
 
@@ -677,6 +829,19 @@ const Index = () => {
       >
         <Settings className="w-5 h-5 text-white/70" />
       </motion.button>
+
+      {/* Transaction History Button */}
+      {conversationStarted && transactions.length > 0 && (
+        <motion.button
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.7 }}
+          onClick={() => setShowTransactionHistory(!showTransactionHistory)}
+          className="absolute top-4 right-20 p-3 rounded-full bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/10 transition-colors"
+        >
+          <History className="w-5 h-5 text-white/70" />
+        </motion.button>
+      )}
 
       {/* Voice Settings Panel */}
       {settingsOpen && (
@@ -703,6 +868,32 @@ const Index = () => {
         sttLastError={stt.getLastError()}
       />
       
+      {/* Transaction History Panel */}
+      {showTransactionHistory && (
+        <TransactionHistoryPanel
+          transactions={transactions}
+          onDeleteTransaction={handleDeleteTransaction}
+          onClose={() => setShowTransactionHistory(false)}
+        />
+      )}
+
+      {/* Keyboard Shortcuts Help */}
+      <KeyboardShortcutsHelp
+        isOpen={showShortcutsHelp}
+        onClose={() => setShowShortcutsHelp(false)}
+      />
+
+      {/* Confetti Celebration */}
+      <ConfettiCelebration trigger={confettiTrigger} />
+
+      {/* Achievement Badge */}
+      {currentAchievement && (
+        <AchievementBadge
+          achievementId={currentAchievement}
+          onClose={() => setCurrentAchievement(null)}
+        />
+      )}
+
       {/* Reset Confirmation Dialog */}
       <AlertDialog open={showResetDialog} onOpenChange={setShowResetDialog}>
         <AlertDialogContent className="bg-gradient-to-br from-gray-900 to-gray-800 border-white/10">

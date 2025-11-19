@@ -1,13 +1,17 @@
 import { motion } from "framer-motion";
-import { Sparkles, DollarSign, Tag, X } from "lucide-react";
+import { Sparkles, DollarSign, Tag, X, MapPin, Plus, ExternalLink } from "lucide-react";
 import { ClaudeResponse } from "@/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { toast } from "sonner";
+import venuesData from "@/data/venues.json";
+import { Venue } from "@/types";
 
 interface RecommendationsPanelProps {
   recommendations: ClaudeResponse["recs"];
   onClose?: () => void;
+  onAddExpense?: (name: string, amount: number, category: string) => void;
 }
 
 const categoryColors: Record<string, string> = {
@@ -19,7 +23,7 @@ const categoryColors: Record<string, string> = {
   other: "bg-gray-500/10 text-gray-600 border-gray-200",
 };
 
-export function RecommendationsPanel({ recommendations, onClose }: RecommendationsPanelProps) {
+export function RecommendationsPanel({ recommendations, onClose, onAddExpense }: RecommendationsPanelProps) {
   console.log('[RecommendationsPanel] Rendering with:', recommendations);
 
   if (!recommendations || recommendations.length === 0) {
@@ -68,46 +72,99 @@ export function RecommendationsPanel({ recommendations, onClose }: Recommendatio
 
         {/* Recommendations as Bullet Points */}
         <div className="max-h-[400px] overflow-y-auto p-4 space-y-2">
-          {recommendations.map((rec, index) => (
-            <motion.div
-              key={`${rec.name}-${index}`}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: index * 0.15 }}
-              className="flex items-start gap-3 p-3 rounded-lg hover:bg-purple-50 transition-colors group"
-            >
-              {/* Bullet point */}
-              <div className="flex-shrink-0 mt-1">
-                <div className="w-2 h-2 rounded-full bg-gradient-to-br from-purple-500 to-blue-500"></div>
-              </div>
+          {recommendations.map((rec, index) => {
+            const venueDetails = (venuesData as Venue[]).find(v => v.name === rec.name);
+            
+            return (
+              <motion.div
+                key={`${rec.name}-${index}`}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.15 }}
+                className="group"
+              >
+                <Card className="p-3 hover:bg-purple-50 transition-colors border-purple-200/50">
+                  <div className="flex items-start gap-3">
+                    {/* Bullet point */}
+                    <div className="flex-shrink-0 mt-1">
+                      <div className="w-2 h-2 rounded-full bg-gradient-to-br from-purple-500 to-blue-500"></div>
+                    </div>
 
-              {/* Content */}
-              <div className="flex-1 space-y-1">
-                <div className="flex items-start justify-between gap-2">
-                  <h4 className="font-semibold text-gray-900 text-sm leading-tight group-hover:text-purple-700 transition-colors">
-                    {rec.name}
-                  </h4>
+                    {/* Content */}
+                    <div className="flex-1 space-y-2 min-w-0">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-semibold text-gray-900 text-sm leading-tight group-hover:text-purple-700 transition-colors">
+                            {rec.name}
+                          </h4>
+                          {venueDetails?.description && (
+                            <p className="text-xs text-gray-600 mt-1 line-clamp-2">
+                              {venueDetails.description}
+                            </p>
+                          )}
+                          {venueDetails?.location && (
+                            <div className="flex items-center gap-1 mt-1 text-xs text-gray-500">
+                              <MapPin className="h-3 w-3" />
+                              <span>{venueDetails.location}</span>
+                            </div>
+                          )}
+                        </div>
 
-                  {/* Price badge */}
-                  <div className="flex items-center gap-0.5 rounded-full bg-green-100 px-2 py-0.5 text-green-700 flex-shrink-0">
-                    <DollarSign className="h-3 w-3" />
-                    <span className="font-bold text-xs">
-                      {rec.est_cost.toFixed(0)}
-                    </span>
+                        {/* Price badge */}
+                        <div className="flex items-center gap-0.5 rounded-full bg-green-100 px-2 py-0.5 text-green-700 flex-shrink-0">
+                          <DollarSign className="h-3 w-3" />
+                          <span className="font-bold text-xs">
+                            {rec.est_cost.toFixed(0)}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Category badge and actions */}
+                      <div className="flex items-center justify-between gap-2">
+                        <Badge
+                          variant="outline"
+                          className={`text-xs ${categoryColors[rec.category] || categoryColors.other}`}
+                        >
+                          <Tag className="mr-1 h-2.5 w-2.5" />
+                          {rec.category}
+                        </Badge>
+
+                        <div className="flex items-center gap-1">
+                          {onAddExpense && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => {
+                                onAddExpense(rec.name, rec.est_cost, rec.category);
+                                toast.success(`Added ${rec.name} as expense!`);
+                              }}
+                              className="h-7 px-2 text-xs hover:bg-purple-100"
+                            >
+                              <Plus className="h-3 w-3 mr-1" />
+                              Add
+                            </Button>
+                          )}
+                          {venueDetails?.location && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => {
+                                const query = encodeURIComponent(`${rec.name} ${venueDetails.location}`);
+                                window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, '_blank');
+                              }}
+                              className="h-7 px-2 text-xs hover:bg-purple-100"
+                            >
+                              <ExternalLink className="h-3 w-3" />
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                </div>
-
-                {/* Category badge */}
-                <Badge
-                  variant="outline"
-                  className={`text-xs ${categoryColors[rec.category] || categoryColors.other}`}
-                >
-                  <Tag className="mr-1 h-2.5 w-2.5" />
-                  {rec.category}
-                </Badge>
-              </div>
-            </motion.div>
-          ))}
+                </Card>
+              </motion.div>
+            );
+          })}
         </div>
 
         {/* Footer */}
