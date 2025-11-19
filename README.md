@@ -157,32 +157,74 @@ VITE_SUPABASE_PUBLISHABLE_KEY=your_supabase_anon_key
 VITE_SUPABASE_PROJECT_ID=your_project_id
 ```
 
-4. **Configure Supabase secrets:**
+4. **Install Supabase CLI:**
+```bash
+npm install -g supabase
+```
 
-In your Supabase dashboard → Project Settings → Edge Functions → Secrets:
-- `ANTHROPIC_API_KEY` - Your Anthropic API key
-- `ELEVENLABS_API_KEY` - Your ElevenLabs API key (free tier works!)
+5. **Login to Supabase:**
+```bash
+supabase login
+```
+This will open a browser for authentication.
 
-5. **Deploy Supabase functions:**
+6. **Link to your Supabase project:**
+```bash
+supabase link --project-ref your_project_id
+```
+Find your project ID in your Supabase dashboard URL or Project Settings.
+
+7. **Configure Supabase secrets:**
+
+Set your API keys as secrets (NOT in .env):
+```bash
+supabase secrets set ANTHROPIC_API_KEY=your_anthropic_api_key_here
+supabase secrets set ELEVENLABS_API_KEY=your_elevenlabs_api_key_here
+```
+
+**Note:** The `elevenlabs-tts` function uses ElevenLabs API with a free tier (10,000 characters/month).
+
+8. **Deploy Supabase Edge Functions:**
 ```bash
 supabase functions deploy claude-intent
 supabase functions deploy elevenlabs-tts
 ```
 
-**Note:** The `elevenlabs-tts` function uses ElevenLabs API with a free tier (10,000 characters/month).
-
-6. **Start the dev server:**
+9. **Start the dev server:**
 ```bash
 npm run dev
 ```
 
-7. **Open `http://localhost:8080`** and start talking to Finora! 🎉
+10. **Open `http://localhost:5173`** (or the port shown in terminal) and start talking to Finora! 🎉
 
 ### Browser Requirements
 - **Chrome or Edge** (for Web Speech API)
 - **Microphone access** enabled
 - **Audio playback** enabled
 - **HTTPS in production** (required for mic access)
+
+### Troubleshooting
+
+**White screen on load:**
+- Open browser console (F12) and check for errors
+- Verify `.env` file exists and has correct Supabase credentials
+- Check that environment variables are loaded: they should appear in console
+
+**Can't hear Finora speak:**
+- Make sure Supabase Edge Functions are deployed
+- Verify API keys are set as Supabase secrets (not in .env)
+- Check browser console for TTS errors
+- Ensure audio isn't muted in browser
+
+**Microphone not working:**
+- Grant microphone permissions when prompted
+- Use Chrome or Edge (Safari/Firefox not supported)
+- Check browser console for permission errors
+
+**Edge Functions failing:**
+- Run `supabase functions deploy` to ensure they're deployed
+- Check Supabase dashboard → Edge Functions → Logs for errors
+- Verify secrets are set: `supabase secrets list`
 
 ---
 

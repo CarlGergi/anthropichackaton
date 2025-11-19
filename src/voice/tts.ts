@@ -40,6 +40,10 @@ export async function textToSpeech(
 let audioContextUnlocked = false;
 let globalAudioElement: HTMLAudioElement | null = null;
 
+// Global audio context - reuse to avoid "MediaElementSource already exists" errors
+let globalAudioContext: AudioContext | null = null;
+let animationFrameId: number | null = null;
+
 // Call this on user interaction (button click) to unlock audio
 export function unlockAudio() {
   if (!audioContextUnlocked) {
@@ -63,7 +67,7 @@ export function playAudioFromBase64(
   onAmplitude?: (amplitude: number) => void
 ): HTMLAudioElement | null {
   logger.log('[Audio] Starting playback, data size:', base64Audio?.length || 0, 'bytes');
-  
+
   if (!base64Audio) {
     logger.error('[Audio] ✗ No audio data provided!');
     onEnded?.();
@@ -71,6 +75,12 @@ export function playAudioFromBase64(
   }
 
   try {
+    // Cancel any ongoing animation frame
+    if (animationFrameId !== null) {
+      cancelAnimationFrame(animationFrameId);
+      animationFrameId = null;
+    }
+
     // Convert base64 to blob
     logger.log('[Audio] Decoding base64...');
     const binaryString = atob(base64Audio);
@@ -78,68 +88,94 @@ export function playAudioFromBase64(
     for (let i = 0; i < binaryString.length; i++) {
       bytes[i] = binaryString.charCodeAt(i);
     }
-    
+
     logger.log('[Audio] Creating blob, size:', bytes.length, 'bytes');
     const blob = new Blob([bytes], { type: mimeType });
     const url = URL.createObjectURL(blob);
     logger.log('[Audio] Blob URL created:', url);
 
-    // Create audio element
+    // Create fresh audio element each time
     const audio = new Audio(url);
     audio.volume = 1.0;
-    
+
     // Enable autoplay by setting the required attributes
     audio.setAttribute('autoplay', 'true');
     audio.setAttribute('playsinline', 'true');
-    
+
     // Set up audio context for amplitude tracking
     if (onAmplitude) {
       try {
-        const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-        const source = audioContext.createMediaElementSource(audio);
-        const analyser = audioContext.createAnalyser();
+        // Reuse or create audio context (fixes "MediaElementSource already exists" error)
+        if (!globalAudioContext) {
+          globalAudioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+          logger.log('[Audio] Created new AudioContext');
+        }
+
+        // Resume context if suspended (browser autoplay policy)
+        if (globalAudioContext.state === 'suspended') {
+          globalAudioContext.resume();
+          logger.log('[Audio] Resumed suspended AudioContext');
+        }
+
+        // Create new source for this audio element
+        const source = globalAudioContext.createMediaElementSource(audio);
+        const analyser = globalAudioContext.createAnalyser();
         analyser.fftSize = 256;
-        
+
         source.connect(analyser);
-        analyser.connect(audioContext.destination);
-        
+        analyser.connect(globalAudioContext.destination);
+
         const dataArray = new Uint8Array(analyser.frequencyBinCount);
-        
+
         const checkAmplitude = () => {
-          if (audio.paused) return;
-          
+          if (audio.paused) {
+            if (onAmplitude) onAmplitude(0);
+            return;
+          }
+
           analyser.getByteFrequencyData(dataArray);
           const average = dataArray.reduce((a, b) => a + b) / dataArray.length;
           const normalized = average / 255;
           onAmplitude(normalized);
-          
-          requestAnimationFrame(checkAmplitude);
+
+          animationFrameId = requestAnimationFrame(checkAmplitude);
         };
-        
+
         audio.onplay = () => {
           logger.log('[Audio] ▶ Playing...');
           checkAmplitude();
         };
       } catch (audioCtxError) {
-        logger.warn('[Audio] Could not create AudioContext:', audioCtxError);
-        // Continue without amplitude tracking
+        logger.warn('[Audio] Could not setup AudioContext:', audioCtxError);
+        // Continue without amplitude tracking - just play the audio normally
+        audio.onplay = () => {
+          logger.log('[Audio] ▶ Playing (without amplitude tracking)...');
+        };
       }
     }
-    
+
+    const cleanup = () => {
+      logger.log('[Audio] Cleaning up...');
+      URL.revokeObjectURL(url);
+      if (animationFrameId !== null) {
+        cancelAnimationFrame(animationFrameId);
+        animationFrameId = null;
+      }
+      if (onAmplitude) onAmplitude(0);
+    };
+
     audio.onended = () => {
       logger.log('[Audio] ✓ Playback ended');
-      URL.revokeObjectURL(url);
-      if (onAmplitude) onAmplitude(0);
+      cleanup();
       onEnded?.();
     };
-    
+
     audio.onerror = (err) => {
       logger.error("[Audio] ✗ Playback error:", err);
-      URL.revokeObjectURL(url);
-      if (onAmplitude) onAmplitude(0);
+      cleanup();
       onEnded?.();
     };
-    
+
     // Start playback
     logger.log('[Audio] Attempting to play...');
     audio.play()
@@ -148,11 +184,10 @@ export function playAudioFromBase64(
       })
       .catch((err) => {
         logger.error("[Audio] ✗ Play failed:", err);
-        URL.revokeObjectURL(url);
-        if (onAmplitude) onAmplitude(0);
+        cleanup();
         onEnded?.();
       });
-    
+
     return audio;
   } catch (error) {
     logger.error("[Audio] ✗ Critical error in playAudioFromBase64:", error);

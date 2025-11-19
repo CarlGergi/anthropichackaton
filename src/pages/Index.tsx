@@ -354,7 +354,16 @@ const Index = () => {
         }
         
         setVoiceState("speaking");
-        
+
+        // Stop and cleanup any currently playing audio
+        if (currentAudio) {
+          logger.log('[Finora] Stopping previous audio before playing new one');
+          currentAudio.pause();
+          currentAudio.currentTime = 0;
+          setCurrentAudio(null);
+          setAudioAmplitude(0);
+        }
+
         try {
           const ttsResponse = await textToSpeech(
             claudeResponse.speech,
@@ -365,8 +374,8 @@ const Index = () => {
 
           if (ttsResponse.audio_b64) {
             const audio = playAudioFromBase64(
-              ttsResponse.audio_b64, 
-              ttsResponse.mime, 
+              ttsResponse.audio_b64,
+              ttsResponse.mime,
               () => {
                 setVoiceState("idle");
                 setCurrentAudio(null);
@@ -392,7 +401,7 @@ const Index = () => {
         setVoiceState("idle");
       }
     },
-    [budget, refreshData, finoraState]
+    [budget, refreshData, finoraState, selectedVoice, currentAudio, checkAchievements]
   );
 
   // Check support on mount
@@ -581,13 +590,6 @@ const Index = () => {
           {/* Recommendations Panel - appears to the left of character */}
           <AnimatePresence>
             {(() => {
-              console.log('[Index] Recommendations check:', {
-                showRecommendations,
-                hasResponse: !!lastClaudeResponse,
-                hasRecs: !!lastClaudeResponse?.recs,
-                recsLength: lastClaudeResponse?.recs?.length || 0
-              });
-
               return showRecommendations && lastClaudeResponse?.recs && lastClaudeResponse.recs.length > 0 ? (
                 <RecommendationsPanel
                   recommendations={lastClaudeResponse.recs}
