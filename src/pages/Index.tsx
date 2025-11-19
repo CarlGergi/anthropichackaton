@@ -128,11 +128,15 @@ const Index = () => {
               () => {
                 setVoiceState("idle");
                 setCurrentAudio(null);
+                setAudioAmplitude(0);
                 // Mark intro as shown after greeting
                 const updatedState = mergeStatePatch(finoraState, { introShown: true });
                 setFinoraState(updatedState);
                 saveFinoraState(updatedState);
                 logger.log('[Finora] Intro shown, state updated');
+              },
+              (amplitude) => {
+                setAudioAmplitude(amplitude);
               }
             );
             setCurrentAudio(audio);
