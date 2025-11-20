@@ -139,3 +139,20 @@ export interface VisionAnalysisResult {
   gesture: GestureType;
   tone: ToneType;
 }
+
+export interface DebateResult {
+  question: string;
+  devilArgument: string;
+  angelArgument: string;
+  verdict: {
+    recommendation: "buy" | "wait" | "skip";
+    reasoning: string;
+    alternatives?: string[];
+    financialImpact: {
+      cost: number;
+      remainingBudget: number;
+      daysLeft: number;
+      dailyBudgetAfter: number;
+    };
+  };
+}
