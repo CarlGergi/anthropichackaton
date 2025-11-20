@@ -46,7 +46,7 @@ export interface Transaction {
   amount: number;
   merchant: string;
   category: CategoryType;
-  source: "voice" | "manual";
+  source: "voice" | "manual" | "vision";
   rawText?: string;
 }
 
@@ -116,4 +116,43 @@ export interface Venue {
   est_cost: number;
   description: string;
   location: string;
+}
+
+export type VisionImageType = "menu" | "receipt" | "price_tag" | "shopping" | "general";
+
+export interface VisionAnalysisResult {
+  imageType: VisionImageType;
+  items: Array<{
+    name: string;
+    price: number;
+    category?: CategoryType;
+  }>;
+  totalCost: number;
+  affordability: "affordable" | "maybe" | "expensive" | "too_expensive";
+  advice: string;
+  recommendations?: Array<{
+    name: string;
+    est_cost: number;
+    category: string;
+  }>;
+  shouldLog?: boolean;
+  gesture: GestureType;
+  tone: ToneType;
+}
+
+export interface DebateResult {
+  question: string;
+  devilArgument: string;
+  angelArgument: string;
+  verdict: {
+    recommendation: "buy" | "wait" | "skip";
+    reasoning: string;
+    alternatives?: string[];
+    financialImpact: {
+      cost: number;
+      remainingBudget: number;
+      daysLeft: number;
+      dailyBudgetAfter: number;
+    };
+  };
 }

@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Keyboard, Mic, Settings, Bug } from "lucide-react";
+import { X, Keyboard, Mic, Settings, Bug, Camera, Scale } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
@@ -13,6 +13,16 @@ const shortcuts = [
     key: "Space / Click Mic",
     description: "Start/stop voice input",
     icon: <Mic className="h-4 w-4" />,
+  },
+  {
+    key: "C",
+    description: "Capture image for analysis",
+    icon: <Camera className="h-4 w-4" />,
+  },
+  {
+    key: "B",
+    description: "Start Finora Debates (Angel vs Devil)",
+    icon: <Scale className="h-4 w-4" />,
   },
   {
     key: "S",
