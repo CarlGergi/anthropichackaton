@@ -274,6 +274,7 @@ export function initializeDemoData(): void {
 
   // Update budget with demo spending
   const budget = loadBudget();
+  budget.total = 1000; // SET THE BUDGET TOTAL!
 
   // Calculate total spent per category
   demoTransactions.forEach(tx => {
