@@ -260,6 +260,7 @@ const Index = () => {
       window.removeEventListener("keypress", handleKeyPress);
       window.removeEventListener("keydown", handleKeyPress);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [voiceState, stt, settingsOpen, debugOpen, showShortcutsHelp, showTransactionHistory, showVisionResult, showDebateResult, conversationStarted, isAnalyzingImage, isDebating]);
 
   // Refresh budget and transactions
