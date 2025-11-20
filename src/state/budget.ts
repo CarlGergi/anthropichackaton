@@ -44,7 +44,7 @@ export function loadBudget(): BudgetState {
     if (!stored) {
       const legacyData = localStorage.getItem(LEGACY_STORAGE_KEY);
       if (legacyData) {
-        logger.info("Migrating budget data from pennypal to finora");
+        logger.log("Migrating budget data from pennypal to finora");
         localStorage.setItem(STORAGE_KEY, legacyData);
         localStorage.removeItem(LEGACY_STORAGE_KEY);
         stored = legacyData;
@@ -77,7 +77,7 @@ export function loadTransactions(): Transaction[] {
     if (!stored) {
       const legacyData = localStorage.getItem(LEGACY_TRANSACTIONS_KEY);
       if (legacyData) {
-        logger.info("Migrating transaction data from pennypal to finora");
+        logger.log("Migrating transaction data from pennypal to finora");
         localStorage.setItem(TRANSACTIONS_KEY, legacyData);
         localStorage.removeItem(LEGACY_TRANSACTIONS_KEY);
         stored = legacyData;
@@ -267,7 +267,7 @@ export function initializeDemoData(): void {
 
   // Only add demo data if no transactions exist
   if (existingTransactions.length > 0) {
-    logger.info("Transactions already exist, skipping demo data");
+    logger.log("Transactions already exist, skipping demo data");
     return;
   }
 
