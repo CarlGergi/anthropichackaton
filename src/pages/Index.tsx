@@ -460,13 +460,28 @@ const Index = () => {
     setSttSupport(support);
   }, []);
 
-  // Initialize demo data if no data exists
+  // Initialize demo data if no data exists OR fix broken state
   useEffect(() => {
     const currentBudget = loadBudget();
     const currentTransactions = loadTransactions();
 
-    // If no budget set and no transactions, load demo data
-    if (currentBudget.total === 0 && currentTransactions.length === 0) {
+    // Case 1: Fix broken state - transactions exist but no budget total
+    if (currentBudget.total === 0 && currentTransactions.length > 0) {
+      logger.log('[Demo] Fixing broken state - setting budget to $1000');
+      const fixedBudget = { ...currentBudget, total: 1000 };
+      saveBudget(fixedBudget);
+      setBudget(fixedBudget);
+
+      // Update finora state
+      const updatedState = mergeStatePatch(finoraState, {
+        monthly_budget: 1000,
+      });
+      setFinoraState(updatedState);
+      saveFinoraState(updatedState);
+      toast.success('Fixed budget data! App is ready to use.');
+    }
+    // Case 2: No data at all - load demo data
+    else if (currentBudget.total === 0 && currentTransactions.length === 0) {
       logger.log('[Demo] No data found, initializing demo data...');
       initializeDemoData();
       // Refresh state

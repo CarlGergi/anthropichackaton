@@ -272,8 +272,9 @@ export function initializeDemoData(): void {
   const demoTransactions = generateDemoTransactions();
   saveTransactions(demoTransactions);
 
-  // Update budget with demo spending
+  // Update budget with demo spending AND set budget total to $1000
   const budget = loadBudget();
+  budget.total = 1000; // Set the budget total
 
   // Calculate total spent per category
   demoTransactions.forEach(tx => {
@@ -282,5 +283,5 @@ export function initializeDemoData(): void {
 
   saveBudget(budget);
 
-  logger.info(`Added ${demoTransactions.length} demo transactions`);
+  logger.info(`Added ${demoTransactions.length} demo transactions with $1000 budget`);
 }
