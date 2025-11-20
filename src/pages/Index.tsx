@@ -80,6 +80,12 @@ const Index = () => {
   const [confettiTrigger, setConfettiTrigger] = useState(false);
   const [currentAchievement, setCurrentAchievement] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<CategoryType | "all">("all");
+  const [showVisionResult, setShowVisionResult] = useState(false);
+  const [visionResult, setVisionResult] = useState<VisionAnalysisResult | null>(null);
+  const [showDebateResult, setShowDebateResult] = useState(false);
+  const [debateResult, setDebateResult] = useState<DebateResult | null>(null);
+  const [isAnalyzingImage, setIsAnalyzingImage] = useState(false);
+  const [isDebating, setIsDebating] = useState(false);
 
   // Handle voice change
   const handleVoiceChange = useCallback((voice: string) => {
