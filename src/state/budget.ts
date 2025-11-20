@@ -185,342 +185,102 @@ export function clearAllData(): void {
   localStorage.removeItem(LEGACY_TRANSACTIONS_KEY);
 }
 
-// Generate realistic demo data for Toronto student - Perfect for judges!
-export function initializeDemoData(): void {
+/**
+ * Generate realistic student expense demo data
+ * Creates transactions spread across the month
+ */
+export function generateDemoTransactions(): Transaction[] {
   const now = new Date();
-  const month = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   const currentDay = now.getDate();
 
-  // Create budget with $1200 total (realistic for student)
-  const demoBudget: BudgetState = {
-    month,
-    total: 1200,
-    categoryTargets: {
-      food: 0.30,      // 30% = $360
-      transport: 0.15, // 15% = $180
-      fun: 0.20,       // 20% = $240
-      essentials: 0.25,// 25% = $300
-      clothes: 0.05,   // 5% = $60
-      other: 0.05,     // 5% = $60
-    },
-    spent: {
-      food: 0,
-      transport: 0,
-      fun: 0,
-      essentials: 0,
-      clothes: 0,
-      other: 0,
-    },
-  };
+  // Realistic student expenses with merchants and amounts
+  const demoExpenses = [
+    // Week 1 (Days 1-7)
+    { day: 1, amount: 250, merchant: "Rent Payment", category: "essentials" as CategoryType, description: "Monthly rent" },
+    { day: 2, amount: 45, merchant: "No Frills", category: "food" as CategoryType, description: "Weekly groceries" },
+    { day: 3, amount: 7.50, merchant: "Starbucks", category: "food" as CategoryType, description: "Coffee and breakfast" },
+    { day: 4, amount: 13.50, merchant: "TTC Day Pass", category: "transport" as CategoryType, description: "Transit pass" },
+    { day: 5, amount: 12, merchant: "Pizza Pizza", category: "food" as CategoryType, description: "Lunch" },
+    { day: 6, amount: 35, merchant: "Sneaky Dee's", category: "fun" as CategoryType, description: "Night out with friends" },
+    { day: 7, amount: 18, merchant: "Pai Thai", category: "food" as CategoryType, description: "Dinner" },
 
-  // Create realistic Toronto student transactions spread across the month
-  const demoTransactions: Transaction[] = [
-    // Day 1 - Rent payment (essentials)
-    {
-      id: `tx_${Date.now()}_demo1`,
-      date: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`,
-      amount: 600,
-      merchant: "Landlord - Monthly Rent",
-      category: "essentials",
-      source: "manual"
-    },
+    // Week 2 (Days 8-14)
+    { day: 8, amount: 6.50, merchant: "Tim Hortons", category: "food" as CategoryType, description: "Coffee" },
+    { day: 9, amount: 42, merchant: "No Frills", category: "food" as CategoryType, description: "Groceries" },
+    { day: 10, amount: 15, merchant: "Comedy Bar", category: "fun" as CategoryType, description: "Comedy show" },
+    { day: 11, amount: 8.75, merchant: "Uber Eats", category: "food" as CategoryType, description: "Late night snack" },
+    { day: 12, amount: 27, merchant: "TTC Weekly Pass", category: "transport" as CategoryType, description: "Transit" },
+    { day: 13, amount: 55, merchant: "Textbook Store", category: "essentials" as CategoryType, description: "Course materials" },
+    { day: 14, amount: 14, merchant: "Freshii", category: "food" as CategoryType, description: "Healthy lunch" },
 
-    // Day 1 - Groceries
-    {
-      id: `tx_${Date.now()}_demo2`,
-      date: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`,
-      amount: 85,
-      merchant: "No Frills - Weekly Groceries",
-      category: "food",
-      source: "vision",
-      rawText: "Photo of receipt"
-    },
+    // Week 3 (Days 15-21) - Only if current day >= 15
+    { day: 15, amount: 9, merchant: "Dollarama", category: "essentials" as CategoryType, description: "Household supplies" },
+    { day: 16, amount: 38, merchant: "No Frills", category: "food" as CategoryType, description: "Groceries" },
+    { day: 17, amount: 22, merchant: "Cinema", category: "fun" as CategoryType, description: "Movie night" },
+    { day: 18, amount: 11.50, merchant: "Banh Mi Boys", category: "food" as CategoryType, description: "Lunch" },
+    { day: 19, amount: 45, merchant: "Uniqlo", category: "clothes" as CategoryType, description: "New shirt" },
+    { day: 20, amount: 16, merchant: "Hot Docs Cinema", category: "fun" as CategoryType, description: "Documentary" },
+    { day: 21, amount: 7.25, merchant: "Starbucks", category: "food" as CategoryType, description: "Study session coffee" },
 
-    // Day 2 - Coffee run
-    {
-      id: `tx_${Date.now()}_demo3`,
-      date: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-02`,
-      amount: 6.50,
-      merchant: "Starbucks - Coffee",
-      category: "food",
-      source: "voice",
-      rawText: "I spent $6.50 on coffee at Starbucks"
-    },
-
-    // Day 2 - TTC Pass
-    {
-      id: `tx_${Date.now()}_demo4`,
-      date: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-02`,
-      amount: 156,
-      merchant: "TTC - Monthly Metropass",
-      category: "transport",
-      source: "manual"
-    },
-
-    // Day 3 - Phone bill
-    {
-      id: `tx_${Date.now()}_demo5`,
-      date: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-03`,
-      amount: 55,
-      merchant: "Fido - Phone Bill",
-      category: "essentials",
-      source: "manual"
-    },
-
-    // Day 3 - Late night food
-    {
-      id: `tx_${Date.now()}_demo6`,
-      date: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-03`,
-      amount: 18,
-      merchant: "Uber Eats - Pizza",
-      category: "food",
-      source: "voice",
-      rawText: "Spent $18 on Uber Eats"
-    },
-
-    // Day 4 - Coffee again
-    {
-      id: `tx_${Date.now()}_demo7`,
-      date: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-04`,
-      amount: 6.50,
-      merchant: "Starbucks - Coffee",
-      category: "food",
-      source: "voice",
-      rawText: "Got coffee again, $6.50"
-    },
-
-    // Day 5 - Movies with friends
-    {
-      id: `tx_${Date.now()}_demo8`,
-      date: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-05`,
-      amount: 45,
-      merchant: "Cineplex - Movie Tickets & Snacks",
-      category: "fun",
-      source: "manual"
-    },
-
-    // Day 5 - Late Uber home
-    {
-      id: `tx_${Date.now()}_demo9`,
-      date: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-05`,
-      amount: 22,
-      merchant: "Uber - Ride Home",
-      category: "transport",
-      source: "voice",
-      rawText: "Uber ride cost me $22"
-    },
-
-    // Day 6 - Pharmacy
-    {
-      id: `tx_${Date.now()}_demo10`,
-      date: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-06`,
-      amount: 25,
-      merchant: "Shoppers Drug Mart",
-      category: "essentials",
-      source: "manual"
-    },
-
-    // Day 7 - Weekend groceries
-    {
-      id: `tx_${Date.now()}_demo11`,
-      date: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-07`,
-      amount: 42,
-      merchant: "Loblaws - Groceries",
-      category: "food",
-      source: "vision",
-      rawText: "Photo of receipt"
-    },
-
-    // Day 8 - Coffee
-    {
-      id: `tx_${Date.now()}_demo12`,
-      date: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-08`,
-      amount: 6.50,
-      merchant: "Starbucks - Coffee",
-      category: "food",
-      source: "voice",
-      rawText: "Coffee $6.50"
-    },
-
-    // Day 8 - Friday night out
-    {
-      id: `tx_${Date.now()}_demo13`,
-      date: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-08`,
-      amount: 65,
-      merchant: "The Drake Hotel - Drinks",
-      category: "fun",
-      source: "manual"
-    },
-
-    // Day 9 - Brunch
-    {
-      id: `tx_${Date.now()}_demo14`,
-      date: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-09`,
-      amount: 28,
-      merchant: "Sunset Grill - Brunch",
-      category: "food",
-      source: "voice",
-      rawText: "Brunch was $28"
-    },
-
-    // Day 10 - Amazon order
-    {
-      id: `tx_${Date.now()}_demo15`,
-      date: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-10`,
-      amount: 35,
-      merchant: "Amazon - School Supplies",
-      category: "other",
-      source: "manual"
-    },
-
-    // Day 11 - Coffee
-    {
-      id: `tx_${Date.now()}_demo16`,
-      date: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-11`,
-      amount: 6.50,
-      merchant: "Starbucks - Coffee",
-      category: "food",
-      source: "voice",
-      rawText: "Coffee $6.50"
-    },
-
-    // Day 12 - Spotify
-    {
-      id: `tx_${Date.now()}_demo17`,
-      date: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-12`,
-      amount: 11.99,
-      merchant: "Spotify Premium",
-      category: "fun",
-      source: "manual"
-    },
-
-    // Day 13 - Fast food
-    {
-      id: `tx_${Date.now()}_demo18`,
-      date: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-13`,
-      amount: 14,
-      merchant: "McDonald's",
-      category: "food",
-      source: "voice",
-      rawText: "Spent $14 at McDonald's"
-    },
-
-    // Day 14 - Groceries
-    {
-      id: `tx_${Date.now()}_demo19`,
-      date: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-14`,
-      amount: 55,
-      merchant: "No Frills - Groceries",
-      category: "food",
-      source: "vision",
-      rawText: "Photo of receipt"
-    },
-
-    // Day 15 - Coffee
-    {
-      id: `tx_${Date.now()}_demo20`,
-      date: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-15`,
-      amount: 6.50,
-      merchant: "Starbucks - Coffee",
-      category: "food",
-      source: "voice",
-      rawText: "Coffee run $6.50"
-    },
-
-    // Day 15 - Date night
-    {
-      id: `tx_${Date.now()}_demo21`,
-      date: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-15`,
-      amount: 85,
-      merchant: "Keg Steakhouse - Date",
-      category: "fun",
-      source: "manual"
-    },
-
-    // Day 16 - H&M shopping
-    {
-      id: `tx_${Date.now()}_demo22`,
-      date: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-16`,
-      amount: 75,
-      merchant: "H&M - New Jeans",
-      category: "clothes",
-      source: "manual"
-    },
-
-    // Day 17 - Tim Hortons
-    {
-      id: `tx_${Date.now()}_demo23`,
-      date: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-17`,
-      amount: 4.50,
-      merchant: "Tim Hortons - Coffee & Donut",
-      category: "food",
-      source: "voice",
-      rawText: "Tim's run $4.50"
-    },
-
-    // Day 18 - Laundry
-    {
-      id: `tx_${Date.now()}_demo24`,
-      date: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-18`,
-      amount: 12,
-      merchant: "Laundromat",
-      category: "essentials",
-      source: "manual"
-    },
-
-    // Day 18 - Pizza
-    {
-      id: `tx_${Date.now()}_demo25`,
-      date: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-18`,
-      amount: 16,
-      merchant: "Pizza Pizza",
-      category: "food",
-      source: "voice",
-      rawText: "Pizza for $16"
-    },
-
-    // Day 19 - Uber
-    {
-      id: `tx_${Date.now()}_demo26`,
-      date: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-19`,
-      amount: 18,
-      merchant: "Uber - Ride to Campus",
-      category: "transport",
-      source: "voice",
-      rawText: "Uber $18"
-    },
-
-    // Day 20 - Groceries
-    {
-      id: `tx_${Date.now()}_demo27`,
-      date: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-20`,
-      amount: 48,
-      merchant: "FreshCo - Groceries",
-      category: "food",
-      source: "vision",
-      rawText: "Photo of receipt"
-    },
+    // Week 4 (Days 22-28) - Only if current day >= 22
+    { day: 22, amount: 35, merchant: "No Frills", category: "food" as CategoryType, description: "Groceries" },
+    { day: 23, amount: 13.50, merchant: "TTC Day Pass", category: "transport" as CategoryType, description: "Transit" },
+    { day: 24, amount: 8, merchant: "Pizza Pizza", category: "food" as CategoryType, description: "Quick dinner" },
+    { day: 25, amount: 25, merchant: "Value Village", category: "clothes" as CategoryType, description: "Thrift shopping" },
+    { day: 26, amount: 30, merchant: "Date Night", category: "fun" as CategoryType, description: "Dinner with someone special" },
+    { day: 27, amount: 12, merchant: "Kupfert & Kim", category: "food" as CategoryType, description: "Healthy meal" },
+    { day: 28, amount: 15, merchant: "Bulk Barn", category: "essentials" as CategoryType, description: "Snacks and supplies" },
   ];
 
-  // Only include transactions up to current day to make it realistic
-  const filteredTransactions = demoTransactions.filter(tx => {
-    const txDay = parseInt(tx.date.split('-')[2]);
-    return txDay <= currentDay;
+  // Filter to only include expenses up to current day
+  const relevantExpenses = demoExpenses.filter(exp => exp.day <= currentDay);
+
+  // Convert to Transaction format
+  const transactions: Transaction[] = relevantExpenses.map((exp, index) => {
+    const expenseDate = new Date(now.getFullYear(), now.getMonth(), exp.day);
+
+    return {
+      id: `demo_tx_${Date.now()}_${index}`,
+      date: expenseDate.toISOString().split("T")[0],
+      amount: exp.amount,
+      merchant: exp.merchant,
+      category: exp.category,
+      source: "manual" as const,
+      rawText: exp.description,
+    };
   });
 
-  // Calculate spent amounts
-  filteredTransactions.forEach(tx => {
-    demoBudget.spent[tx.category] += tx.amount;
+  return transactions.reverse(); // Most recent first
+}
+
+/**
+ * Initialize budget with demo data for demonstration purposes
+ * Call this when user sets a $1000 budget for the first time
+ */
+export function initializeDemoData(): void {
+  const existingTransactions = loadTransactions();
+
+  // Only add demo data if no transactions exist
+  if (existingTransactions.length > 0) {
+    logger.info("Transactions already exist, skipping demo data");
+    return;
+  }
+
+  logger.info("Initializing demo data for $1000 budget");
+
+  // Generate demo transactions
+  const demoTransactions = generateDemoTransactions();
+  saveTransactions(demoTransactions);
+
+  // Update budget with demo spending
+  const budget = loadBudget();
+
+  // Calculate total spent per category
+  demoTransactions.forEach(tx => {
+    budget.spent[tx.category] += tx.amount;
   });
 
-  // Save demo data
-  saveBudget(demoBudget);
-  saveTransactions(filteredTransactions);
+  saveBudget(budget);
 
-  logger.log('[Demo] Demo data initialized:', {
-    budget: demoBudget.total,
-    transactions: filteredTransactions.length,
-    totalSpent: Object.values(demoBudget.spent).reduce((sum, val) => sum + val, 0),
-    remaining: demoBudget.total - Object.values(demoBudget.spent).reduce((sum, val) => sum + val, 0)
-  });
+  logger.info(`Added ${demoTransactions.length} demo transactions`);
 }
