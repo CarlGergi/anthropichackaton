@@ -46,7 +46,7 @@ export interface Transaction {
   amount: number;
   merchant: string;
   category: CategoryType;
-  source: "voice" | "manual";
+  source: "voice" | "manual" | "vision";
   rawText?: string;
 }
 
