@@ -365,7 +365,8 @@ const Index = () => {
 
             // Initialize demo data if budget is around $1000 (for demo purposes)
             const budgetAmount = claudeResponse.state_patch.monthly_budget || 0;
-            if (budgetAmount >= 900 && budgetAmount <= 1100 && transactions.length === 0) {
+            const currentTransactions = loadTransactions(); // Load from localStorage, not state
+            if (budgetAmount >= 900 && budgetAmount <= 1100 && currentTransactions.length === 0) {
               logger.log('[Finora] Initializing demo data for $1000 budget demo');
               initializeDemoData();
               refreshData(); // Reload transactions and budget
