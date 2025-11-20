@@ -260,35 +260,37 @@ export function generateDemoTransactions(fullMonth: boolean = false): Transactio
 
 /**
  * Initialize budget with demo data for demonstration purposes
- * Call this when user sets a $1000 budget for the first time
+ * Always loads demo data to ensure the app boots with realistic examples
  */
 export function initializeDemoData(): void {
-  const existingTransactions = loadTransactions();
-
-  // Only add demo data if no transactions exist
-  if (existingTransactions.length > 0) {
-    logger.log("Transactions already exist, skipping demo data");
-    return;
-  }
-
   logger.info("Initializing demo data for $1000 budget - Alex Chen profile");
 
   // Generate demo transactions (full month for complete demo experience)
   const demoTransactions = generateDemoTransactions(true);
   saveTransactions(demoTransactions);
 
-  // Update budget with demo spending AND set budget total to $1000
-  const budget = loadBudget();
+  // Create fresh budget with demo spending AND set budget total to $1000
+  const budget = getDefaultBudget();
   budget.total = 1000; // Set the budget total
 
-  // Calculate total spent per category
+  // Calculate total spent per category from demo transactions
+  budget.spent = {
+    food: 0,
+    transport: 0,
+    fun: 0,
+    essentials: 0,
+    clothes: 0,
+    other: 0,
+  };
+
   demoTransactions.forEach(tx => {
-    budget.spent[tx.category] += tx.amount;
+    budget.spent[tx.category] = (budget.spent[tx.category] || 0) + tx.amount;
   });
 
   saveBudget(budget);
 
-  logger.info(`Added ${demoTransactions.length} demo transactions with $1000 budget`);
+  logger.info(`Successfully loaded ${demoTransactions.length} demo transactions with $1000 budget`);
+  logger.info(`Total spent: $${Object.values(budget.spent).reduce((a, b) => a + b, 0).toFixed(2)}`);
 }
 
 /**

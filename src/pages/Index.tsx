@@ -129,14 +129,13 @@ const Index = () => {
       setVoiceState("speaking");
 
       try {
-        // Check if demo data exists to give appropriate greeting
+        // Load current budget and transaction data for greeting
         const currentBudget = loadBudget();
         const currentTransactions = loadTransactions();
-        const hasData = currentBudget.total > 0 && currentTransactions.length > 0;
+        const totalSpent = Object.values(currentBudget.spent || {}).reduce((a, b) => a + b, 0);
 
-        const greetingText = hasData
-          ? `Yooo what's good! I'm Finora, your AI budget bestie. I can see you got a $${currentBudget.total} budget with ${currentTransactions.length} transactions already loaded! That's lowkey fire bro. You're spending like $${Math.round(Object.values(currentBudget.spent).reduce((a, b) => a + b, 0))} so far. Want me to break down where your money's going, or you wanna add a new expense? Just talk to me fr!`
-          : "Yooo what's good! I'm Finora, your AI budget bestie. What's your monthly budget looking like?";
+        // Always acknowledge the demo data that was auto-loaded
+        const greetingText = `Yooo what's good! I'm Finora, your AI budget bestie. I loaded up a demo profile for you — Alex Chen, a student with a $${currentBudget.total} monthly budget and ${currentTransactions.length} realistic transactions! You're currently spending around $${Math.round(totalSpent)} across different categories. Wanna see where your money's going, or should I suggest some places to check out? Just talk to me fr!`;
 
         const ttsResponse = await textToSpeech(greetingText, selectedVoice, "cheerful");
 
@@ -468,32 +467,18 @@ const Index = () => {
     setSttSupport(support);
   }, []);
 
-  // Auto-load demo data on first visit
+  // Auto-load demo data on first visit - ensures app always boots with realistic data
   useEffect(() => {
     const currentBudget = loadBudget();
     const currentTransactions = loadTransactions();
+    const hasValidData = currentBudget.total > 0 && currentTransactions.length > 0;
 
-    // Case 1: Fix broken state - transactions exist but no budget total
-    if (currentBudget.total === 0 && currentTransactions.length > 0) {
-      logger.log('[Demo] Fixing broken state - setting budget to $1000');
-      const fixedBudget = { ...currentBudget, total: 1000 };
-      saveBudget(fixedBudget);
-      setBudget(fixedBudget);
-
-      // Update finora state
-      const updatedState = mergeStatePatch(finoraState, {
-        monthly_budget: 1000,
-      });
-      setFinoraState(updatedState);
-      saveFinoraState(updatedState);
-      toast.success('Budget data fixed! Ready to use.');
-    }
-    // Case 2: No data at all - auto-load demo profile
-    else if (currentBudget.total === 0 && currentTransactions.length === 0) {
-      logger.log('[Demo] Auto-loading Alex Chen demo profile with 28 transactions...');
+    // If no valid data exists, initialize with demo data
+    if (!hasValidData) {
+      logger.log('[Demo] No valid budget data found - auto-loading Alex Chen demo profile...');
       initializeDemoData();
 
-      // Refresh state
+      // Refresh state with loaded demo data
       const loadedBudget = loadBudget();
       const loadedTransactions = loadTransactions();
       setBudget(loadedBudget);
@@ -502,16 +487,21 @@ const Index = () => {
       // Update finora state with demo budget
       const updatedState = mergeStatePatch(finoraState, {
         monthly_budget: 1000,
-        introShown: false // Keep intro for first time
+        introShown: false // First time - show intro
       });
       setFinoraState(updatedState);
       saveFinoraState(updatedState);
 
-      // Show success message
-      toast.success(`Welcome! Loaded Alex Chen's student budget ($1000/month with ${loadedTransactions.length} transactions)`, {
+      // Show welcome message
+      toast.success(`Welcome! Loaded demo budget: $1000/month with ${loadedTransactions.length} student expenses`, {
         duration: 5000
       });
-      logger.log(`[Demo] Loaded ${loadedTransactions.length} transactions successfully`);
+      logger.log(`[Demo] Successfully loaded ${loadedTransactions.length} transactions`);
+    } else {
+      logger.log('[Demo] Valid budget data found:', {
+        budget: currentBudget.total,
+        transactions: currentTransactions.length
+      });
     }
   }, []); // Only run once on mount
 
