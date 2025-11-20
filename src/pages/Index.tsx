@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { logger } from "@/lib/logger";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mic, Loader2, Volume2, Settings, Hand, Sparkles, History, Download, Upload, Camera, Scale } from "lucide-react";
+import { Mic, Loader2, Volume2, Settings, Hand, Sparkles, History, Download, Upload, Camera, Scale, User } from "lucide-react";
 import DebugPanel from "@/components/DebugPanel";
 import VoiceSettings from "@/components/VoiceSettings";
 import { AnimatedFinoraCharacter } from "@/components/AnimatedFinoraCharacter";
@@ -41,7 +41,8 @@ import {
   calculateRemainingTotal,
   saveBudget,
   saveTransactions,
-  initializeDemoData
+  initializeDemoData,
+  forceLoadDemoData
 } from "@/state/budget";
 import {
   loadFinoraState,
@@ -568,7 +569,7 @@ const Index = () => {
   // Handle reset
   const handleReset = useCallback(() => {
     logger.log('[Finora] Resetting all data...');
-    
+
     // First end any active conversation
     if (voiceState === "listening") {
       stt.stop();
@@ -578,27 +579,65 @@ const Index = () => {
       currentAudio.currentTime = 0;
       setCurrentAudio(null);
     }
-    
+
     // Clear all localStorage data
     clearAllData();
     localStorage.removeItem("finora_state");
-    
+
     // Reset all states to defaults
     const freshFinoraState = getDefaultFinoraState();
     const freshBudget = getDefaultBudget();
-    
+
     setFinoraState(freshFinoraState);
     setBudget(freshBudget);
     setTransactions([]);
     setVoiceState("idle");
     setConversationStarted(false);
     setLastClaudeResponse(undefined);
-    
+
     logger.log('[Finora] Reset complete - fresh state:', freshFinoraState);
-    
+
     setShowResetDialog(false);
     toast.success("Finora forgot everything. Fresh start!");
   }, [voiceState, stt, currentAudio]);
+
+  // Handle load demo data
+  const handleLoadDemoData = useCallback(() => {
+    logger.log('[Finora] Loading demo profile - Alex Chen...');
+
+    // Stop any active conversation
+    if (voiceState === "listening") {
+      stt.stop();
+    }
+    if (currentAudio) {
+      currentAudio.pause();
+      currentAudio.currentTime = 0;
+      setCurrentAudio(null);
+    }
+
+    // Force load demo data
+    forceLoadDemoData();
+
+    // Reload state from localStorage
+    setBudget(loadBudget());
+    setTransactions(loadTransactions());
+
+    // Update finora state
+    const updatedState = mergeStatePatch(finoraState, {
+      monthly_budget: 1000,
+      introShown: false
+    });
+    setFinoraState(updatedState);
+    saveFinoraState(updatedState);
+
+    // Reset conversation state
+    setVoiceState("idle");
+    setConversationStarted(false);
+
+    logger.log('[Finora] Demo profile loaded successfully');
+
+    toast.success("Loaded demo profile: Alex Chen - UofT student with $1000 budget and 28 transactions!");
+  }, [voiceState, stt, currentAudio, finoraState]);
 
   // Handle camera capture and vision analysis
   const handleCameraCapture = useCallback(async () => {
@@ -1139,6 +1178,24 @@ const Index = () => {
             <span className="flex items-center gap-2">
               <Upload className="w-4 h-4" />
               Import
+            </span>
+          </motion.button>
+
+          {/* Load Demo Profile Button */}
+          <motion.button
+            onClick={handleLoadDemoData}
+            className="px-6 py-3 rounded-full bg-gradient-to-r from-purple-600 to-pink-600
+              text-white font-bold text-sm
+              hover:shadow-[0_0_30px_rgba(168,85,247,0.5)]
+              transition-all duration-300 ease-out
+              hover:scale-105 active:scale-95
+              border border-white/20"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <span className="flex items-center gap-2">
+              <User className="w-4 h-4" />
+              Load Demo
             </span>
           </motion.button>
         </motion.div>
