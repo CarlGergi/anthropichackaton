@@ -188,52 +188,57 @@ export function clearAllData(): void {
 /**
  * Generate realistic student expense demo data
  * Creates transactions spread across the month
+ * @param fullMonth - If true, shows all transactions regardless of current day (for demo purposes)
  */
-export function generateDemoTransactions(): Transaction[] {
+export function generateDemoTransactions(fullMonth: boolean = false): Transaction[] {
   const now = new Date();
   const currentDay = now.getDate();
 
-  // Realistic student expenses with merchants and amounts
+  // Demo Profile: "Alex Chen" - University of Toronto student
+  // Budget: $1000/month
+  // Living in shared apartment near campus
   const demoExpenses = [
     // Week 1 (Days 1-7)
-    { day: 1, amount: 250, merchant: "Rent Payment", category: "essentials" as CategoryType, description: "Monthly rent" },
+    { day: 1, amount: 250, merchant: "Rent Payment", category: "essentials" as CategoryType, description: "Monthly rent split with roommate" },
     { day: 2, amount: 45, merchant: "No Frills", category: "food" as CategoryType, description: "Weekly groceries" },
     { day: 3, amount: 7.50, merchant: "Starbucks", category: "food" as CategoryType, description: "Coffee and breakfast" },
     { day: 4, amount: 13.50, merchant: "TTC Day Pass", category: "transport" as CategoryType, description: "Transit pass" },
-    { day: 5, amount: 12, merchant: "Pizza Pizza", category: "food" as CategoryType, description: "Lunch" },
+    { day: 5, amount: 12, merchant: "Pizza Pizza", category: "food" as CategoryType, description: "Lunch between classes" },
     { day: 6, amount: 35, merchant: "Sneaky Dee's", category: "fun" as CategoryType, description: "Night out with friends" },
     { day: 7, amount: 18, merchant: "Pai Thai", category: "food" as CategoryType, description: "Dinner" },
 
     // Week 2 (Days 8-14)
-    { day: 8, amount: 6.50, merchant: "Tim Hortons", category: "food" as CategoryType, description: "Coffee" },
+    { day: 8, amount: 6.50, merchant: "Tim Hortons", category: "food" as CategoryType, description: "Morning coffee" },
     { day: 9, amount: 42, merchant: "No Frills", category: "food" as CategoryType, description: "Groceries" },
-    { day: 10, amount: 15, merchant: "Comedy Bar", category: "fun" as CategoryType, description: "Comedy show" },
-    { day: 11, amount: 8.75, merchant: "Uber Eats", category: "food" as CategoryType, description: "Late night snack" },
-    { day: 12, amount: 27, merchant: "TTC Weekly Pass", category: "transport" as CategoryType, description: "Transit" },
+    { day: 10, amount: 15, merchant: "Comedy Bar", category: "fun" as CategoryType, description: "Comedy show with classmates" },
+    { day: 11, amount: 8.75, merchant: "Uber Eats", category: "food" as CategoryType, description: "Late night study snack" },
+    { day: 12, amount: 27, merchant: "TTC Weekly Pass", category: "transport" as CategoryType, description: "Weekly transit pass" },
     { day: 13, amount: 55, merchant: "Textbook Store", category: "essentials" as CategoryType, description: "Course materials" },
     { day: 14, amount: 14, merchant: "Freshii", category: "food" as CategoryType, description: "Healthy lunch" },
 
-    // Week 3 (Days 15-21) - Only if current day >= 15
+    // Week 3 (Days 15-21)
     { day: 15, amount: 9, merchant: "Dollarama", category: "essentials" as CategoryType, description: "Household supplies" },
-    { day: 16, amount: 38, merchant: "No Frills", category: "food" as CategoryType, description: "Groceries" },
-    { day: 17, amount: 22, merchant: "Cinema", category: "fun" as CategoryType, description: "Movie night" },
-    { day: 18, amount: 11.50, merchant: "Banh Mi Boys", category: "food" as CategoryType, description: "Lunch" },
-    { day: 19, amount: 45, merchant: "Uniqlo", category: "clothes" as CategoryType, description: "New shirt" },
-    { day: 20, amount: 16, merchant: "Hot Docs Cinema", category: "fun" as CategoryType, description: "Documentary" },
+    { day: 16, amount: 38, merchant: "No Frills", category: "food" as CategoryType, description: "Weekly groceries" },
+    { day: 17, amount: 22, merchant: "Scotiabank Theatre", category: "fun" as CategoryType, description: "Movie night" },
+    { day: 18, amount: 11.50, merchant: "Banh Mi Boys", category: "food" as CategoryType, description: "Quick lunch" },
+    { day: 19, amount: 45, merchant: "Uniqlo", category: "clothes" as CategoryType, description: "New winter shirt" },
+    { day: 20, amount: 16, merchant: "Hot Docs Cinema", category: "fun" as CategoryType, description: "Documentary for class" },
     { day: 21, amount: 7.25, merchant: "Starbucks", category: "food" as CategoryType, description: "Study session coffee" },
 
-    // Week 4 (Days 22-28) - Only if current day >= 22
-    { day: 22, amount: 35, merchant: "No Frills", category: "food" as CategoryType, description: "Groceries" },
-    { day: 23, amount: 13.50, merchant: "TTC Day Pass", category: "transport" as CategoryType, description: "Transit" },
+    // Week 4 (Days 22-28)
+    { day: 22, amount: 35, merchant: "No Frills", category: "food" as CategoryType, description: "Weekly groceries" },
+    { day: 23, amount: 13.50, merchant: "TTC Day Pass", category: "transport" as CategoryType, description: "Transit for weekend" },
     { day: 24, amount: 8, merchant: "Pizza Pizza", category: "food" as CategoryType, description: "Quick dinner" },
     { day: 25, amount: 25, merchant: "Value Village", category: "clothes" as CategoryType, description: "Thrift shopping" },
-    { day: 26, amount: 30, merchant: "Date Night", category: "fun" as CategoryType, description: "Dinner with someone special" },
-    { day: 27, amount: 12, merchant: "Kupfert & Kim", category: "food" as CategoryType, description: "Healthy meal" },
-    { day: 28, amount: 15, merchant: "Bulk Barn", category: "essentials" as CategoryType, description: "Snacks and supplies" },
+    { day: 26, amount: 30, merchant: "Kinka Izakaya", category: "fun" as CategoryType, description: "Date night dinner" },
+    { day: 27, amount: 12, merchant: "Kupfert & Kim", category: "food" as CategoryType, description: "Healthy meal prep" },
+    { day: 28, amount: 15, merchant: "Bulk Barn", category: "essentials" as CategoryType, description: "Snacks and trail mix" },
   ];
 
-  // Filter to only include expenses up to current day
-  const relevantExpenses = demoExpenses.filter(exp => exp.day <= currentDay);
+  // Filter to only include expenses up to current day (unless fullMonth is true for demo)
+  const relevantExpenses = fullMonth
+    ? demoExpenses
+    : demoExpenses.filter(exp => exp.day <= currentDay);
 
   // Convert to Transaction format
   const transactions: Transaction[] = relevantExpenses.map((exp, index) => {
@@ -266,15 +271,15 @@ export function initializeDemoData(): void {
     return;
   }
 
-  logger.log("Initializing demo data for $1000 budget");
+  logger.info("Initializing demo data for $1000 budget - Alex Chen profile");
 
-  // Generate demo transactions
-  const demoTransactions = generateDemoTransactions();
+  // Generate demo transactions (full month for complete demo experience)
+  const demoTransactions = generateDemoTransactions(true);
   saveTransactions(demoTransactions);
 
-  // Update budget with demo spending
+  // Update budget with demo spending AND set budget total to $1000
   const budget = loadBudget();
-  budget.total = 1000; // SET THE BUDGET TOTAL!
+  budget.total = 1000; // Set the budget total
 
   // Calculate total spent per category
   demoTransactions.forEach(tx => {
@@ -283,5 +288,33 @@ export function initializeDemoData(): void {
 
   saveBudget(budget);
 
-  logger.log(`Added ${demoTransactions.length} demo transactions`);
+  logger.info(`Added ${demoTransactions.length} demo transactions with $1000 budget`);
+}
+
+/**
+ * Force load demo data even if data already exists
+ * Useful for testing and showcasing features
+ */
+export function forceLoadDemoData(): void {
+  logger.info("Force loading demo data - Alex Chen profile");
+
+  // Clear existing data first
+  clearAllData();
+
+  // Generate demo transactions (full month)
+  const demoTransactions = generateDemoTransactions(true);
+  saveTransactions(demoTransactions);
+
+  // Create budget with demo spending
+  const budget = getDefaultBudget();
+  budget.total = 1000;
+
+  // Calculate total spent per category
+  demoTransactions.forEach(tx => {
+    budget.spent[tx.category] += tx.amount;
+  });
+
+  saveBudget(budget);
+
+  logger.info(`Force loaded ${demoTransactions.length} demo transactions with $1000 budget`);
 }
