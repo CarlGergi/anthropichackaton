@@ -460,7 +460,7 @@ const Index = () => {
     setSttSupport(support);
   }, []);
 
-  // Initialize demo data if no data exists OR fix broken state
+  // Auto-load demo data on first visit
   useEffect(() => {
     const currentBudget = loadBudget();
     const currentTransactions = loadTransactions();
@@ -478,23 +478,32 @@ const Index = () => {
       });
       setFinoraState(updatedState);
       saveFinoraState(updatedState);
-      toast.success('Fixed budget data! App is ready to use.');
+      toast.success('Budget data fixed! Ready to use.');
     }
-    // Case 2: No data at all - load demo data
+    // Case 2: No data at all - auto-load demo profile
     else if (currentBudget.total === 0 && currentTransactions.length === 0) {
-      logger.log('[Demo] No data found, initializing demo data...');
+      logger.log('[Demo] Auto-loading Alex Chen demo profile with 28 transactions...');
       initializeDemoData();
-      // Refresh state
-      setBudget(loadBudget());
-      setTransactions(loadTransactions());
 
-      // Also update finora state with the demo budget
+      // Refresh state
+      const loadedBudget = loadBudget();
+      const loadedTransactions = loadTransactions();
+      setBudget(loadedBudget);
+      setTransactions(loadedTransactions);
+
+      // Update finora state with demo budget
       const updatedState = mergeStatePatch(finoraState, {
         monthly_budget: 1000,
         introShown: false // Keep intro for first time
       });
       setFinoraState(updatedState);
       saveFinoraState(updatedState);
+
+      // Show success message
+      toast.success(`Welcome! Loaded Alex Chen's student budget ($1000/month with ${loadedTransactions.length} transactions)`, {
+        duration: 5000
+      });
+      logger.log(`[Demo] Loaded ${loadedTransactions.length} transactions successfully`);
     }
   }, []); // Only run once on mount
 
