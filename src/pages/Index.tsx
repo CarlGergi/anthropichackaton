@@ -134,8 +134,8 @@ const Index = () => {
         const currentTransactions = loadTransactions();
         const totalSpent = Object.values(currentBudget.spent || {}).reduce((a, b) => a + b, 0);
 
-        // Always acknowledge the demo data that was auto-loaded
-        const greetingText = `Yooo what's good! I'm Finora, your AI budget bestie. I loaded up a demo profile for you — Alex Chen, a student with a $${currentBudget.total} monthly budget and ${currentTransactions.length} realistic transactions! You're currently spending around $${Math.round(totalSpent)} across different categories. Wanna see where your money's going, or should I suggest some places to check out? Just talk to me fr!`;
+        // Naturally acknowledge the existing budget and transactions
+        const greetingText = `Yooo what's good! I'm Finora, your AI budget bestie. I can see you've got a $${currentBudget.total} monthly budget with ${currentTransactions.length} transactions already logged! You're currently spending around $${Math.round(totalSpent)} across different categories. Wanna see where your money's going, or should I suggest some places to check out? Just talk to me fr!`;
 
         const ttsResponse = await textToSpeech(greetingText, selectedVoice, "cheerful");
 
@@ -493,7 +493,7 @@ const Index = () => {
       saveFinoraState(updatedState);
 
       // Show welcome message
-      toast.success(`Welcome! Loaded demo budget: $1000/month with ${loadedTransactions.length} student expenses`, {
+      toast.success(`Welcome to Finora! Budget: $1000/month with ${loadedTransactions.length} transactions`, {
         duration: 5000
       });
       logger.log(`[Demo] Successfully loaded ${loadedTransactions.length} transactions`);
@@ -590,21 +590,34 @@ const Index = () => {
     clearAllData();
     localStorage.removeItem("finora_state");
 
-    // Reset all states to defaults
+    // Reload demo data - keeps Alex Chen profile persistent
+    logger.log('[Finora] Reloading demo data after reset...');
+    initializeDemoData();
+
+    // Load the fresh demo data
+    const loadedBudget = loadBudget();
+    const loadedTransactions = loadTransactions();
+
+    // Reset finora state but keep demo budget info
     const freshFinoraState = getDefaultFinoraState();
-    const freshBudget = getDefaultBudget();
+    freshFinoraState.monthly_budget = 1000;
+    freshFinoraState.introShown = false; // Reset intro so user gets greeted again
+    saveFinoraState(freshFinoraState);
 
     setFinoraState(freshFinoraState);
-    setBudget(freshBudget);
-    setTransactions([]);
+    setBudget(loadedBudget);
+    setTransactions(loadedTransactions);
     setVoiceState("idle");
     setConversationStarted(false);
     setLastClaudeResponse(undefined);
 
-    logger.log('[Finora] Reset complete - fresh state:', freshFinoraState);
+    logger.log('[Finora] Reset complete with demo data:', {
+      budget: loadedBudget.total,
+      transactions: loadedTransactions.length
+    });
 
     setShowResetDialog(false);
-    toast.success("Finora forgot everything. Fresh start!");
+    toast.success("Reset complete! Alex Chen demo profile ready.");
   }, [voiceState, stt, currentAudio]);
 
   // Handle camera capture and vision analysis
