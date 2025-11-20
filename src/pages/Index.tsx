@@ -56,9 +56,52 @@ const venuesData = venuesDataRaw as Venue[];
 
 const Index = () => {
   const [voiceState, setVoiceState] = useState<VoiceState>("idle");
-  const [budget, setBudget] = useState(loadBudget());
-  const [transactions, setTransactions] = useState(loadTransactions());
-  const [finoraState, setFinoraState] = useState(loadFinoraState());
+  const [budget, setBudget] = useState(() => {
+    try {
+      const loadedBudget = loadBudget();
+      const loadedTransactions = loadTransactions();
+
+      // If no valid data, initialize demo data immediately
+      if (loadedBudget.total === 0 || loadedTransactions.length === 0) {
+        logger.log('[Index] No valid data found - initializing demo data immediately');
+        initializeDemoData();
+        return loadBudget(); // Return the newly loaded budget
+      }
+
+      return loadedBudget;
+    } catch (error) {
+      logger.error('[Index] Failed to load budget:', error);
+      // Initialize demo data as fallback
+      initializeDemoData();
+      return loadBudget();
+    }
+  });
+  const [transactions, setTransactions] = useState(() => {
+    try {
+      const loadedTransactions = loadTransactions();
+      // Transactions should already be loaded by the budget initialization above
+      return loadedTransactions;
+    } catch (error) {
+      logger.error('[Index] Failed to load transactions:', error);
+      return [];
+    }
+  });
+  const [finoraState, setFinoraState] = useState(() => {
+    try {
+      const state = loadFinoraState();
+      // Ensure monthly_budget is set if we have a budget
+      const currentBudget = loadBudget();
+      if (currentBudget.total > 0 && !state.monthly_budget) {
+        const updatedState = { ...state, monthly_budget: currentBudget.total };
+        saveFinoraState(updatedState);
+        return updatedState;
+      }
+      return state;
+    } catch (error) {
+      logger.error('[Index] Failed to load finora state:', error);
+      return getDefaultFinoraState();
+    }
+  });
   const [conversationStarted, setConversationStarted] = useState(false);
   const [debugOpen, setDebugOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -132,7 +175,12 @@ const Index = () => {
         // Load current budget and transaction data for greeting
         const currentBudget = loadBudget();
         const currentTransactions = loadTransactions();
-        const totalSpent = Object.values(currentBudget.spent || {}).reduce((a, b) => a + b, 0);
+
+        // Safely calculate total spent with fallback
+        let totalSpent = 0;
+        if (currentBudget.spent) {
+          totalSpent = Object.values(currentBudget.spent).reduce((a, b) => a + b, 0);
+        }
 
         // Naturally acknowledge the existing budget and transactions
         const greetingText = `Yooo what's good! I'm Finora, your AI budget bestie. I can see you've got a $${currentBudget.total} monthly budget with ${currentTransactions.length} transactions already logged! You're currently spending around $${Math.round(totalSpent)} across different categories. Wanna see where your money's going, or should I suggest some places to check out? Just talk to me fr!`;
@@ -467,30 +515,13 @@ const Index = () => {
     setSttSupport(support);
   }, []);
 
-  // Auto-load demo data on first visit - ensures app always boots with realistic data
+  // Show welcome message if demo data was just loaded
   useEffect(() => {
-    const currentBudget = loadBudget();
-    const currentTransactions = loadTransactions();
-    const hasValidData = currentBudget.total > 0 && currentTransactions.length > 0;
-
-    // If no valid data exists, initialize with demo data
-    if (!hasValidData) {
-      logger.log('[Demo] No valid budget data found - auto-loading Alex Chen demo profile...');
-      initializeDemoData();
-
-      // Refresh state with loaded demo data
-      const loadedBudget = loadBudget();
-      const loadedTransactions = loadTransactions();
-      setBudget(loadedBudget);
-      setTransactions(loadedTransactions);
-
-      // Update finora state with demo budget
-      const updatedState = mergeStatePatch(finoraState, {
-        monthly_budget: 1000,
-        introShown: false // First time - show intro
+    if (budget.total > 0 && transactions.length > 0) {
+      logger.log('[Demo] App loaded with data:', {
+        budget: budget.total,
+        transactions: transactions.length
       });
-      setFinoraState(updatedState);
-      saveFinoraState(updatedState);
 
       // Show welcome message
       toast.success(`Welcome to Finora! Budget: $1000/month with ${loadedTransactions.length} transactions`, {

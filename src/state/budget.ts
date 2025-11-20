@@ -263,7 +263,7 @@ export function generateDemoTransactions(fullMonth: boolean = false): Transactio
  * Always loads demo data to ensure the app boots with realistic examples
  */
 export function initializeDemoData(): void {
-  logger.info("Initializing demo data for $1000 budget - Alex Chen profile");
+  logger.log("Initializing demo data for $1000 budget - Alex Chen profile");
 
   // Generate demo transactions (full month for complete demo experience)
   const demoTransactions = generateDemoTransactions(true);
@@ -289,8 +289,8 @@ export function initializeDemoData(): void {
 
   saveBudget(budget);
 
-  logger.info(`Successfully loaded ${demoTransactions.length} demo transactions with $1000 budget`);
-  logger.info(`Total spent: $${Object.values(budget.spent).reduce((a, b) => a + b, 0).toFixed(2)}`);
+  logger.log(`Successfully loaded ${demoTransactions.length} demo transactions with $1000 budget`);
+  logger.log(`Total spent: $${Object.values(budget.spent).reduce((a, b) => a + b, 0).toFixed(2)}`);
 }
 
 /**
@@ -298,7 +298,7 @@ export function initializeDemoData(): void {
  * Useful for testing and showcasing features
  */
 export function forceLoadDemoData(): void {
-  logger.info("Force loading demo data - Alex Chen profile");
+  logger.log("Force loading demo data - Alex Chen profile");
 
   // Clear existing data first
   clearAllData();
@@ -318,5 +318,5 @@ export function forceLoadDemoData(): void {
 
   saveBudget(budget);
 
-  logger.info(`Force loaded ${demoTransactions.length} demo transactions with $1000 budget`);
+  logger.log(`Force loaded ${demoTransactions.length} demo transactions with $1000 budget`);
 }
