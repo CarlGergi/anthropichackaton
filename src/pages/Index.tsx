@@ -121,17 +121,25 @@ const Index = () => {
     }
     
     setConversationStarted(true);
-    
+
     // Greet only if first time AND intro not shown
     if (!finoraState.introShown) {
       logger.log('[Finora] First time user - playing intro greeting');
       await new Promise(resolve => setTimeout(resolve, 500));
       setVoiceState("speaking");
-      
+
       try {
-        const greetingText = "Yooo what's good! I'm Finora, your AI budget bestie. What's your monthly budget looking like?";
+        // Check if demo data exists to give appropriate greeting
+        const currentBudget = loadBudget();
+        const currentTransactions = loadTransactions();
+        const hasData = currentBudget.total > 0 && currentTransactions.length > 0;
+
+        const greetingText = hasData
+          ? `Yooo what's good! I'm Finora, your AI budget bestie. I can see you got a $${currentBudget.total} budget with ${currentTransactions.length} transactions already loaded! That's lowkey fire bro. You're spending like $${Math.round(Object.values(currentBudget.spent).reduce((a, b) => a + b, 0))} so far. Want me to break down where your money's going, or you wanna add a new expense? Just talk to me fr!`
+          : "Yooo what's good! I'm Finora, your AI budget bestie. What's your monthly budget looking like?";
+
         const ttsResponse = await textToSpeech(greetingText, selectedVoice, "cheerful");
-        
+
           if (ttsResponse.audio_b64) {
             const audio = playAudioFromBase64(
               ttsResponse.audio_b64,
@@ -849,8 +857,8 @@ const Index = () => {
         </p>
       </motion.div>
 
-      {/* Quick Stats Dashboard - shows when conversation started and budget is set */}
-      {conversationStarted && budget.total > 0 && (
+      {/* Quick Stats Dashboard - shows when budget is set (demo data or user data) */}
+      {budget.total > 0 && (
         <>
           <QuickStatsDashboard budget={budget} />
           <BudgetProgressIndicators budget={budget} onCategoryClick={handleCategoryClick} />
