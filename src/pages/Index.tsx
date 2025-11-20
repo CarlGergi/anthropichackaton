@@ -128,11 +128,15 @@ const Index = () => {
               () => {
                 setVoiceState("idle");
                 setCurrentAudio(null);
+                setAudioAmplitude(0);
                 // Mark intro as shown after greeting
                 const updatedState = mergeStatePatch(finoraState, { introShown: true });
                 setFinoraState(updatedState);
                 saveFinoraState(updatedState);
                 logger.log('[Finora] Intro shown, state updated');
+              },
+              (amplitude) => {
+                setAudioAmplitude(amplitude);
               }
             );
             setCurrentAudio(audio);
@@ -360,6 +364,12 @@ const Index = () => {
           logger.log('[Finora] Stopping previous audio before playing new one');
           currentAudio.pause();
           currentAudio.currentTime = 0;
+
+          // Call cleanup if available to disconnect Web Audio nodes
+          if ((currentAudio as any).cleanup) {
+            (currentAudio as any).cleanup();
+          }
+
           setCurrentAudio(null);
           setAudioAmplitude(0);
         }
