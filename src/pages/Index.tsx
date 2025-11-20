@@ -37,7 +37,8 @@ import {
   getDefaultBudget,
   calculateRemainingTotal,
   saveBudget,
-  saveTransactions
+  saveTransactions,
+  initializeDemoData
 } from "@/state/budget";
 import {
   loadFinoraState,
@@ -75,6 +76,7 @@ const Index = () => {
   const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
   const [confettiTrigger, setConfettiTrigger] = useState(false);
   const [currentAchievement, setCurrentAchievement] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<CategoryType | "all">("all");
 
   // Handle voice change
   const handleVoiceChange = useCallback((voice: string) => {
@@ -196,6 +198,13 @@ const Index = () => {
     refreshData();
     toast.success("Transaction deleted!");
   }, [refreshData]);
+
+  // Handle category click - open transaction history filtered by category
+  const handleCategoryClick = useCallback((category: CategoryType) => {
+    setSelectedCategory(category);
+    setShowTransactionHistory(true);
+    toast.success(`Viewing ${category} transactions`);
+  }, []);
 
   // Handle add expense from recommendation
   const handleAddExpenseFromRecommendation = useCallback((name: string, amount: number, category: string) => {
@@ -338,6 +347,15 @@ const Index = () => {
             setBudget(newBudget);
             saveBudget(newBudget);
             toast.success(`Budget set to $${claudeResponse.state_patch.monthly_budget}`);
+
+            // Initialize demo data if budget is around $1000 (for demo purposes)
+            const budgetAmount = claudeResponse.state_patch.monthly_budget || 0;
+            if (budgetAmount >= 900 && budgetAmount <= 1100 && transactions.length === 0) {
+              logger.log('[Finora] Initializing demo data for $1000 budget demo');
+              initializeDemoData();
+              refreshData(); // Reload transactions and budget
+              toast.success('Added realistic student expense examples for demo!', { duration: 5000 });
+            }
           }
         }
 
@@ -585,7 +603,7 @@ const Index = () => {
       {conversationStarted && budget.total > 0 && (
         <>
           <QuickStatsDashboard budget={budget} />
-          <BudgetProgressIndicators budget={budget} />
+          <BudgetProgressIndicators budget={budget} onCategoryClick={handleCategoryClick} />
         </>
       )}
 
@@ -885,7 +903,11 @@ const Index = () => {
         <TransactionHistoryPanel
           transactions={transactions}
           onDeleteTransaction={handleDeleteTransaction}
-          onClose={() => setShowTransactionHistory(false)}
+          onClose={() => {
+            setShowTransactionHistory(false);
+            setSelectedCategory("all");
+          }}
+          initialCategoryFilter={selectedCategory}
         />
       )}
 

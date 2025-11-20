@@ -15,6 +15,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 
 interface BudgetProgressIndicatorsProps {
   budget: BudgetState;
+  onCategoryClick?: (category: CategoryType) => void;
 }
 
 const categoryConfig: Record<CategoryType, { icon: React.ReactNode; label: string; color: string }> = {
@@ -50,7 +51,7 @@ const categoryConfig: Record<CategoryType, { icon: React.ReactNode; label: strin
   },
 };
 
-export function BudgetProgressIndicators({ budget }: BudgetProgressIndicatorsProps) {
+export function BudgetProgressIndicators({ budget, onCategoryClick }: BudgetProgressIndicatorsProps) {
   if (budget.total === 0) {
     return null;
   }
@@ -114,7 +115,10 @@ export function BudgetProgressIndicators({ budget }: BudgetProgressIndicatorsPro
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Card className="bg-white/5 border-white/10 hover:bg-white/10 transition-colors cursor-pointer p-4">
+                    <Card
+                      className="bg-white/5 border-white/10 hover:bg-white/10 transition-colors cursor-pointer p-4"
+                      onClick={() => onCategoryClick?.(category)}
+                    >
                       <div className="flex flex-col items-center">
                         {/* Category Icon */}
                         <div className={`mb-3 ${config.color}`}>

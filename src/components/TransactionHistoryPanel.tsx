@@ -41,6 +41,7 @@ interface TransactionHistoryPanelProps {
   transactions: Transaction[];
   onDeleteTransaction: (id: string) => void;
   onClose?: () => void;
+  initialCategoryFilter?: CategoryType | "all";
 }
 
 const categoryIcons: Record<CategoryType, React.ReactNode> = {
@@ -61,13 +62,14 @@ const categoryColors: Record<CategoryType, string> = {
   other: "bg-gray-500/10 text-gray-600 border-gray-200",
 };
 
-export function TransactionHistoryPanel({ 
-  transactions, 
+export function TransactionHistoryPanel({
+  transactions,
   onDeleteTransaction,
-  onClose 
+  onClose,
+  initialCategoryFilter = "all"
 }: TransactionHistoryPanelProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState<CategoryType | "all">("all");
+  const [categoryFilter, setCategoryFilter] = useState<CategoryType | "all">(initialCategoryFilter);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
   // Filter transactions
