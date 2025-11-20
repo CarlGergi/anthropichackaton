@@ -169,7 +169,7 @@ const Index = () => {
     } else {
       logger.log('[Finora] Returning user - skipping intro (introShown=true)');
     }
-  }, [finoraState]);
+  }, [finoraState, selectedVoice]);
 
   // Handle keyboard shortcuts
   useEffect(() => {
