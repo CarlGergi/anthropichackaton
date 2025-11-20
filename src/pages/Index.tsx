@@ -58,15 +58,29 @@ const Index = () => {
   const [voiceState, setVoiceState] = useState<VoiceState>("idle");
   const [budget, setBudget] = useState(() => {
     try {
-      return loadBudget();
+      const loadedBudget = loadBudget();
+      const loadedTransactions = loadTransactions();
+
+      // If no valid data, initialize demo data immediately
+      if (loadedBudget.total === 0 || loadedTransactions.length === 0) {
+        logger.log('[Index] No valid data found - initializing demo data immediately');
+        initializeDemoData();
+        return loadBudget(); // Return the newly loaded budget
+      }
+
+      return loadedBudget;
     } catch (error) {
       logger.error('[Index] Failed to load budget:', error);
-      return getDefaultBudget();
+      // Initialize demo data as fallback
+      initializeDemoData();
+      return loadBudget();
     }
   });
   const [transactions, setTransactions] = useState(() => {
     try {
-      return loadTransactions();
+      const loadedTransactions = loadTransactions();
+      // Transactions should already be loaded by the budget initialization above
+      return loadedTransactions;
     } catch (error) {
       logger.error('[Index] Failed to load transactions:', error);
       return [];
@@ -74,7 +88,15 @@ const Index = () => {
   });
   const [finoraState, setFinoraState] = useState(() => {
     try {
-      return loadFinoraState();
+      const state = loadFinoraState();
+      // Ensure monthly_budget is set if we have a budget
+      const currentBudget = loadBudget();
+      if (currentBudget.total > 0 && !state.monthly_budget) {
+        const updatedState = { ...state, monthly_budget: currentBudget.total };
+        saveFinoraState(updatedState);
+        return updatedState;
+      }
+      return state;
     } catch (error) {
       logger.error('[Index] Failed to load finora state:', error);
       return getDefaultFinoraState();
@@ -493,50 +515,22 @@ const Index = () => {
     setSttSupport(support);
   }, []);
 
-  // Auto-load demo data on first visit - ensures app always boots with realistic data
+  // Show welcome message if demo data was just loaded
   useEffect(() => {
-    try {
-      const currentBudget = loadBudget();
-      const currentTransactions = loadTransactions();
-      const hasValidData = currentBudget.total > 0 && currentTransactions.length > 0;
+    if (budget.total > 0 && transactions.length > 0) {
+      logger.log('[Demo] App loaded with data:', {
+        budget: budget.total,
+        transactions: transactions.length
+      });
 
-      // If no valid data exists, initialize with demo data
-      if (!hasValidData) {
-        logger.log('[Demo] No valid budget data found - auto-loading Alex Chen demo profile...');
-        initializeDemoData();
-
-        // Refresh state with loaded demo data
-        const loadedBudget = loadBudget();
-        const loadedTransactions = loadTransactions();
-
-        logger.log('[Demo] Loaded budget:', loadedBudget);
-        logger.log('[Demo] Loaded transactions count:', loadedTransactions.length);
-
-        setBudget(loadedBudget);
-        setTransactions(loadedTransactions);
-
-        // Update finora state with demo budget
-        const updatedState = mergeStatePatch(finoraState, {
-          monthly_budget: 1000,
-          introShown: false // First time - show intro
-        });
-        setFinoraState(updatedState);
-        saveFinoraState(updatedState);
-
-        // Show welcome message
-        toast.success(`Welcome! Loaded demo budget: $1000/month with ${loadedTransactions.length} student expenses`, {
+      // Show welcome toast on first load
+      const hasShownWelcome = sessionStorage.getItem('finora_welcome_shown');
+      if (!hasShownWelcome) {
+        toast.success(`Welcome! Loaded demo budget: $${budget.total}/month with ${transactions.length} student expenses`, {
           duration: 5000
         });
-        logger.log(`[Demo] Successfully loaded ${loadedTransactions.length} transactions`);
-      } else {
-        logger.log('[Demo] Valid budget data found:', {
-          budget: currentBudget.total,
-          transactions: currentTransactions.length
-        });
+        sessionStorage.setItem('finora_welcome_shown', 'true');
       }
-    } catch (error) {
-      logger.error('[Demo] Error loading demo data:', error);
-      toast.error('Failed to load demo data. Please refresh the page.');
     }
   }, []); // Only run once on mount
 
