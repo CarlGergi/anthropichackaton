@@ -117,3 +117,25 @@ export interface Venue {
   description: string;
   location: string;
 }
+
+export type VisionImageType = "menu" | "receipt" | "price_tag" | "shopping" | "general";
+
+export interface VisionAnalysisResult {
+  imageType: VisionImageType;
+  items: Array<{
+    name: string;
+    price: number;
+    category?: CategoryType;
+  }>;
+  totalCost: number;
+  affordability: "affordable" | "maybe" | "expensive" | "too_expensive";
+  advice: string;
+  recommendations?: Array<{
+    name: string;
+    est_cost: number;
+    category: string;
+  }>;
+  shouldLog?: boolean;
+  gesture: GestureType;
+  tone: ToneType;
+}

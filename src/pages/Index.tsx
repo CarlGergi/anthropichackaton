@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { logger } from "@/lib/logger";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mic, Loader2, Volume2, Settings, Hand, Sparkles, History, Download, Upload } from "lucide-react";
+import { Mic, Loader2, Volume2, Settings, Hand, Sparkles, History, Download, Upload, Camera } from "lucide-react";
 import DebugPanel from "@/components/DebugPanel";
 import VoiceSettings from "@/components/VoiceSettings";
 import { AnimatedFinoraCharacter } from "@/components/AnimatedFinoraCharacter";
@@ -14,6 +14,7 @@ import { QuickStatsDashboard } from "@/components/QuickStatsDashboard";
 import { TransactionHistoryPanel } from "@/components/TransactionHistoryPanel";
 import { KeyboardShortcutsHelp } from "@/components/KeyboardShortcutsHelp";
 import { BudgetProgressIndicators } from "@/components/BudgetProgressIndicators";
+import { VisionResultPanel } from "@/components/VisionResultPanel";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,10 +25,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { VoiceState, ClaudeResponse, TTSResponse, CategoryType } from "@/types";
+import { VoiceState, ClaudeResponse, TTSResponse, CategoryType, VisionAnalysisResult } from "@/types";
 import { SpeechToText, STTSupport } from "@/voice/stt";
 import { textToSpeech, playAudioFromBase64, unlockAudio } from "@/voice/tts";
 import { getIntent } from "@/ai/claude";
+import { supabase } from "@/integrations/supabase/client";
 import {
   loadBudget,
   loadTransactions,
@@ -75,6 +77,9 @@ const Index = () => {
   const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
   const [confettiTrigger, setConfettiTrigger] = useState(false);
   const [currentAchievement, setCurrentAchievement] = useState<string | null>(null);
+  const [visionResult, setVisionResult] = useState<VisionAnalysisResult | null>(null);
+  const [showVisionResult, setShowVisionResult] = useState(false);
+  const [isAnalyzingImage, setIsAnalyzingImage] = useState(false);
 
   // Handle voice change
   const handleVoiceChange = useCallback((voice: string) => {
@@ -161,6 +166,11 @@ const Index = () => {
       if (e.key === "s" || e.key === "S") {
         setSettingsOpen((prev) => !prev);
       }
+      if (e.key === "c" || e.key === "C") {
+        if (conversationStarted && !isAnalyzingImage) {
+          handleCameraCapture();
+        }
+      }
       if (e.key === "h" || e.key === "H" || e.key === "?") {
         setShowShortcutsHelp((prev) => !prev);
       }
@@ -173,6 +183,7 @@ const Index = () => {
         if (debugOpen) setDebugOpen(false);
         if (showShortcutsHelp) setShowShortcutsHelp(false);
         if (showTransactionHistory) setShowTransactionHistory(false);
+        if (showVisionResult) setShowVisionResult(false);
       }
     };
 
@@ -182,7 +193,7 @@ const Index = () => {
       window.removeEventListener("keypress", handleKeyPress);
       window.removeEventListener("keydown", handleKeyPress);
     };
-  }, [voiceState, stt, settingsOpen, debugOpen, showShortcutsHelp, showTransactionHistory]);
+  }, [voiceState, stt, settingsOpen, debugOpen, showShortcutsHelp, showTransactionHistory, showVisionResult, conversationStarted, isAnalyzingImage, handleCameraCapture]);
 
   // Refresh budget and transactions
   const refreshData = useCallback(() => {
@@ -522,6 +533,130 @@ const Index = () => {
     toast.success("Finora forgot everything. Fresh start!");
   }, [voiceState, stt, currentAudio]);
 
+  // Handle camera capture and vision analysis
+  const handleCameraCapture = useCallback(async () => {
+    if (!conversationStarted) {
+      toast.error('Please start the conversation first');
+      return;
+    }
+
+    // Create file input
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.capture = 'environment'; // Use back camera on mobile
+
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+
+      try {
+        setIsAnalyzingImage(true);
+        toast.info('Analyzing image...');
+
+        // Convert image to base64
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+          try {
+            const base64 = event.target?.result as string;
+            const base64Data = base64.split(',')[1]; // Remove data:image/jpeg;base64, prefix
+            const mimeType = file.type;
+
+            logger.log('[Vision] Sending image to Claude Vision API...');
+
+            // Call Vision API
+            const { data, error } = await supabase.functions.invoke('claude-vision', {
+              body: {
+                image_b64: base64Data,
+                mime_type: mimeType,
+                budget: {
+                  total: budget.total,
+                  spent: budget.spent,
+                  remaining_total: calculateRemainingTotal(budget),
+                  days_left: Math.ceil((new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate() - new Date().getDate()))
+                },
+                image_type: 'general'
+              }
+            });
+
+            if (error) {
+              logger.error('[Vision] API error:', error);
+              throw error;
+            }
+
+            logger.log('[Vision] Analysis result:', data);
+            setVisionResult(data as VisionAnalysisResult);
+            setShowVisionResult(true);
+            setIsAnalyzingImage(false);
+
+            // Speak the advice
+            if (data.advice) {
+              setVoiceState("speaking");
+              try {
+                const ttsResponse = await textToSpeech(data.advice, selectedVoice, "cheerful");
+                if (ttsResponse.audio_b64) {
+                  const audio = playAudioFromBase64(
+                    ttsResponse.audio_b64,
+                    ttsResponse.mime,
+                    () => {
+                      setVoiceState("idle");
+                      setCurrentAudio(null);
+                      setAudioAmplitude(0);
+                    },
+                    (amplitude) => {
+                      setAudioAmplitude(amplitude);
+                    }
+                  );
+                  setCurrentAudio(audio);
+                } else {
+                  setVoiceState("idle");
+                }
+              } catch (ttsError) {
+                logger.error('[Vision] TTS failed:', ttsError);
+                setVoiceState("idle");
+              }
+            }
+
+            toast.success('Image analyzed!');
+          } catch (error) {
+            logger.error('[Vision] Processing failed:', error);
+            toast.error('Failed to analyze image');
+            setIsAnalyzingImage(false);
+          }
+        };
+        reader.readAsDataURL(file);
+      } catch (error) {
+        logger.error('[Vision] Camera capture failed:', error);
+        toast.error('Failed to capture image');
+        setIsAnalyzingImage(false);
+      }
+    };
+
+    input.click();
+  }, [conversationStarted, budget, selectedVoice]);
+
+  // Handle log expense from vision
+  const handleLogVisionExpense = useCallback(() => {
+    if (!visionResult) return;
+
+    // Add all items as transactions
+    visionResult.items.forEach((item) => {
+      addTransaction({
+        date: new Date().toISOString().split("T")[0],
+        amount: item.price,
+        merchant: item.name,
+        category: item.category || "other",
+        source: "manual",
+      });
+    });
+
+    refreshData();
+    toast.success(`Logged ${visionResult.items.length} item(s)!`);
+    setShowVisionResult(false);
+    setVisionResult(null);
+    checkAchievements();
+  }, [visionResult, refreshData, checkAchievements]);
+
   const getStateIcon = () => {
     switch (voiceState) {
       case "listening":
@@ -692,45 +827,73 @@ const Index = () => {
           transition={{ duration: 0.6 }}
           className="flex flex-col items-center gap-6 mb-8"
         >
-          <motion.button
-            onClick={handleVoiceToggle}
-            disabled={voiceState === "thinking" || voiceState === "speaking"}
-            className={`
-              relative w-32 h-32 md:w-40 md:h-40 rounded-full backdrop-blur-xl border-2 border-white/30
-              flex items-center justify-center
-              transition-all duration-300 ease-out
-              disabled:opacity-70 disabled:cursor-not-allowed
-              hover:scale-105 active:scale-95
-              bg-gradient-to-br
-              ${getStateColor()}
-            `}
-            whileTap={{ scale: 0.95 }}
-            animate={
-              voiceState === "listening"
-                ? {
-                    scale: [1, 1.05, 1],
-                    transition: { repeat: Infinity, duration: 1.5 },
-                  }
-                : {}
-            }
-          >
-            {/* Pulse ring for listening */}
-            {voiceState === "listening" && (
-              <motion.div
-                className="absolute inset-0 rounded-full border-2 border-white/40"
-                animate={{
-                  scale: [1, 1.4, 1],
-                  opacity: [0.5, 0, 0.5],
-                }}
-                transition={{
-                  repeat: Infinity,
-                  duration: 1.5,
-                }}
-              />
-            )}
-            
-            {getStateIcon()}
-          </motion.button>
+          {/* Mic and Camera Buttons Row */}
+          <div className="flex items-center gap-6">
+            {/* Microphone Button */}
+            <motion.button
+              onClick={handleVoiceToggle}
+              disabled={voiceState === "thinking" || voiceState === "speaking"}
+              className={`
+                relative w-32 h-32 md:w-40 md:h-40 rounded-full backdrop-blur-xl border-2 border-white/30
+                flex items-center justify-center
+                transition-all duration-300 ease-out
+                disabled:opacity-70 disabled:cursor-not-allowed
+                hover:scale-105 active:scale-95
+                bg-gradient-to-br
+                ${getStateColor()}
+              `}
+              whileTap={{ scale: 0.95 }}
+              animate={
+                voiceState === "listening"
+                  ? {
+                      scale: [1, 1.05, 1],
+                      transition: { repeat: Infinity, duration: 1.5 },
+                    }
+                  : {}
+              }
+            >
+              {/* Pulse ring for listening */}
+              {voiceState === "listening" && (
+                <motion.div
+                  className="absolute inset-0 rounded-full border-2 border-white/40"
+                  animate={{
+                    scale: [1, 1.4, 1],
+                    opacity: [0.5, 0, 0.5],
+                  }}
+                  transition={{
+                    repeat: Infinity,
+                    duration: 1.5,
+                  }}
+                />
+              )}
+
+              {getStateIcon()}
+            </motion.button>
+
+            {/* Camera Button */}
+            <motion.button
+              onClick={handleCameraCapture}
+              disabled={isAnalyzingImage || voiceState === "thinking" || voiceState === "speaking"}
+              className={`
+                relative w-24 h-24 md:w-32 md:h-32 rounded-full backdrop-blur-xl border-2 border-white/30
+                flex items-center justify-center
+                transition-all duration-300 ease-out
+                disabled:opacity-50 disabled:cursor-not-allowed
+                hover:scale-105 active:scale-95
+                bg-gradient-to-br from-cyan-500 to-blue-600
+                shadow-[0_0_40px_rgba(6,182,212,0.4)]
+                hover:shadow-[0_0_60px_rgba(6,182,212,0.6)]
+              `}
+              whileTap={{ scale: 0.95 }}
+              whileHover={{ scale: 1.05 }}
+            >
+              {isAnalyzingImage ? (
+                <Loader2 className="w-10 h-10 md:w-12 md:h-12 text-white animate-spin" />
+              ) : (
+                <Camera className="w-10 h-10 md:w-12 md:h-12 text-white" />
+              )}
+            </motion.button>
+          </div>
 
           {/* Status pill */}
           <motion.div
@@ -740,10 +903,11 @@ const Index = () => {
             className="px-6 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20"
           >
             <p className="text-sm font-medium text-white/90">
-              {voiceState === "idle" && "Voice activated — talk to Finora anytime now!"}
+              {voiceState === "idle" && !isAnalyzingImage && "Voice activated — talk to Finora anytime now!"}
               {voiceState === "listening" && "Listening..."}
               {voiceState === "thinking" && "Thinking..."}
               {voiceState === "speaking" && "Speaking..."}
+              {isAnalyzingImage && "Analyzing image..."}
             </p>
           </motion.div>
         </motion.div>
@@ -905,6 +1069,20 @@ const Index = () => {
           onClose={() => setCurrentAchievement(null)}
         />
       )}
+
+      {/* Vision Result Panel */}
+      <AnimatePresence>
+        {showVisionResult && visionResult && (
+          <VisionResultPanel
+            result={visionResult}
+            onClose={() => {
+              setShowVisionResult(false);
+              setVisionResult(null);
+            }}
+            onLogExpense={handleLogVisionExpense}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Reset Confirmation Dialog */}
       <AlertDialog open={showResetDialog} onOpenChange={setShowResetDialog}>
