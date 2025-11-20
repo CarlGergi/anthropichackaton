@@ -56,9 +56,30 @@ const venuesData = venuesDataRaw as Venue[];
 
 const Index = () => {
   const [voiceState, setVoiceState] = useState<VoiceState>("idle");
-  const [budget, setBudget] = useState(loadBudget());
-  const [transactions, setTransactions] = useState(loadTransactions());
-  const [finoraState, setFinoraState] = useState(loadFinoraState());
+  const [budget, setBudget] = useState(() => {
+    try {
+      return loadBudget();
+    } catch (error) {
+      logger.error('[Index] Failed to load budget:', error);
+      return getDefaultBudget();
+    }
+  });
+  const [transactions, setTransactions] = useState(() => {
+    try {
+      return loadTransactions();
+    } catch (error) {
+      logger.error('[Index] Failed to load transactions:', error);
+      return [];
+    }
+  });
+  const [finoraState, setFinoraState] = useState(() => {
+    try {
+      return loadFinoraState();
+    } catch (error) {
+      logger.error('[Index] Failed to load finora state:', error);
+      return getDefaultFinoraState();
+    }
+  });
   const [conversationStarted, setConversationStarted] = useState(false);
   const [debugOpen, setDebugOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -132,10 +153,15 @@ const Index = () => {
         // Load current budget and transaction data for greeting
         const currentBudget = loadBudget();
         const currentTransactions = loadTransactions();
-        const totalSpent = Object.values(currentBudget.spent || {}).reduce((a, b) => a + b, 0);
+
+        // Safely calculate total spent with fallback
+        let totalSpent = 0;
+        if (currentBudget.spent) {
+          totalSpent = Object.values(currentBudget.spent).reduce((a, b) => a + b, 0);
+        }
 
         // Always acknowledge the demo data that was auto-loaded
-        const greetingText = `Yooo what's good! I'm Finora, your AI budget bestie. I loaded up a demo profile for you — Alex Chen, a student with a $${currentBudget.total} monthly budget and ${currentTransactions.length} realistic transactions! You're currently spending around $${Math.round(totalSpent)} across different categories. Wanna see where your money's going, or should I suggest some places to check out? Just talk to me fr!`;
+        const greetingText = `Yooo what's good! I'm Finora, your AI budget bestie. I loaded up a demo profile for you — Alex Chen, a student with a $${currentBudget.total || 1000} monthly budget and ${currentTransactions.length} realistic transactions! You're currently spending around $${Math.round(totalSpent)} across different categories. Wanna see where your money's going, or should I suggest some places to check out? Just talk to me fr!`;
 
         const ttsResponse = await textToSpeech(greetingText, selectedVoice, "cheerful");
 
@@ -469,39 +495,48 @@ const Index = () => {
 
   // Auto-load demo data on first visit - ensures app always boots with realistic data
   useEffect(() => {
-    const currentBudget = loadBudget();
-    const currentTransactions = loadTransactions();
-    const hasValidData = currentBudget.total > 0 && currentTransactions.length > 0;
+    try {
+      const currentBudget = loadBudget();
+      const currentTransactions = loadTransactions();
+      const hasValidData = currentBudget.total > 0 && currentTransactions.length > 0;
 
-    // If no valid data exists, initialize with demo data
-    if (!hasValidData) {
-      logger.log('[Demo] No valid budget data found - auto-loading Alex Chen demo profile...');
-      initializeDemoData();
+      // If no valid data exists, initialize with demo data
+      if (!hasValidData) {
+        logger.log('[Demo] No valid budget data found - auto-loading Alex Chen demo profile...');
+        initializeDemoData();
 
-      // Refresh state with loaded demo data
-      const loadedBudget = loadBudget();
-      const loadedTransactions = loadTransactions();
-      setBudget(loadedBudget);
-      setTransactions(loadedTransactions);
+        // Refresh state with loaded demo data
+        const loadedBudget = loadBudget();
+        const loadedTransactions = loadTransactions();
 
-      // Update finora state with demo budget
-      const updatedState = mergeStatePatch(finoraState, {
-        monthly_budget: 1000,
-        introShown: false // First time - show intro
-      });
-      setFinoraState(updatedState);
-      saveFinoraState(updatedState);
+        logger.log('[Demo] Loaded budget:', loadedBudget);
+        logger.log('[Demo] Loaded transactions count:', loadedTransactions.length);
 
-      // Show welcome message
-      toast.success(`Welcome! Loaded demo budget: $1000/month with ${loadedTransactions.length} student expenses`, {
-        duration: 5000
-      });
-      logger.log(`[Demo] Successfully loaded ${loadedTransactions.length} transactions`);
-    } else {
-      logger.log('[Demo] Valid budget data found:', {
-        budget: currentBudget.total,
-        transactions: currentTransactions.length
-      });
+        setBudget(loadedBudget);
+        setTransactions(loadedTransactions);
+
+        // Update finora state with demo budget
+        const updatedState = mergeStatePatch(finoraState, {
+          monthly_budget: 1000,
+          introShown: false // First time - show intro
+        });
+        setFinoraState(updatedState);
+        saveFinoraState(updatedState);
+
+        // Show welcome message
+        toast.success(`Welcome! Loaded demo budget: $1000/month with ${loadedTransactions.length} student expenses`, {
+          duration: 5000
+        });
+        logger.log(`[Demo] Successfully loaded ${loadedTransactions.length} transactions`);
+      } else {
+        logger.log('[Demo] Valid budget data found:', {
+          budget: currentBudget.total,
+          transactions: currentTransactions.length
+        });
+      }
+    } catch (error) {
+      logger.error('[Demo] Error loading demo data:', error);
+      toast.error('Failed to load demo data. Please refresh the page.');
     }
   }, []); // Only run once on mount
 
