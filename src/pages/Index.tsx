@@ -710,13 +710,27 @@ const Index = () => {
 
       if (error) {
         logger.error('[Debate] API error:', error);
-        // Provide helpful error message
-        if (error.message?.includes('FunctionsRelayError') || error.message?.includes('Not Found')) {
-          toast.error('Debate feature not deployed yet. Please deploy finora-debates edge function.');
-        } else if (error.message?.includes('network') || error.message?.includes('fetch')) {
-          toast.error('Network error. Please check your connection.');
+        console.error('[Debate] Full error details:', error);
+
+        // Provide very specific error messages
+        const errorMsg = error.message || JSON.stringify(error);
+
+        if (errorMsg.includes('FunctionsRelayError') || errorMsg.includes('Not Found') || errorMsg.includes('404')) {
+          toast.error('⚠️ DEPLOYMENT REQUIRED: Run "supabase functions deploy finora-debates" in your terminal', {
+            duration: 8000
+          });
+        } else if (errorMsg.includes('Failed to fetch') || errorMsg.includes('NetworkError')) {
+          toast.error('Network error. Check your internet connection.', {
+            duration: 5000
+          });
+        } else if (errorMsg.includes('ANTHROPIC_API_KEY')) {
+          toast.error('Missing API key. Set ANTHROPIC_API_KEY in Supabase secrets.', {
+            duration: 6000
+          });
         } else {
-          toast.error(`Debate failed: ${error.message || 'Unknown error'}`);
+          toast.error(`Debate failed: ${errorMsg.substring(0, 100)}`, {
+            duration: 6000
+          });
         }
         throw error;
       }
