@@ -220,41 +220,75 @@ const Index = () => {
 
   // Handle keyboard shortcuts
   useEffect(() => {
-    const handleKeyPress = (e: KeyboardEvent) => {
+    const handleKeyDown = (e: KeyboardEvent) => {
       // Don't trigger shortcuts if user is typing in an input/textarea
       const target = e.target as HTMLElement;
       const isTyping = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable;
 
-      // Space key - Toggle voice input
-      if (e.key === " " && !isTyping) {
-        e.preventDefault(); // Prevent page scroll
-        handleVoiceToggle();
+      // Ignore if typing in an input field
+      if (isTyping) return;
+
+      // Space key - Toggle voice input (only when conversation started)
+      if (e.key === " " || e.code === "Space") {
+        e.preventDefault();
+        if (conversationStarted) {
+          handleVoiceToggle();
+        } else {
+          toast.info("Start the conversation first!");
+        }
         return;
       }
 
+      // D - Debug panel
       if (e.key === "d" || e.key === "D") {
+        e.preventDefault();
         setDebugOpen((prev) => !prev);
+        return;
       }
+
+      // S - Settings
       if (e.key === "s" || e.key === "S") {
+        e.preventDefault();
         setSettingsOpen((prev) => !prev);
+        return;
       }
+
+      // C - Camera/Vision
       if (e.key === "c" || e.key === "C") {
+        e.preventDefault();
         if (conversationStarted && !isAnalyzingImage) {
           handleCameraCapture();
+        } else if (!conversationStarted) {
+          toast.info("Start the conversation first!");
         }
+        return;
       }
+
+      // B - Debates
       if (e.key === "b" || e.key === "B") {
+        e.preventDefault();
         if (conversationStarted && !isDebating) {
           handleStartDebate();
+        } else if (!conversationStarted) {
+          toast.info("Start the conversation first!");
         }
+        return;
       }
+
+      // H or ? - Help/Shortcuts
       if (e.key === "h" || e.key === "H" || e.key === "?") {
+        e.preventDefault();
         setShowShortcutsHelp((prev) => !prev);
+        return;
       }
+
+      // Escape - Close all panels/stop listening
       if (e.key === "Escape") {
+        e.preventDefault();
         if (voiceState === "listening") {
           stt.stop();
           setVoiceState("idle");
+          toast.info("Stopped listening");
         }
         if (settingsOpen) setSettingsOpen(false);
         if (debugOpen) setDebugOpen(false);
@@ -262,16 +296,30 @@ const Index = () => {
         if (showTransactionHistory) setShowTransactionHistory(false);
         if (showVisionResult) setShowVisionResult(false);
         if (showDebateResult) setShowDebateResult(false);
+        return;
       }
     };
 
-    window.addEventListener("keypress", handleKeyPress);
-    window.addEventListener("keydown", handleKeyPress);
+    window.addEventListener("keydown", handleKeyDown);
     return () => {
-      window.removeEventListener("keypress", handleKeyPress);
-      window.removeEventListener("keydown", handleKeyPress);
+      window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [voiceState, stt, settingsOpen, debugOpen, showShortcutsHelp, showTransactionHistory, showVisionResult, showDebateResult, conversationStarted, isAnalyzingImage, isDebating, handleVoiceToggle, handleCameraCapture, handleStartDebate]);
+  }, [
+    voiceState,
+    stt,
+    settingsOpen,
+    debugOpen,
+    showShortcutsHelp,
+    showTransactionHistory,
+    showVisionResult,
+    showDebateResult,
+    conversationStarted,
+    isAnalyzingImage,
+    isDebating,
+    handleVoiceToggle,
+    handleCameraCapture,
+    handleStartDebate
+  ]);
 
   // Refresh budget and transactions
   const refreshData = useCallback(() => {
