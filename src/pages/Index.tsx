@@ -1246,16 +1246,28 @@ const Index = () => {
     }
   };
 
-  const getStateColor = () => {
+  const getStateStyle = () => {
     switch (voiceState) {
       case "listening":
-        return "from-green-500 to-emerald-600 shadow-[0_0_60px_rgba(34,197,94,0.6)]";
+        return {
+          background: "linear-gradient(to bottom right, rgb(34, 197, 94), rgb(16, 185, 129))",
+          boxShadow: "0 0 60px rgba(34, 197, 94, 0.6)"
+        };
       case "thinking":
-        return "from-yellow-500 to-orange-500 shadow-[0_0_60px_rgba(234,179,8,0.6)]";
+        return {
+          background: "linear-gradient(to bottom right, rgb(234, 179, 8), rgb(249, 115, 22))",
+          boxShadow: "0 0 60px rgba(234, 179, 8, 0.6)"
+        };
       case "speaking":
-        return "from-blue-500 to-purple-600 shadow-[0_0_60px_rgba(59,130,246,0.6)]";
+        return {
+          background: "linear-gradient(to bottom right, rgb(59, 130, 246), rgb(147, 51, 234))",
+          boxShadow: "0 0 60px rgba(59, 130, 246, 0.6)"
+        };
       default:
-        return "from-violet-600 to-purple-600 shadow-[0_0_60px_rgba(139,92,246,0.6)]";
+        return {
+          background: "linear-gradient(to bottom right, rgb(124, 58, 237), rgb(147, 51, 234))",
+          boxShadow: "0 0 60px rgba(139, 92, 246, 0.6)"
+        };
     }
   };
 
@@ -1666,15 +1678,14 @@ const Index = () => {
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
               whileHover={{ scale: 1.08, y: -5 }}
-              className={`
+              style={getStateStyle()}
+              className="
                 relative w-32 h-32 md:w-40 md:h-40 rounded-full backdrop-blur-xl border-2 border-white/30
                 flex items-center justify-center
                 transition-all duration-300 ease-out
                 disabled:opacity-70 disabled:cursor-not-allowed
                 active:scale-95
-                bg-gradient-to-br
-                ${getStateColor()}
-              `}
+              "
               whileTap={{ scale: 0.95 }}
               animate={
                 voiceState === "listening"
