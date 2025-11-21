@@ -318,6 +318,26 @@ const Index = () => {
             saveBudget(newBudget);
             toast.success(`Budget set to $${claudeResponse.state_patch.monthly_budget}`);
           }
+
+          // Handle initial spending report (when user says "I already spent $X")
+          if (claudeResponse.state_patch.initial_spent !== undefined && claudeResponse.state_patch.initial_spent > 0) {
+            const spentAmount = claudeResponse.state_patch.initial_spent;
+            const category = claudeResponse.entities?.category || "other";
+
+            // Add transaction for initial spending
+            addTransaction({
+              date: new Date().toISOString().split("T")[0],
+              amount: spentAmount,
+              merchant: "Initial spending",
+              category: category as CategoryType,
+              source: "voice",
+              rawText: text,
+            });
+
+            refreshData();
+            logger.log(`[Finora] Recorded initial spending: $${spentAmount} in ${category}`);
+            toast.success(`Recorded $${spentAmount} already spent`);
+          }
         }
 
         // Handle ADD_EXPENSE intent
