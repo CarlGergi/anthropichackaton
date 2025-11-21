@@ -1231,45 +1231,14 @@ const Index = () => {
     setBudget(freshBudget);
     setTransactions([]);
     setVoiceState("idle");
-    // DON'T reset conversationStarted - keep it true to stay in conversation mode
+    setConversationStarted(false); // Reset conversation so "Start Conversation" button shows
     setLastClaudeResponse(undefined);
 
     logger.log('[Finora] Reset complete - fresh Normal Mode state:', freshFinoraState);
 
     setShowResetDialog(false);
-    toast.success("Normal Mode reset! Restarting conversation...");
-
-    // Auto-play greeting after reset
-    await new Promise(resolve => setTimeout(resolve, 500));
-    setVoiceState("speaking");
-
-    try {
-      const greetingText = `Hey! I'm Finora, your AI budget bestie. Looks like we're starting fresh! Before we get started, I need to know a couple things: What's your monthly budget? And how much have you already spent this month? Just tell me naturally, like you're texting a friend!`;
-
-      const ttsResponse = await textToSpeech(greetingText, selectedVoice, "cheerful");
-
-      if (ttsResponse.audio_b64) {
-        const audio = playAudioFromBase64(
-          ttsResponse.audio_b64,
-          ttsResponse.mime,
-          () => {
-            setVoiceState("idle");
-            setCurrentAudio(null);
-            setAudioAmplitude(0);
-          },
-          (amplitude) => setAudioAmplitude(amplitude)
-        );
-        setCurrentAudio(audio);
-        setLastTTSResponse(ttsResponse);
-        setFinoraState(prev => ({ ...prev, introShown: true }));
-      } else {
-        setVoiceState("idle");
-      }
-    } catch (error) {
-      logger.error('[Reset] Failed to play greeting:', error);
-      setVoiceState("idle");
-    }
-  }, [voiceState, stt, currentAudio, selectedVoice]);
+    toast.success("Normal Mode reset! Press 'Start Conversation' to begin again.");
+  }, [voiceState, stt, currentAudio]);
 
   // Handle log expense from vision
   const handleLogVisionExpense = useCallback(() => {
@@ -1677,6 +1646,49 @@ const Index = () => {
       <div className="text-white text-center mb-4 text-sm opacity-50">
         conversationStarted: {conversationStarted ? 'TRUE' : 'FALSE'} | voiceState: {voiceState}
       </div>
+
+      {/* Start Conversation Button - Shows after ending/resetting conversation */}
+      {!conversationStarted && (
+        <motion.div
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="flex flex-col items-center gap-6 mb-12"
+        >
+          <motion.button
+            onClick={handleStartConversation}
+            className="group relative px-12 py-6 text-xl font-bold text-white rounded-full
+              bg-gradient-to-r from-violet-600 via-purple-600 to-teal-600
+              shadow-[0_0_40px_rgba(139,92,246,0.5)]
+              hover:shadow-[0_0_60px_rgba(139,92,246,0.7)]
+              transition-all duration-300 ease-out
+              hover:scale-105 active:scale-95
+              border-2 border-white/20"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            animate={{
+              boxShadow: [
+                "0 0 40px rgba(139,92,246,0.5)",
+                "0 0 60px rgba(139,92,246,0.7)",
+                "0 0 40px rgba(139,92,246,0.5)",
+              ],
+            }}
+            transition={{
+              boxShadow: {
+                repeat: Infinity,
+                duration: 2,
+              },
+            }}
+          >
+            <span className="flex items-center gap-3">
+              Start Conversation 🎤
+            </span>
+          </motion.button>
+          <p className="text-white/60 text-sm">
+            {demoMode ? '🎬 Demo Mode Active' : '👤 Normal Mode Active'}
+          </p>
+        </motion.div>
+      )}
 
       {/* Mic, Camera, and Debate Buttons - Active after conversation started */}
       {conversationStarted && (
