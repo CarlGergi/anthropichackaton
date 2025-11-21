@@ -749,25 +749,39 @@ const Index = () => {
     checkAchievements();
   }, [refreshData, checkAchievements]);
 
-  // Handle export data
+  // Handle export expenses to share with friends
   const handleExportData = useCallback(() => {
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+
+    // Filter transactions for current month only
+    const monthTransactions = loadTransactions().filter((t) => {
+      const transactionDate = new Date(t.date);
+      return transactionDate.getMonth() === currentMonth &&
+             transactionDate.getFullYear() === currentYear;
+    });
+
     const data = {
-      budget: loadBudget(),
-      transactions: loadTransactions(),
-      finoraState: loadFinoraState(),
+      type: "finora_expenses_share",
+      version: "1.0",
+      month: new Date().toLocaleString('default', { month: 'long', year: 'numeric' }),
       exportDate: new Date().toISOString(),
+      totalExpenses: monthTransactions.reduce((sum, t) => sum + t.amount, 0),
+      transactionCount: monthTransactions.length,
+      transactions: monthTransactions,
     };
+
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `finora-backup-${new Date().toISOString().split("T")[0]}.json`;
+    a.download = `finora-expenses-${new Date().toISOString().split("T")[0]}.json`;
     a.click();
     URL.revokeObjectURL(url);
-    toast.success("Data exported!");
+    toast.success(`Exported ${monthTransactions.length} expenses to share!`);
   }, []);
 
-  // Handle import data
+  // Handle import expenses from friends
   const handleImportData = useCallback(() => {
     const input = document.createElement("input");
     input.type = "file";
@@ -779,11 +793,31 @@ const Index = () => {
       reader.onload = (event) => {
         try {
           const data = JSON.parse(event.target?.result as string);
-          if (data.budget) saveBudget(data.budget);
-          if (data.transactions) saveTransactions(data.transactions);
-          if (data.finoraState) saveFinoraState(data.finoraState);
-          refreshData();
-          toast.success("Data imported!");
+
+          // Check if it's a Finora expenses share file
+          if (data.type === "finora_expenses_share" && data.transactions) {
+            const existingTransactions = loadTransactions();
+
+            // Merge imported transactions with existing ones
+            const mergedTransactions = [...existingTransactions, ...data.transactions];
+
+            // Remove duplicates based on date, amount, and merchant
+            const uniqueTransactions = mergedTransactions.filter((transaction, index, self) =>
+              index === self.findIndex((t) => (
+                t.date === transaction.date &&
+                t.amount === transaction.amount &&
+                t.merchant === transaction.merchant
+              ))
+            );
+
+            saveTransactions(uniqueTransactions);
+            refreshData();
+
+            const importedCount = uniqueTransactions.length - existingTransactions.length;
+            toast.success(`Imported ${importedCount} expenses from ${data.month}!`);
+          } else {
+            toast.error("Invalid Finora expenses file");
+          }
         } catch (error) {
           toast.error("Invalid file format");
         }
@@ -1294,7 +1328,7 @@ const Index = () => {
             </span>
           </motion.button>
 
-          {/* Export Button */}
+          {/* Export Button - Share expenses with friends */}
           <motion.button
             onClick={handleExportData}
             className="px-6 py-3 rounded-full bg-gradient-to-r from-green-600 to-emerald-600
@@ -1305,14 +1339,15 @@ const Index = () => {
               border border-white/20"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
+            title="Share your expenses with friends"
           >
             <span className="flex items-center gap-2">
               <Download className="w-4 h-4" />
-              Export
+              Share Expenses
             </span>
           </motion.button>
 
-          {/* Import Button */}
+          {/* Import Button - Import friend's expenses */}
           <motion.button
             onClick={handleImportData}
             className="px-6 py-3 rounded-full bg-gradient-to-r from-blue-600 to-cyan-600
@@ -1323,10 +1358,11 @@ const Index = () => {
               border border-white/20"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
+            title="Import friend's expenses"
           >
             <span className="flex items-center gap-2">
               <Upload className="w-4 h-4" />
-              Import
+              Import Expenses
             </span>
           </motion.button>
         </motion.div>
