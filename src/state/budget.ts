@@ -1,8 +1,45 @@
 import { BudgetState, Transaction, CategoryType } from "@/types";
 import { logger } from "@/lib/logger";
 
+// Updated storage keys from old "pennypal" to "finora"
+// Normal mode uses standard keys, demo mode uses _demo suffix
 const STORAGE_KEY = "finora_budget";
 const TRANSACTIONS_KEY = "finora_transactions";
+const DEMO_STORAGE_KEY = "finora_budget_demo";
+const DEMO_TRANSACTIONS_KEY = "finora_transactions_demo";
+
+// Legacy keys for migration
+const LEGACY_STORAGE_KEY = "pennypal_budget";
+const LEGACY_TRANSACTIONS_KEY = "pennypal_transactions";
+
+// Track current mode - initialize from localStorage to ensure correct mode on load
+let currentMode: "normal" | "demo" = (() => {
+  if (typeof localStorage !== 'undefined') {
+    const savedMode = localStorage.getItem('finora_current_mode');
+    return savedMode === 'demo' ? 'demo' : 'normal';
+  }
+  return 'normal';
+})();
+
+logger.log(`[Storage] Initialized in ${currentMode.toUpperCase()} mode`);
+
+export function setStorageMode(mode: "normal" | "demo"): void {
+  currentMode = mode;
+  localStorage.setItem('finora_current_mode', mode);
+  logger.log(`[Storage] Switched to ${mode.toUpperCase()} mode`);
+}
+
+export function getStorageMode(): "normal" | "demo" {
+  return currentMode;
+}
+
+function getBudgetKey(): string {
+  return currentMode === "demo" ? DEMO_STORAGE_KEY : STORAGE_KEY;
+}
+
+function getTransactionsKey(): string {
+  return currentMode === "demo" ? DEMO_TRANSACTIONS_KEY : TRANSACTIONS_KEY;
+}
 
 export function getDefaultBudget(): BudgetState {
   const now = new Date();
@@ -32,7 +69,20 @@ export function getDefaultBudget(): BudgetState {
 
 export function loadBudget(): BudgetState {
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
+    const key = getBudgetKey();
+    let stored = localStorage.getItem(key);
+
+    // Migrate from legacy key if needed (only for normal mode)
+    if (!stored && currentMode === "normal") {
+      const legacyData = localStorage.getItem(LEGACY_STORAGE_KEY);
+      if (legacyData) {
+        logger.log("Migrating budget data from pennypal to finora");
+        localStorage.setItem(STORAGE_KEY, legacyData);
+        localStorage.removeItem(LEGACY_STORAGE_KEY);
+        stored = legacyData;
+      }
+    }
+
     if (stored) {
       return JSON.parse(stored);
     }
@@ -44,7 +94,8 @@ export function loadBudget(): BudgetState {
 
 export function saveBudget(budget: BudgetState): void {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(budget));
+    const key = getBudgetKey();
+    localStorage.setItem(key, JSON.stringify(budget));
   } catch (e) {
     logger.error("Failed to save budget:", e);
   }
@@ -52,7 +103,20 @@ export function saveBudget(budget: BudgetState): void {
 
 export function loadTransactions(): Transaction[] {
   try {
-    const stored = localStorage.getItem(TRANSACTIONS_KEY);
+    const key = getTransactionsKey();
+    let stored = localStorage.getItem(key);
+
+    // Migrate from legacy key if needed (only for normal mode)
+    if (!stored && currentMode === "normal") {
+      const legacyData = localStorage.getItem(LEGACY_TRANSACTIONS_KEY);
+      if (legacyData) {
+        logger.log("Migrating transaction data from pennypal to finora");
+        localStorage.setItem(TRANSACTIONS_KEY, legacyData);
+        localStorage.removeItem(LEGACY_TRANSACTIONS_KEY);
+        stored = legacyData;
+      }
+    }
+
     if (stored) {
       return JSON.parse(stored);
     }
@@ -64,7 +128,8 @@ export function loadTransactions(): Transaction[] {
 
 export function saveTransactions(transactions: Transaction[]): void {
   try {
-    localStorage.setItem(TRANSACTIONS_KEY, JSON.stringify(transactions));
+    const key = getTransactionsKey();
+    localStorage.setItem(key, JSON.stringify(transactions));
   } catch (e) {
     logger.error("Failed to save transactions:", e);
   }
@@ -145,8 +210,28 @@ export function deleteTransaction(id: string): void {
 }
 
 export function clearAllData(): void {
+  // Clear current mode's data only
+  const budgetKey = getBudgetKey();
+  const transactionsKey = getTransactionsKey();
+  localStorage.removeItem(budgetKey);
+  localStorage.removeItem(transactionsKey);
+
+  // Also clear legacy keys if they exist (only for normal mode)
+  if (currentMode === "normal") {
+    localStorage.removeItem(LEGACY_STORAGE_KEY);
+    localStorage.removeItem(LEGACY_TRANSACTIONS_KEY);
+  }
+
+  logger.log(`[Storage] Cleared ${currentMode} mode data`);
+}
+
+export function clearNormalModeData(): void {
+  // Clear only normal mode data
   localStorage.removeItem(STORAGE_KEY);
   localStorage.removeItem(TRANSACTIONS_KEY);
+  localStorage.removeItem(LEGACY_STORAGE_KEY);
+  localStorage.removeItem(LEGACY_TRANSACTIONS_KEY);
+  logger.log("[Storage] Cleared normal mode data");
 }
 
 /**
