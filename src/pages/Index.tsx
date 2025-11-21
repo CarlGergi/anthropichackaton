@@ -1679,7 +1679,15 @@ const Index = () => {
               onClick={handleVoiceToggle}
               disabled={voiceState === "thinking" || voiceState === "speaking"}
               initial={{ scale: 0.5, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
+              animate={
+                voiceState === "listening"
+                  ? {
+                      scale: [1, 1.05, 1],
+                      opacity: 1,
+                      transition: { repeat: Infinity, duration: 1.5 },
+                    }
+                  : { scale: 1, opacity: 1 }
+              }
               transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
               whileHover={{ scale: 1.08, y: -5 }}
               style={getStateStyle()}
@@ -1691,14 +1699,6 @@ const Index = () => {
                 active:scale-95
               "
               whileTap={{ scale: 0.95 }}
-              animate={
-                voiceState === "listening"
-                  ? {
-                      scale: [1, 1.05, 1],
-                      transition: { repeat: Infinity, duration: 1.5 },
-                    }
-                  : {}
-              }
             >
               {/* Pulse ring for listening */}
               {voiceState === "listening" && (
