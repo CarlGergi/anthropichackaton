@@ -68,32 +68,28 @@ const Index = () => {
       logger.error('[Index] Failed to load budget:', error);
       return getDefaultBudget();
     }
-  });
-  const [transactions, setTransactions] = useState(() => {
-    try {
-      const loadedTransactions = loadTransactions();
-      // Transactions should already be loaded by the budget initialization above
-      return loadedTransactions;
-    } catch (error) {
-      logger.error('[Index] Failed to load transactions:', error);
-      return [];
-    }
-  });
+  };
+})();
+
+const Index = () => {
+  // Ensure demo data is loaded before component initialization
+  ensureDemoDataLoaded();
+
+  const [voiceState, setVoiceState] = useState<VoiceState>("idle");
+  const [budget, setBudget] = useState(() => loadBudget());
+  const [transactions, setTransactions] = useState(() => loadTransactions());
   const [finoraState, setFinoraState] = useState(() => {
-    try {
-      const state = loadFinoraState();
-      // Ensure monthly_budget is set if we have a budget
-      const currentBudget = loadBudget();
-      if (currentBudget.total > 0 && !state.monthly_budget) {
-        const updatedState = { ...state, monthly_budget: currentBudget.total };
-        saveFinoraState(updatedState);
-        return updatedState;
-      }
-      return state;
-    } catch (error) {
-      logger.error('[Index] Failed to load finora state:', error);
-      return getDefaultFinoraState();
+    const state = loadFinoraState();
+    const currentBudget = loadBudget();
+
+    // Sync monthly_budget with actual budget
+    if (currentBudget.total > 0 && state.monthly_budget !== currentBudget.total) {
+      const updatedState = { ...state, monthly_budget: currentBudget.total };
+      saveFinoraState(updatedState);
+      return updatedState;
     }
+
+    return state;
   });
   const [conversationStarted, setConversationStarted] = useState(false);
   const [debugOpen, setDebugOpen] = useState(false);
@@ -1185,13 +1181,23 @@ const Index = () => {
     clearNormalModeData();
     localStorage.removeItem("finora_state");
 
-    // Reset all states to defaults
+    // Reload demo data - keeps Alex Chen profile persistent
+    logger.log('[Finora] Reloading demo data after reset...');
+    initializeDemoData();
+
+    // Load the fresh demo data
+    const loadedBudget = loadBudget();
+    const loadedTransactions = loadTransactions();
+
+    // Reset finora state but keep demo budget info
     const freshFinoraState = getDefaultFinoraState();
-    const freshBudget = getDefaultBudget();
+    freshFinoraState.monthly_budget = 1000;
+    freshFinoraState.introShown = false; // Reset intro so user gets greeted again
+    saveFinoraState(freshFinoraState);
 
     setFinoraState(freshFinoraState);
-    setBudget(freshBudget);
-    setTransactions([]);
+    setBudget(loadedBudget);
+    setTransactions(loadedTransactions);
     setVoiceState("idle");
     setConversationStarted(false); // Reset conversation so "Start Conversation" button shows
     setLastClaudeResponse(undefined);
