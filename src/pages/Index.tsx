@@ -1021,7 +1021,7 @@ const Index = () => {
   }, []); // Only run once on mount
 
   // Handle initial mode selection (onboarding)
-  const handleModeSelection = useCallback(async (enableDemo: boolean) => {
+  const handleModeSelection = useCallback((enableDemo: boolean) => {
     logger.log(`[Onboarding] Selected ${enableDemo ? 'DEMO' : 'NORMAL'} mode`);
 
     // Set storage mode FIRST
@@ -1044,74 +1044,14 @@ const Index = () => {
     setShowModeSelection(false);
     refreshData();
 
-    // Automatically start conversation after mode selection
-    // Unlock audio on this user interaction
-    unlockAudio();
-
-    // Request mic permission
-    try {
-      await navigator.mediaDevices.getUserMedia({ audio: true });
-      setSttSupport(prev => ({ ...prev, hasMicPermission: true }));
-    } catch (error) {
-      logger.error('[Onboarding] Mic permission denied:', error);
-      toast.error('Microphone access needed to continue. Please allow and refresh.');
-      return;
-    }
-
-    // Set conversation as started
-    setConversationStarted(true);
-
-    // Small delay to let the UI transition
-    await new Promise(resolve => setTimeout(resolve, 800));
-
-    // Greet the user with Finora's intro
-    if (!finoraState.introShown) {
-      logger.log('[Onboarding] Playing intro greeting for', enableDemo ? 'DEMO' : 'NORMAL', 'mode');
-      setVoiceState("speaking");
-
-      try {
-        const currentBudget = loadBudget();
-        let greetingText: string;
-
-        if (enableDemo) {
-          // Demo mode greeting
-          const totalSpent = Object.values(currentBudget.spent || {}).reduce((a, b) => a + b, 0);
-          greetingText = `Yooo what's good! I'm Finora, your AI budget bestie. I can see you already spent around $${Math.round(totalSpent)} this month out of your $${currentBudget.total || 1000} budget. Wanna see where your money's going, or should I suggest some cheap spots to check out? Just talk to me fr!`;
-        } else {
-          // Normal mode greeting
-          greetingText = `Hey! I'm Finora, your AI budget bestie who helps you manage your money without the stress. Before we get started, I need to know a couple things: What's your monthly budget? And how much have you already spent this month? Just tell me naturally, like you're texting a friend!`;
-        }
-
-        const ttsResponse = await textToSpeech(greetingText, selectedVoice, "cheerful");
-
-        if (ttsResponse.audio_b64) {
-          const audio = playAudioFromBase64(
-            ttsResponse.audio_b64,
-            ttsResponse.mime,
-            () => {
-              setVoiceState("idle");
-              setCurrentAudio(null);
-              setAudioAmplitude(0);
-            },
-            (amplitude) => setAudioAmplitude(amplitude)
-          );
-          setCurrentAudio(audio);
-          setLastTTSResponse(ttsResponse);
-          setFinoraState(prev => ({ ...prev, introShown: true }));
-        } else {
-          setVoiceState("idle");
-        }
-
-        toast.success(enableDemo ? 'Welcome to Finora Demo! 🎤' : 'Welcome to Finora! 🎤', {
-          duration: 3000
-        });
-      } catch (error) {
-        logger.error('[Onboarding] Failed to play greeting:', error);
-        setVoiceState("idle");
-        toast.error('Failed to start conversation. Please try again.');
-      }
-    }
-  }, [refreshData, finoraState, selectedVoice]);
+    // Show welcome message
+    toast.success(
+      enableDemo
+        ? 'Welcome to Finora Demo! Press the mic to start chatting 🎤'
+        : 'Welcome to Finora! Press the mic to start 🎤',
+      { duration: 4000 }
+    );
+  }, [refreshData]);
 
   // Handle demo mode toggle
   const handleDemoModeToggle = useCallback((enableDemo: boolean) => {
@@ -1613,7 +1553,47 @@ const Index = () => {
         </motion.div>
       )}
 
-      {/* Mic, Camera, and Debate Buttons - Active after mode selection */}
+      {/* Start Conversation Button - Shows after mode selection */}
+      {!conversationStarted && (
+        <motion.div
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="flex flex-col items-center gap-6 mb-12"
+        >
+          <motion.button
+            onClick={handleStartConversation}
+            className="group relative px-12 py-6 text-xl font-bold text-white rounded-full
+              bg-gradient-to-r from-violet-600 via-purple-600 to-teal-600
+              shadow-[0_0_40px_rgba(139,92,246,0.5)]
+              hover:shadow-[0_0_60px_rgba(139,92,246,0.7)]
+              transition-all duration-300 ease-out
+              hover:scale-105 active:scale-95
+              border-2 border-white/20"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            animate={{
+              boxShadow: [
+                "0 0 40px rgba(139,92,246,0.5)",
+                "0 0 60px rgba(139,92,246,0.7)",
+                "0 0 40px rgba(139,92,246,0.5)",
+              ],
+            }}
+            transition={{
+              boxShadow: {
+                repeat: Infinity,
+                duration: 2,
+              },
+            }}
+          >
+            <span className="flex items-center gap-3">
+              Start Conversation 🎤
+            </span>
+          </motion.button>
+        </motion.div>
+      )}
+
+      {/* Mic, Camera, and Debate Buttons - Active after conversation started */}
       {conversationStarted && (
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
