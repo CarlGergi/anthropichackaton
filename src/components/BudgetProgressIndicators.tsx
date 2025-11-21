@@ -63,7 +63,7 @@ export function BudgetProgressIndicators({ budget, onCategoryClick }: BudgetProg
     const spent = budget.spent[category];
     const remaining = calculateRemaining(budget, category);
     const percentage = target > 0 ? Math.min(100, (spent / target) * 100) : 0;
-    
+
     return {
       target,
       spent,
@@ -87,17 +87,56 @@ export function BudgetProgressIndicators({ budget, onCategoryClick }: BudgetProg
     return "stroke-green-500";
   };
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.08,
+        delayChildren: 0.15
+      }
+    }
+  };
+
+  const cardVariants = {
+    hidden: {
+      opacity: 0,
+      y: 60,
+      scale: 0.7,
+      rotateX: -20
+    },
+    visible: {
+      opacity: 1,
+      y: 0,
+      scale: 1,
+      rotateX: 0,
+      transition: {
+        type: "spring",
+        stiffness: 120,
+        damping: 15,
+        mass: 0.8
+      }
+    }
+  };
+
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
+      variants={containerVariants}
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, margin: "-80px" }}
       className="w-full max-w-6xl px-4 mb-6"
     >
-      <h3 className="text-lg font-semibold text-white/90 mb-4 text-center">
+      <motion.h3
+        initial={{ opacity: 0, y: -20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.5 }}
+        className="text-lg font-semibold text-white/90 mb-4 text-center"
+      >
         Budget Progress by Category
-      </h3>
-      
+      </motion.h3>
+
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         {categories.map((category, index) => {
           const progress = getCategoryProgress(category);
@@ -108,22 +147,31 @@ export function BudgetProgressIndicators({ budget, onCategoryClick }: BudgetProg
           return (
             <motion.div
               key={category}
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: index * 0.1 }}
+              variants={cardVariants}
+              whileHover={{
+                scale: 1.08,
+                y: -12,
+                rotateY: 5,
+                transition: { duration: 0.3 }
+              }}
+              whileTap={{ scale: 0.95 }}
             >
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Card
-                      className="bg-white/5 border-white/10 hover:bg-white/10 transition-colors cursor-pointer p-4"
+                      className="bg-white/5 border-white/10 hover:bg-white/10 hover:shadow-xl hover:border-white/20 transition-all duration-300 cursor-pointer p-4"
                       onClick={() => onCategoryClick?.(category)}
                     >
                       <div className="flex flex-col items-center">
                         {/* Category Icon */}
-                        <div className={`mb-3 ${config.color}`}>
+                        <motion.div
+                          className={`mb-3 ${config.color}`}
+                          whileHover={{ scale: 1.2, rotate: 10 }}
+                          transition={{ type: "spring", stiffness: 300 }}
+                        >
                           {config.icon}
-                        </div>
+                        </motion.div>
 
                         {/* Circular Progress */}
                         <div className="relative w-24 h-24 mb-2">
@@ -149,17 +197,32 @@ export function BudgetProgressIndicators({ budget, onCategoryClick }: BudgetProg
                               strokeLinecap="round"
                               className={getProgressBgColor(progress.percentage, progress.isOver)}
                               initial={{ strokeDashoffset: circumference }}
-                              animate={{ strokeDashoffset: offset }}
-                              transition={{ duration: 1, delay: index * 0.1 }}
+                              whileInView={{ strokeDashoffset: offset }}
+                              viewport={{ once: true }}
+                              transition={{
+                                duration: 1.5,
+                                delay: index * 0.15,
+                                ease: "easeOut"
+                              }}
                               strokeDasharray={circumference}
                             />
                           </svg>
-                          
+
                           {/* Percentage text */}
                           <div className="absolute inset-0 flex items-center justify-center">
-                            <span className={`text-sm font-bold ${getProgressColor(progress.percentage, progress.isOver)}`}>
+                            <motion.span
+                              className={`text-sm font-bold ${getProgressColor(progress.percentage, progress.isOver)}`}
+                              initial={{ scale: 0 }}
+                              whileInView={{ scale: 1 }}
+                              viewport={{ once: true }}
+                              transition={{
+                                delay: index * 0.15 + 0.5,
+                                type: "spring",
+                                stiffness: 200
+                              }}
+                            >
                               {Math.round(progress.percentage)}%
-                            </span>
+                            </motion.span>
                           </div>
                         </div>
 
@@ -174,10 +237,16 @@ export function BudgetProgressIndicators({ budget, onCategoryClick }: BudgetProg
                             ${progress.spent.toFixed(0)} / ${progress.target.toFixed(0)}
                           </p>
                           {progress.isOver && (
-                            <div className="flex items-center gap-1 mt-1 text-red-400">
+                            <motion.div
+                              initial={{ scale: 0, opacity: 0 }}
+                              whileInView={{ scale: 1, opacity: 1 }}
+                              viewport={{ once: true }}
+                              transition={{ delay: index * 0.15 + 0.8 }}
+                              className="flex items-center gap-1 mt-1 text-red-400"
+                            >
                               <AlertCircle className="h-3 w-3" />
                               <span className="text-xs">Over</span>
-                            </div>
+                            </motion.div>
                           )}
                         </div>
                       </div>
@@ -189,7 +258,7 @@ export function BudgetProgressIndicators({ budget, onCategoryClick }: BudgetProg
                       <p className="text-xs">Spent: ${progress.spent.toFixed(2)}</p>
                       <p className="text-xs">Target: ${progress.target.toFixed(2)}</p>
                       <p className="text-xs">
-                        {progress.isOver 
+                        {progress.isOver
                           ? `Over by $${Math.abs(progress.remaining).toFixed(2)}`
                           : `Remaining: $${progress.remaining.toFixed(2)}`
                         }

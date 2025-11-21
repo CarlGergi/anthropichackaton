@@ -1297,8 +1297,22 @@ const Index = () => {
       {/* Quick Stats Dashboard - shows when budget is set (demo data or user data) */}
       {budget.total > 0 && (
         <>
-          <QuickStatsDashboard budget={budget} />
-          <BudgetProgressIndicators budget={budget} onCategoryClick={handleCategoryClick} />
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
+          >
+            <QuickStatsDashboard budget={budget} />
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-100px" }}
+            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+          >
+            <BudgetProgressIndicators budget={budget} onCategoryClick={handleCategoryClick} />
+          </motion.div>
         </>
       )}
 
@@ -1340,14 +1354,23 @@ const Index = () => {
             })()}
           </AnimatePresence>
 
-          {/* Character in center */}
-          <div className="w-full max-w-md">
+          {/* Character in center - with parallax effect */}
+          <motion.div
+            className="w-full max-w-md"
+            initial={{ y: 0 }}
+            animate={{ y: [0, -10, 0] }}
+            transition={{
+              duration: 4,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+          >
             <AnimatedFinoraCharacter
               voiceState={voiceState}
               gesture={lastClaudeResponse?.gesture}
               audioAmplitude={audioAmplitude}
             />
-          </div>
+          </motion.div>
         </motion.div>
       )}
 
@@ -1359,31 +1382,40 @@ const Index = () => {
           transition={{ duration: 0.6, delay: 0.2 }}
           className="flex flex-col items-center gap-6 mb-12"
         >
-          {/* Demo Mode Toggle Buttons */}
-          <div className="flex items-center gap-3 mb-4">
-            <button
+          {/* Demo Mode Toggle Buttons - Enhanced */}
+          <motion.div
+            className="flex items-center gap-3 mb-4"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+          >
+            <motion.button
               onClick={() => handleDemoModeToggle(true)}
               disabled={demoMode}
+              whileHover={{ scale: demoMode ? 1 : 1.05, y: -2 }}
+              whileTap={{ scale: 0.95 }}
               className={`px-6 py-3 rounded-full font-semibold transition-all duration-300
                 ${demoMode
-                  ? 'bg-gradient-to-r from-violet-600 to-purple-600 text-white shadow-lg border-2 border-white/30'
-                  : 'bg-white/10 text-white/70 hover:bg-white/20 border-2 border-white/20'
+                  ? 'bg-gradient-to-r from-violet-600 to-purple-600 text-white shadow-lg shadow-purple-500/50 border-2 border-white/30'
+                  : 'bg-white/10 text-white/70 hover:bg-white/20 hover:shadow-lg border-2 border-white/20'
                 }`}
             >
               🎬 Demo Mode
-            </button>
-            <button
+            </motion.button>
+            <motion.button
               onClick={() => handleDemoModeToggle(false)}
               disabled={!demoMode}
+              whileHover={{ scale: !demoMode ? 1 : 1.05, y: -2 }}
+              whileTap={{ scale: 0.95 }}
               className={`px-6 py-3 rounded-full font-semibold transition-all duration-300
                 ${!demoMode
-                  ? 'bg-gradient-to-r from-teal-600 to-emerald-600 text-white shadow-lg border-2 border-white/30'
-                  : 'bg-white/10 text-white/70 hover:bg-white/20 border-2 border-white/20'
+                  ? 'bg-gradient-to-r from-teal-600 to-emerald-600 text-white shadow-lg shadow-teal-500/50 border-2 border-white/30'
+                  : 'bg-white/10 text-white/70 hover:bg-white/20 hover:shadow-lg border-2 border-white/20'
                 }`}
             >
               👤 Normal Mode
-            </button>
-          </div>
+            </motion.button>
+          </motion.div>
 
           <motion.button
             onClick={handleStartConversation}
@@ -1438,18 +1470,27 @@ const Index = () => {
           transition={{ duration: 0.6 }}
           className="flex flex-col items-center gap-6 mb-8"
         >
-          {/* Mic, Camera, and Debate Buttons Row */}
-          <div className="flex items-center gap-6">
+          {/* Mic, Camera, and Debate Buttons Row - Enhanced */}
+          <motion.div
+            className="flex items-center gap-6"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
             {/* Microphone Button */}
             <motion.button
               onClick={handleVoiceToggle}
               disabled={voiceState === "thinking" || voiceState === "speaking"}
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
+              whileHover={{ scale: 1.08, y: -5 }}
               className={`
                 relative w-32 h-32 md:w-40 md:h-40 rounded-full backdrop-blur-xl border-2 border-white/30
                 flex items-center justify-center
                 transition-all duration-300 ease-out
                 disabled:opacity-70 disabled:cursor-not-allowed
-                hover:scale-105 active:scale-95
+                active:scale-95
                 bg-gradient-to-br
                 ${getStateColor()}
               `}
@@ -1485,18 +1526,21 @@ const Index = () => {
             <motion.button
               onClick={handleCameraCapture}
               disabled={isAnalyzingImage || voiceState === "thinking" || voiceState === "speaking"}
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.4, type: "spring", stiffness: 200 }}
+              whileHover={{ scale: 1.08, y: -5 }}
               className={`
                 relative w-24 h-24 md:w-32 md:h-32 rounded-full backdrop-blur-xl border-2 border-white/30
                 flex items-center justify-center
                 transition-all duration-300 ease-out
                 disabled:opacity-50 disabled:cursor-not-allowed
-                hover:scale-105 active:scale-95
+                active:scale-95
                 bg-gradient-to-br from-cyan-500 to-blue-600
                 shadow-[0_0_40px_rgba(6,182,212,0.4)]
                 hover:shadow-[0_0_60px_rgba(6,182,212,0.6)]
               `}
               whileTap={{ scale: 0.95 }}
-              whileHover={{ scale: 1.05 }}
             >
               {isAnalyzingImage ? (
                 <Loader2 className="w-10 h-10 md:w-12 md:h-12 text-white animate-spin" />
@@ -1509,12 +1553,16 @@ const Index = () => {
             <motion.button
               onClick={handleStartDebate}
               disabled={isDebating || voiceState === "thinking" || voiceState === "speaking"}
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.5, type: "spring", stiffness: 200 }}
+              whileHover={{ scale: 1.08, y: -5 }}
               className={`
                 relative w-24 h-24 md:w-32 md:h-32 rounded-full backdrop-blur-xl border-2 border-white/30
                 flex items-center justify-center
                 transition-all duration-300 ease-out
                 disabled:opacity-50 disabled:cursor-not-allowed
-                hover:scale-105 active:scale-95
+                active:scale-95
                 bg-gradient-to-br from-purple-500 to-pink-600
                 shadow-[0_0_40px_rgba(168,85,247,0.4)]
                 hover:shadow-[0_0_60px_rgba(168,85,247,0.6)]
@@ -1530,12 +1578,12 @@ const Index = () => {
             </motion.button>
           </div>
 
-          {/* Status pill */}
+          {/* Status pill - Enhanced */}
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="px-6 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20"
+            initial={{ opacity: 0, y: 10, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ delay: 0.6, type: "spring", stiffness: 150 }}
+            className="px-6 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 shadow-lg"
           >
             <p className="text-sm font-medium text-white/90">
               {voiceState === "idle" && !isAnalyzingImage && !isDebating && "Voice activated — talk to Finora anytime now!"}
@@ -1549,24 +1597,27 @@ const Index = () => {
         </motion.div>
       )}
 
-      {/* Control Buttons - Below Character */}
+      {/* Control Buttons - Below Character - Enhanced */}
       {conversationStarted && (
         <motion.div
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
+          transition={{ delay: 0.4, type: "spring", stiffness: 150 }}
           className="flex items-center gap-4 mb-12"
         >
-          {/* End Conversation Button */}
+          {/* End Conversation Button - Enhanced */}
           <motion.button
             onClick={handleEndConversation}
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.5, type: "spring", stiffness: 150 }}
             className="px-6 py-3 rounded-full bg-gradient-to-r from-red-500 to-orange-500
               text-white font-bold text-sm
               hover:shadow-[0_0_30px_rgba(239,68,68,0.5)]
               transition-all duration-300 ease-out
-              hover:scale-105 active:scale-95
+              active:scale-95
               border border-white/20"
-            whileHover={{ scale: 1.05 }}
+            whileHover={{ scale: 1.05, y: -3 }}
             whileTap={{ scale: 0.95 }}
           >
             <span className="flex items-center gap-2">
@@ -1575,17 +1626,20 @@ const Index = () => {
             </span>
           </motion.button>
 
-          {/* Reset Button - Only show in Normal Mode */}
+          {/* Reset Button - Only show in Normal Mode - Enhanced */}
           {!demoMode && (
             <motion.button
               onClick={() => setShowResetDialog(true)}
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.6, type: "spring", stiffness: 150 }}
               className="px-6 py-3 rounded-full bg-gradient-to-r from-violet-600 to-teal-600
                 text-white font-bold text-sm
                 hover:shadow-[0_0_30px_rgba(139,92,246,0.5)]
                 transition-all duration-300 ease-out
-                hover:scale-105 active:scale-95
+                active:scale-95
                 border border-white/20"
-              whileHover={{ scale: 1.05 }}
+              whileHover={{ scale: 1.05, y: -3 }}
               whileTap={{ scale: 0.95 }}
             >
               <span className="flex items-center gap-2">
@@ -1595,16 +1649,19 @@ const Index = () => {
             </motion.button>
           )}
 
-          {/* Export Button - Share expenses with friends */}
+          {/* Export Button - Share expenses with friends - Enhanced */}
           <motion.button
             onClick={handleExportData}
+            initial={{ opacity: 0, x: -30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.3, type: "spring", stiffness: 150 }}
             className="px-6 py-3 rounded-full bg-gradient-to-r from-green-600 to-emerald-600
               text-white font-bold text-sm
               hover:shadow-[0_0_30px_rgba(34,197,94,0.5)]
               transition-all duration-300 ease-out
-              hover:scale-105 active:scale-95
+              active:scale-95
               border border-white/20"
-            whileHover={{ scale: 1.05 }}
+            whileHover={{ scale: 1.05, y: -3 }}
             whileTap={{ scale: 0.95 }}
             title="Share your expenses with friends"
           >
@@ -1614,16 +1671,19 @@ const Index = () => {
             </span>
           </motion.button>
 
-          {/* Import Button - Import friend's expenses */}
+          {/* Import Button - Import friend's expenses - Enhanced */}
           <motion.button
             onClick={handleImportData}
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.4, type: "spring", stiffness: 150 }}
             className="px-6 py-3 rounded-full bg-gradient-to-r from-blue-600 to-cyan-600
               text-white font-bold text-sm
               hover:shadow-[0_0_30px_rgba(59,130,246,0.5)]
               transition-all duration-300 ease-out
-              hover:scale-105 active:scale-95
+              active:scale-95
               border border-white/20"
-            whileHover={{ scale: 1.05 }}
+            whileHover={{ scale: 1.05, y: -3 }}
             whileTap={{ scale: 0.95 }}
             title="Import friend's expenses"
           >
@@ -1635,25 +1695,30 @@ const Index = () => {
         </motion.div>
       )}
 
-      {/* Settings Button */}
+      {/* Settings Button - Enhanced */}
       <motion.button
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.6 }}
+        initial={{ opacity: 0, scale: 0, rotate: -180 }}
+        animate={{ opacity: 1, scale: 1, rotate: 0 }}
+        transition={{ delay: 0.6, type: "spring", stiffness: 200 }}
+        whileHover={{ scale: 1.1, rotate: 90 }}
+        whileTap={{ scale: 0.9 }}
         onClick={() => setSettingsOpen(!settingsOpen)}
-        className="absolute top-4 right-4 p-3 rounded-full bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/10 transition-colors"
+        className="absolute top-4 right-4 p-3 rounded-full bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/15 hover:shadow-lg transition-all"
       >
         <Settings className="w-5 h-5 text-white/70" />
       </motion.button>
 
-      {/* Transaction History Button */}
+      {/* Transaction History Button - Enhanced */}
       {conversationStarted && transactions.length > 0 && (
         <motion.button
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.7 }}
+          initial={{ opacity: 0, scale: 0, x: 50 }}
+          animate={{ opacity: 1, scale: 1, x: 0 }}
+          exit={{ opacity: 0, scale: 0, x: 50 }}
+          transition={{ delay: 0.7, type: "spring", stiffness: 200 }}
+          whileHover={{ scale: 1.1, y: -2 }}
+          whileTap={{ scale: 0.9 }}
           onClick={() => setShowTransactionHistory(!showTransactionHistory)}
-          className="absolute top-4 right-20 p-3 rounded-full bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/10 transition-colors"
+          className="absolute top-4 right-20 p-3 rounded-full bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/15 hover:shadow-lg transition-all"
         >
           <History className="w-5 h-5 text-white/70" />
         </motion.button>
