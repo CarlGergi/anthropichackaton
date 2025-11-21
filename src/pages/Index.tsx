@@ -54,53 +54,47 @@ import { Venue } from "@/types";
 
 const venuesData = venuesDataRaw as Venue[];
 
-const Index = () => {
-  const [voiceState, setVoiceState] = useState<VoiceState>("idle");
-  const [budget, setBudget] = useState(() => {
-    try {
-      const loadedBudget = loadBudget();
-      const loadedTransactions = loadTransactions();
+// Initialize demo data before rendering - runs only once
+const ensureDemoDataLoaded = (() => {
+  let initialized = false;
+  return () => {
+    if (!initialized) {
+      try {
+        const existingBudget = loadBudget();
+        const existingTransactions = loadTransactions();
 
-      // If no valid data, initialize demo data immediately
-      if (loadedBudget.total === 0 || loadedTransactions.length === 0) {
-        logger.log('[Index] No valid data found - initializing demo data immediately');
+        if (existingBudget.total === 0 || existingTransactions.length === 0) {
+          logger.log('[App] Auto-loading demo data');
+          initializeDemoData();
+        }
+      } catch (error) {
+        logger.error('[App] Failed to check data:', error);
         initializeDemoData();
-        return loadBudget(); // Return the newly loaded budget
       }
+      initialized = true;
+    }
+  };
+})();
 
-      return loadedBudget;
-    } catch (error) {
-      logger.error('[Index] Failed to load budget:', error);
-      // Initialize demo data as fallback
-      initializeDemoData();
-      return loadBudget();
-    }
-  });
-  const [transactions, setTransactions] = useState(() => {
-    try {
-      const loadedTransactions = loadTransactions();
-      // Transactions should already be loaded by the budget initialization above
-      return loadedTransactions;
-    } catch (error) {
-      logger.error('[Index] Failed to load transactions:', error);
-      return [];
-    }
-  });
+const Index = () => {
+  // Ensure demo data is loaded before component initialization
+  ensureDemoDataLoaded();
+
+  const [voiceState, setVoiceState] = useState<VoiceState>("idle");
+  const [budget, setBudget] = useState(() => loadBudget());
+  const [transactions, setTransactions] = useState(() => loadTransactions());
   const [finoraState, setFinoraState] = useState(() => {
-    try {
-      const state = loadFinoraState();
-      // Ensure monthly_budget is set if we have a budget
-      const currentBudget = loadBudget();
-      if (currentBudget.total > 0 && !state.monthly_budget) {
-        const updatedState = { ...state, monthly_budget: currentBudget.total };
-        saveFinoraState(updatedState);
-        return updatedState;
-      }
-      return state;
-    } catch (error) {
-      logger.error('[Index] Failed to load finora state:', error);
-      return getDefaultFinoraState();
+    const state = loadFinoraState();
+    const currentBudget = loadBudget();
+
+    // Sync monthly_budget with actual budget
+    if (currentBudget.total > 0 && state.monthly_budget !== currentBudget.total) {
+      const updatedState = { ...state, monthly_budget: currentBudget.total };
+      saveFinoraState(updatedState);
+      return updatedState;
     }
+
+    return state;
   });
   const [conversationStarted, setConversationStarted] = useState(false);
   const [debugOpen, setDebugOpen] = useState(false);
@@ -422,17 +416,7 @@ const Index = () => {
             newBudget.total = claudeResponse.state_patch.monthly_budget || 0;
             setBudget(newBudget);
             saveBudget(newBudget);
-            toast.success(`Budget set to $${claudeResponse.state_patch.monthly_budget}`);
-
-            // Initialize demo data if budget is around $1000 (for demo purposes)
-            const budgetAmount = claudeResponse.state_patch.monthly_budget || 0;
-            const currentTransactions = loadTransactions(); // Load from localStorage, not state
-            if (budgetAmount >= 900 && budgetAmount <= 1100 && currentTransactions.length === 0) {
-              logger.log('[Finora] Initializing demo data for $1000 budget demo');
-              initializeDemoData();
-              refreshData(); // Reload transactions and budget
-              toast.success('Added realistic student expense examples for demo!', { duration: 5000 });
-            }
+            toast.success(`Budget updated to $${claudeResponse.state_patch.monthly_budget}`);
           }
         }
 
@@ -515,22 +499,23 @@ const Index = () => {
     setSttSupport(support);
   }, []);
 
-  // Show welcome message if demo data was just loaded
+  // Show welcome message on first load only
   useEffect(() => {
     const hasShownWelcome = sessionStorage.getItem('finora_welcome_shown');
 
-    if (budget.total > 0 && transactions.length > 0 && !hasShownWelcome) {
-      logger.log('[Demo] App loaded with data:', {
+    if (!hasShownWelcome && budget.total > 0 && transactions.length > 0) {
+      logger.log('[App] Data loaded successfully:', {
         budget: budget.total,
-        transactions: transactions.length
+        transactions: transactions.length,
+        totalSpent: Object.values(budget.spent).reduce((a, b) => a + b, 0)
       });
 
-      toast.success(`Welcome! Loaded demo budget: $${budget.total}/month with ${transactions.length} student expenses`, {
-        duration: 5000
+      toast.success(`Demo loaded: $${budget.total}/month budget with ${transactions.length} transactions`, {
+        duration: 4000
       });
       sessionStorage.setItem('finora_welcome_shown', 'true');
     }
-  }, [budget.total, transactions.length]); // Run when budget or transactions change
+  }, []); // Run only once on mount
 
   // Handle voice toggle (only when conversation started)
   const handleVoiceToggle = useCallback(async () => {
