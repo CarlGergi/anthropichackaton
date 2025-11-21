@@ -276,6 +276,43 @@ const Index = () => {
     toast.success(`Viewing ${category} transactions`);
   }, []);
 
+  // Check for achievements
+  const checkAchievements = useCallback(() => {
+    const updatedBudget = loadBudget();
+    const updatedTransactions = loadTransactions();
+    const remaining = calculateRemainingTotal(updatedBudget);
+    const totalSpent = Object.values(updatedBudget.spent).reduce((sum, val) => sum + val, 0);
+
+    // Check food spending (Ramen Master)
+    const foodSpent = updatedBudget.spent.food || 0;
+    if (foodSpent < 20 && !localStorage.getItem('achievement_ramen_master')) {
+      setCurrentAchievement('ramen_master');
+      setConfettiTrigger(true);
+      localStorage.setItem('achievement_ramen_master', 'true');
+      setTimeout(() => setConfettiTrigger(false), 100);
+    }
+
+    // Check savings (No Cap Saver)
+    const savingsPercent = updatedBudget.total > 0 ? (remaining / updatedBudget.total) * 100 : 0;
+    if (savingsPercent >= 50 && !localStorage.getItem('achievement_no_cap_saver')) {
+      setCurrentAchievement('no_cap_saver');
+      setConfettiTrigger(true);
+      localStorage.setItem('achievement_no_cap_saver', 'true');
+      setTimeout(() => setConfettiTrigger(false), 100);
+    }
+
+    // Check if under budget (Budget King)
+    if (remaining > 0 && totalSpent > 0 && !localStorage.getItem('achievement_budget_king')) {
+      const daysLeft = Math.ceil((new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate() - new Date().getDate()));
+      if (daysLeft <= 3 && remaining > 0) {
+        setCurrentAchievement('budget_king');
+        setConfettiTrigger(true);
+        localStorage.setItem('achievement_budget_king', 'true');
+        setTimeout(() => setConfettiTrigger(false), 100);
+      }
+    }
+  }, []);
+
   // Handle add expense from recommendation
   const handleAddExpenseFromRecommendation = useCallback((name: string, amount: number, category: string) => {
     addTransaction({
@@ -288,44 +325,7 @@ const Index = () => {
     refreshData();
     toast.success(`Added ${name} expense!`);
     checkAchievements();
-  }, [refreshData]);
-
-  // Check for achievements
-  const checkAchievements = useCallback(() => {
-    const updatedBudget = loadBudget();
-    const updatedTransactions = loadTransactions();
-    const remaining = calculateRemainingTotal(updatedBudget);
-    const totalSpent = Object.values(updatedBudget.spent).reduce((sum, val) => sum + val, 0);
-    
-    // Check food spending (Ramen Master)
-    const foodSpent = updatedBudget.spent.food || 0;
-    if (foodSpent < 20 && !localStorage.getItem('achievement_ramen_master')) {
-      setCurrentAchievement('ramen_master');
-      setConfettiTrigger(true);
-      localStorage.setItem('achievement_ramen_master', 'true');
-      setTimeout(() => setConfettiTrigger(false), 100);
-    }
-    
-    // Check savings (No Cap Saver)
-    const savingsPercent = updatedBudget.total > 0 ? (remaining / updatedBudget.total) * 100 : 0;
-    if (savingsPercent >= 50 && !localStorage.getItem('achievement_no_cap_saver')) {
-      setCurrentAchievement('no_cap_saver');
-      setConfettiTrigger(true);
-      localStorage.setItem('achievement_no_cap_saver', 'true');
-      setTimeout(() => setConfettiTrigger(false), 100);
-    }
-    
-    // Check if under budget (Budget King)
-    if (remaining > 0 && totalSpent > 0 && !localStorage.getItem('achievement_budget_king')) {
-      const daysLeft = Math.ceil((new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate() - new Date().getDate()));
-      if (daysLeft <= 3 && remaining > 0) {
-        setCurrentAchievement('budget_king');
-        setConfettiTrigger(true);
-        localStorage.setItem('achievement_budget_king', 'true');
-        setTimeout(() => setConfettiTrigger(false), 100);
-      }
-    }
-  }, []);
+  }, [refreshData, checkAchievements]);
 
   // Handle export data
   const handleExportData = useCallback(() => {
