@@ -1017,6 +1017,9 @@ const Index = () => {
     setShowModeSelection(false);
     refreshData();
 
+    // Start conversation immediately after mode selection
+    setConversationStarted(true);
+
     // Show welcome message
     const totalBudget = enableDemo ? 1000 : 0;
     if (enableDemo) {
@@ -1028,7 +1031,51 @@ const Index = () => {
         duration: 4000
       });
     }
-  }, [refreshData]);
+
+    // Trigger Finora's intro greeting after a short delay
+    setTimeout(async () => {
+      if (!finoraState.introShown) {
+        try {
+          setVoiceState("thinking");
+          const response = await getIntent(
+            enableDemo ? "Hello!" : "Hi, I'm ready to start budgeting",
+            loadBudget(),
+            venuesData as Venue[],
+            finoraState,
+            enableDemo
+          );
+
+          if (response.response && response.tts) {
+            setLastClaudeResponse(response);
+            setFinoraState(prev => ({ ...prev, introShown: true }));
+
+            // Play Finora's greeting
+            setVoiceState("speaking");
+            const ttsResponse = await textToSpeech(response.response, selectedVoice, response.tts.style || "cheerful");
+            if (ttsResponse.audio_b64) {
+              const audio = playAudioFromBase64(
+                ttsResponse.audio_b64,
+                ttsResponse.mime,
+                () => {
+                  setVoiceState("idle");
+                  setCurrentAudio(null);
+                  setAudioAmplitude(0);
+                },
+                (amplitude) => setAudioAmplitude(amplitude)
+              );
+              setCurrentAudio(audio);
+              setLastTTSResponse(ttsResponse);
+            } else {
+              setVoiceState("idle");
+            }
+          }
+        } catch (error) {
+          logger.error('[Onboarding] Failed to play intro:', error);
+          setVoiceState("idle");
+        }
+      }
+    }, 1000);
+  }, [refreshData, finoraState, selectedVoice]);
 
   // Handle demo mode toggle
   const handleDemoModeToggle = useCallback((enableDemo: boolean) => {
