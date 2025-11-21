@@ -130,6 +130,8 @@ const Index = () => {
   const [showCameraOptions, setShowCameraOptions] = useState(false);
   const [showCameraView, setShowCameraView] = useState(false);
   const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
+  const [showDebateInput, setShowDebateInput] = useState(false);
+  const [debateQuestion, setDebateQuestion] = useState("");
 
   // Handle voice change
   const handleVoiceChange = useCallback((voice: string) => {
@@ -626,34 +628,38 @@ const Index = () => {
     };
   }, [cameraStream]);
 
-  // Handle start debate
-  const handleStartDebate = useCallback(async () => {
+  // Handle start debate - show input dialog
+  const handleStartDebate = useCallback(() => {
     if (!conversationStarted) {
       toast.error('Please start the conversation first');
       return;
     }
+    setShowDebateInput(true);
+  }, [conversationStarted]);
 
-    // Prompt user for the question
-    const question = prompt("What purchase are you considering? (e.g., 'Should I buy that $80 jacket?')");
+  // Handle debate submission
+  const handleDebateSubmit = useCallback(async () => {
+    const question = debateQuestion.trim();
 
-    if (!question || question.trim() === '') {
+    if (!question) {
+      toast.error('Please enter a question');
       return;
     }
+
+    setShowDebateInput(false);
 
     try {
       setIsDebating(true);
       setShowDebateResult(true);
-      setDebateResult(null); // Clear previous result
+      setDebateResult(null);
       toast.info('Finora is debating...');
 
       logger.log('[Debate] Starting debate for:', question);
 
-      // Calculate budget info
       const totalSpent = Object.values(budget.spent).reduce((sum, val) => sum + val, 0);
       const remaining = calculateRemainingTotal(budget);
       const daysLeft = Math.ceil((new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate() - new Date().getDate()));
 
-      // Call Finora Debates Edge Function
       const { data, error } = await supabase.functions.invoke('finora-debates', {
         body: {
           question: question,
@@ -674,14 +680,44 @@ const Index = () => {
       logger.log('[Debate] Debate result:', data);
       setDebateResult(data as DebateResult);
       setIsDebating(false);
+
+      // Finora speaks the verdict!
+      if (data.verdict && data.verdict.reasoning) {
+        setVoiceState("speaking");
+        try {
+          const ttsResponse = await textToSpeech(data.verdict.reasoning, selectedVoice, "cheerful");
+          if (ttsResponse.audio_b64) {
+            const audio = playAudioFromBase64(
+              ttsResponse.audio_b64,
+              ttsResponse.mime,
+              () => {
+                setVoiceState("idle");
+                setCurrentAudio(null);
+                setAudioAmplitude(0);
+              },
+              (amplitude) => {
+                setAudioAmplitude(amplitude);
+              }
+            );
+            setCurrentAudio(audio);
+          } else {
+            setVoiceState("idle");
+          }
+        } catch (ttsError) {
+          logger.error('[Debate] TTS failed:', ttsError);
+          setVoiceState("idle");
+        }
+      }
+
       toast.success('Debate complete!');
+      setDebateQuestion(''); // Clear input
     } catch (error) {
       logger.error('[Debate] Failed:', error);
       toast.error('Failed to get debate results');
       setIsDebating(false);
       setShowDebateResult(false);
     }
-  }, [conversationStarted, budget]);
+  }, [debateQuestion, budget, selectedVoice]);
 
   // Handle keyboard shortcuts
   useEffect(() => {
@@ -1543,6 +1579,99 @@ const Index = () => {
           isLoading={isDebating}
         />
       )}
+
+      {/* Debate Input Dialog */}
+      <AlertDialog open={showDebateInput} onOpenChange={setShowDebateInput}>
+        <AlertDialogContent className="bg-gradient-to-br from-gray-900 to-gray-800 border-white/10 max-w-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-white text-2xl flex items-center gap-3">
+              <Scale className="w-7 h-7 text-purple-400" />
+              Finora Debates
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-white/70 text-base">
+              Thinking about a purchase? Let Finora debate it for you!
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <div className="py-4 space-y-4">
+            {/* Input Field */}
+            <div>
+              <input
+                type="text"
+                value={debateQuestion}
+                onChange={(e) => setDebateQuestion(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && debateQuestion.trim()) {
+                    handleDebateSubmit();
+                  }
+                }}
+                placeholder="e.g., Should I buy $80 jeans?"
+                className="w-full px-4 py-3 bg-black/40 border-2 border-purple-500/30 rounded-xl
+                  text-white placeholder-white/40 text-lg
+                  focus:border-purple-500/60 focus:outline-none
+                  transition-colors"
+                autoFocus
+              />
+            </div>
+
+            {/* Quick Suggestions */}
+            <div>
+              <p className="text-purple-300 text-sm font-semibold mb-2">💡 Quick Examples:</p>
+              <div className="grid grid-cols-1 gap-2">
+                <motion.button
+                  onClick={() => setDebateQuestion("Should I buy $80 jeans when I have limited budget left?")}
+                  className="px-4 py-2 text-left rounded-lg bg-purple-600/20 border border-purple-500/30
+                    text-white/80 text-sm hover:bg-purple-600/30 hover:border-purple-500/50
+                    transition-all"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  Should I buy $80 jeans when I have limited budget left?
+                </motion.button>
+                <motion.button
+                  onClick={() => setDebateQuestion("Is $50 concert tickets worth it with 8 days left in the month?")}
+                  className="px-4 py-2 text-left rounded-lg bg-purple-600/20 border border-purple-500/30
+                    text-white/80 text-sm hover:bg-purple-600/30 hover:border-purple-500/50
+                    transition-all"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  Is $50 concert tickets worth it with 8 days left in the month?
+                </motion.button>
+                <motion.button
+                  onClick={() => setDebateQuestion("Should I splurge on $30 brunch or meal prep at home?")}
+                  className="px-4 py-2 text-left rounded-lg bg-purple-600/20 border border-purple-500/30
+                    text-white/80 text-sm hover:bg-purple-600/30 hover:border-purple-500/50
+                    transition-all"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  Should I splurge on $30 brunch or meal prep at home?
+                </motion.button>
+              </div>
+            </div>
+          </div>
+
+          <AlertDialogFooter>
+            <AlertDialogCancel className="bg-white/10 text-white border-white/20 hover:bg-white/20">
+              Cancel
+            </AlertDialogCancel>
+            <motion.button
+              onClick={handleDebateSubmit}
+              disabled={!debateQuestion.trim()}
+              className="px-6 py-2 rounded-md bg-gradient-to-r from-purple-600 to-pink-600
+                text-white font-bold
+                hover:opacity-90
+                transition-all
+                disabled:opacity-50 disabled:cursor-not-allowed"
+              whileHover={{ scale: debateQuestion.trim() ? 1.05 : 1 }}
+              whileTap={{ scale: debateQuestion.trim() ? 0.95 : 1 }}
+            >
+              Start Debate
+            </motion.button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Camera Options Dialog */}
       <AlertDialog open={showCameraOptions} onOpenChange={setShowCameraOptions}>
