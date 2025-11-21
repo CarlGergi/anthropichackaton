@@ -3,12 +3,11 @@ import { useEffect, useState } from 'react';
 
 interface ConfettiCelebrationProps {
   trigger: boolean;
-  type?: 'success' | 'celebration' | 'achievement';
 }
 
 const colors = ['#f472b6', '#a78bfa', '#60a5fa', '#34d399', '#fbbf24', '#fb7185'];
 
-export function ConfettiCelebration({ trigger, type = 'celebration' }: ConfettiCelebrationProps) {
+export function ConfettiCelebration({ trigger }: ConfettiCelebrationProps) {
   const [particles, setParticles] = useState<Array<{ id: number; x: number; color: string; rotation: number }>>([]);
 
   useEffect(() => {

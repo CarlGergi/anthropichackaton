@@ -29,10 +29,6 @@ export function setStorageMode(mode: "normal" | "demo"): void {
   logger.log(`[Storage] Switched to ${mode.toUpperCase()} mode`);
 }
 
-export function getStorageMode(): "normal" | "demo" {
-  return currentMode;
-}
-
 function getBudgetKey(): string {
   return currentMode === "demo" ? DEMO_STORAGE_KEY : STORAGE_KEY;
 }

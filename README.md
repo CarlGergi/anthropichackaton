@@ -2,7 +2,7 @@
 
 > A revolutionary voice-first financial assistant that combines conversational AI, computer vision, and dual-perspective reasoning to make budgeting actually enjoyable for students.
 
-**Built for the Anthropic Hackathon** | [Live Demo](#) | [Video Demo](#)
+**Built for the Anthropic Hackathon**
 
 ---
 
@@ -130,11 +130,13 @@ Alternatives:
 ### 💰 Smart Budget Management
 
 - **Monthly budget tracking** with category allocation
-- **6 spending categories:** Food, Transport, Fun, Essentials, Clothes, Other
+- **6 spending categories:** Food (30%), Transport (15%), Fun (20%), Essentials (25%), Clothes (5%), Other (5%)
 - **Real-time calculations:** remaining budget, days left, daily spend rate
 - **Spending forecast:** "At this rate you'll overspend by $100"
 - **Budget buffer:** Safety margin between remaining and forecast
-- **Visual progress bars** for each category
+- **Visual progress bars** for each category with color coding
+- **Transaction history** with category filtering and delete functionality
+- **Reset functionality** (Normal Mode only) - Start fresh anytime without losing demo data
 
 ### 🎯 Intelligent Recommendations
 
@@ -173,14 +175,16 @@ meal prepping on Sundays?"
 
 ### 🏆 Gamification & Achievements
 
-- **Ramen Master** 🍜 - Spent under $20 on food
-- **No Cap Saver** 💰 - Saved 50% of budget
-- **Budget King** 👑 - Stayed under budget all month
-- **Finals Survivor** 📚 - Made it through the month
-- **Trend Setter** 📈 - Spending decreased this month
-- **Date Night Pro** 💜 - Found 5 cheap date spots
+Unlock achievements with confetti celebrations and animated badges:
 
-Plus confetti celebrations and animated badges!
+- **Ramen Master** 🍜 - Spent under $20 on food
+- **No Cap Saver** 💰 - Saved 50% of monthly budget
+- **Budget King** 👑 - Stayed under budget in final 3 days
+
+Each achievement triggers:
+- **Confetti animation** - Celebration particles
+- **Toast notification** - Custom badge popup with description
+- **Persistent tracking** - Achievements stay unlocked across sessions
 
 ### 🎨 Beautiful Animated UI
 
@@ -688,13 +692,17 @@ const [devilResponse, angelResponse, verdictResponse] = await Promise.all([
 ## Tech Stack
 
 ### Frontend
-- **React 18.3.1** + **TypeScript 5.9.3**
-- **Vite 5.4.19** - Lightning-fast build tool
-- **Tailwind CSS 3.4.17** - Utility-first styling
-- **shadcn/ui** - 47 accessible components (Radix UI)
-- **Framer Motion 11.18.2** - Smooth animations
+- **React 18.3.1** + **TypeScript 5.9.3** - Full type safety
+- **Vite 5.4.19** with **React SWC** - Lightning-fast build (3x faster than Babel)
+- **Tailwind CSS 3.4.17** - Utility-first styling with custom theme
+- **shadcn/ui** (Radix UI) - Accessible component primitives:
+  - Alert Dialog, Button, Card, Badge, Input, Label
+  - Select, Tooltip, Scroll Area, Sonner (toasts)
+- **Framer Motion 11.18.2** - GPU-accelerated animations
 - **React Router 6.30.1** - Client-side routing
-- **React Hook Form** + **Zod** - Type-safe forms
+- **TanStack React Query 5.90.7** - Server state management with caching
+- **Zod 3.25.76** - Runtime schema validation
+- **Lucide React 0.462.0** - Icon library
 
 ### AI & Voice
 - **Claude Sonnet 4** (Anthropic) - Conversational AI with personality
@@ -704,8 +712,12 @@ const [devilResponse, angelResponse, verdictResponse] = await Promise.all([
 
 ### Backend & Infrastructure
 - **Supabase** - Backend-as-a-Service (BaaS)
-- **Supabase Edge Functions** - Serverless Deno runtime
-- **LocalStorage** - Client-side data persistence (privacy-first)
+- **Supabase Edge Functions** - Serverless Deno runtime for AI APIs
+- **LocalStorage** - Primary data store (100% client-side, privacy-first architecture)
+  - Separate storage keys for Demo vs Normal mode
+  - No cloud database for transactions or budgets
+  - All financial data stays on your device
+  - Legacy migration support from PennyPal
 
 ### Development
 - **ESLint 9.32.0** - Code linting
@@ -780,14 +792,16 @@ anthropichackaton/
 ```
 
 **Key Statistics:**
-- 78 TypeScript files
-- 1,374 lines in main app (Index.tsx)
-- 5 Edge Functions (4 active)
-- 14 custom components
-- 47 UI components (shadcn/ui)
-- 6 achievements
-- 9 voice options
-- 20+ venue recommendations
+- **2,250+ lines** in main app (Index.tsx)
+- **13 custom components** + **8 shadcn/ui primitives**
+- **4 active Edge Functions** (claude-intent, claude-vision, finora-debates, elevenlabs-tts)
+- **35 production dependencies** + 14 dev dependencies
+- **3 achievements** with confetti animations
+- **9 ElevenLabs voice options**
+- **20+ pre-loaded Toronto venues**
+- **6 spending categories** with smart allocation
+- **7 keyboard shortcuts** for power users
+- **Full TypeScript** implementation with type safety
 
 ---
 
@@ -1103,17 +1117,27 @@ npm run preview      # Preview production build
 
 ---
 
-## Demo Data
+## Mode System
 
-Finora includes realistic student expense demo data for first-time users:
+When you first launch Finora, you'll choose between two modes:
 
-- **Budget:** $1000/month
-- **28 transactions** spread across the month
-- **Realistic Toronto merchants:** No Frills, TTC, Pizza Pizza, Starbucks, Sneaky Dee's, etc.
-- **Multiple categories:** Rent ($250), groceries, coffee, transit, entertainment, thrift shopping
-- **Automatically loaded** when no existing data
+### 🎓 Demo Mode - See Sample Student Data
+Explore Finora with realistic student expense data from "Alex Chen":
+- **Pre-loaded budget:** $1000/month
+- **28 realistic transactions** spread across the month
+- **Real Toronto merchants:** No Frills, TTC, Pizza Pizza, Starbucks, Sneaky Dee's, etc.
+- **Multiple categories:** Food, transport, fun, essentials, clothes, other
+- **Perfect for:** Testing features, understanding how Finora works, exploring without commitment
 
-This gives users a realistic starting point to explore features without manual setup.
+### 💬 Normal Mode - Start Fresh
+Talk to Finora without any pre-loaded data:
+- **Blank slate:** Start with $0 budget
+- **Personalized setup:** Set your own monthly budget through conversation
+- **Your data:** Add transactions as you spend
+- **Reset anytime:** Clear your data and start over (available only in Normal Mode)
+- **Perfect for:** Real budgeting, personal finance tracking, daily use
+
+You can switch between modes anytime in Settings, and your data stays separate for each mode.
 
 ---
 
