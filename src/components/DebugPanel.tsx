@@ -4,14 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ClaudeResponse, TTSResponse } from "@/types";
-import { Code2, Play, X } from "lucide-react";
+import { Code2, X } from "lucide-react";
 
 interface DebugPanelProps {
   isOpen: boolean;
   onClose: () => void;
   lastClaudeResponse?: ClaudeResponse;
   lastTTSResponse?: TTSResponse;
-  onReplayTTS?: () => void;
   sttSupport?: {
     hasWebSpeech: boolean;
     hasHTTPS: boolean;
@@ -27,7 +26,6 @@ export default function DebugPanel({
   onClose,
   lastClaudeResponse,
   lastTTSResponse,
-  onReplayTTS,
   sttSupport,
   sttEngine,
   sttLastError
@@ -197,15 +195,7 @@ export default function DebugPanel({
               {/* TTS Response */}
               <Card>
                 <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-sm">Latest TTS Response</CardTitle>
-                    {onReplayTTS && lastTTSResponse && (
-                      <Button size="sm" variant="outline" onClick={onReplayTTS}>
-                        <Play className="w-3 h-3 mr-1" />
-                        Replay
-                      </Button>
-                    )}
-                  </div>
+                  <CardTitle className="text-sm">Latest TTS Response</CardTitle>
                 </CardHeader>
                 <CardContent>
                   {lastTTSResponse ? (

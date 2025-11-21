@@ -42,7 +42,6 @@ import {
   calculateRemainingTotal,
   saveBudget,
   saveTransactions,
-  initializeDemoData,
   forceLoadDemoData,
   setStorageMode
 } from "@/state/budget";

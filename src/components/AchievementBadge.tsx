@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trophy, Star, Zap, Heart, Target, TrendingUp } from 'lucide-react';
+import { Trophy, Star, Target } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 
 interface Achievement {
@@ -25,33 +25,12 @@ const achievements: Record<string, Achievement> = {
     icon: <Star className="h-6 w-6" />,
     color: 'from-green-500 to-emerald-500',
   },
-  date_night_pro: {
-    id: 'date_night_pro',
-    title: 'Date Night Pro 💜',
-    description: 'Found 5 cheap date spots',
-    icon: <Heart className="h-6 w-6" />,
-    color: 'from-pink-500 to-rose-500',
-  },
-  finals_survivor: {
-    id: 'finals_survivor',
-    title: 'Finals Survivor 📚',
-    description: 'Made it through the month!',
-    icon: <Zap className="h-6 w-6" />,
-    color: 'from-purple-500 to-violet-500',
-  },
   budget_king: {
     id: 'budget_king',
     title: 'Budget King 👑',
     description: 'Stayed under budget all month',
     icon: <Target className="h-6 w-6" />,
     color: 'from-yellow-500 to-amber-500',
-  },
-  trend_setter: {
-    id: 'trend_setter',
-    title: 'Trend Setter 📈',
-    description: 'Spending decreased this month',
-    icon: <TrendingUp className="h-6 w-6" />,
-    color: 'from-blue-500 to-cyan-500',
   },
 };
 
