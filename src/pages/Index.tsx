@@ -459,6 +459,165 @@ const Index = () => {
     }
   }, [conversationStarted, voiceState, stt, processTranscript]);
 
+  // Handle camera capture and vision analysis
+  const handleCameraCapture = useCallback(async () => {
+    if (!conversationStarted) {
+      toast.error('Please start the conversation first');
+      return;
+    }
+
+    // Create file input
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.capture = 'environment'; // Use back camera on mobile
+
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+
+      try {
+        setIsAnalyzingImage(true);
+        toast.info('Analyzing image...');
+
+        // Convert image to base64
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+          try {
+            const base64 = event.target?.result as string;
+            const base64Data = base64.split(',')[1]; // Remove data:image/jpeg;base64, prefix
+            const mimeType = file.type;
+
+            logger.log('[Vision] Sending image to Claude Vision API...');
+
+            // Call Vision API
+            const { data, error } = await supabase.functions.invoke('claude-vision', {
+              body: {
+                image_b64: base64Data,
+                mime_type: mimeType,
+                budget: {
+                  total: budget.total,
+                  spent: budget.spent,
+                  remaining_total: calculateRemainingTotal(budget),
+                  days_left: Math.ceil((new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate() - new Date().getDate()))
+                },
+                image_type: 'general'
+              }
+            });
+
+            if (error) {
+              logger.error('[Vision] API error:', error);
+              throw error;
+            }
+
+            logger.log('[Vision] Analysis result:', data);
+            setVisionResult(data as VisionAnalysisResult);
+            setShowVisionResult(true);
+            setIsAnalyzingImage(false);
+
+            // Speak the advice
+            if (data.advice) {
+              setVoiceState("speaking");
+              try {
+                const ttsResponse = await textToSpeech(data.advice, selectedVoice, "cheerful");
+                if (ttsResponse.audio_b64) {
+                  const audio = playAudioFromBase64(
+                    ttsResponse.audio_b64,
+                    ttsResponse.mime,
+                    () => {
+                      setVoiceState("idle");
+                      setCurrentAudio(null);
+                      setAudioAmplitude(0);
+                    },
+                    (amplitude) => {
+                      setAudioAmplitude(amplitude);
+                    }
+                  );
+                  setCurrentAudio(audio);
+                } else {
+                  setVoiceState("idle");
+                }
+              } catch (ttsError) {
+                logger.error('[Vision] TTS failed:', ttsError);
+                setVoiceState("idle");
+              }
+            }
+
+            toast.success('Image analyzed!');
+          } catch (error) {
+            logger.error('[Vision] Processing failed:', error);
+            toast.error('Failed to analyze image');
+            setIsAnalyzingImage(false);
+          }
+        };
+        reader.readAsDataURL(file);
+      } catch (error) {
+        logger.error('[Vision] Camera capture failed:', error);
+        toast.error('Failed to capture image');
+        setIsAnalyzingImage(false);
+      }
+    };
+
+    input.click();
+  }, [conversationStarted, budget, selectedVoice]);
+
+  // Handle start debate
+  const handleStartDebate = useCallback(async () => {
+    if (!conversationStarted) {
+      toast.error('Please start the conversation first');
+      return;
+    }
+
+    // Prompt user for the question
+    const question = prompt("What purchase are you considering? (e.g., 'Should I buy that $80 jacket?')");
+
+    if (!question || question.trim() === '') {
+      return;
+    }
+
+    try {
+      setIsDebating(true);
+      setShowDebateResult(true);
+      setDebateResult(null); // Clear previous result
+      toast.info('Finora is debating...');
+
+      logger.log('[Debate] Starting debate for:', question);
+
+      // Calculate budget info
+      const totalSpent = Object.values(budget.spent).reduce((sum, val) => sum + val, 0);
+      const remaining = calculateRemainingTotal(budget);
+      const daysLeft = Math.ceil((new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate() - new Date().getDate()));
+
+      // Call Finora Debates Edge Function
+      const { data, error } = await supabase.functions.invoke('finora-debates', {
+        body: {
+          question: question,
+          budget: {
+            total: budget.total,
+            totalSpent: totalSpent,
+            remaining: remaining,
+            daysLeft: daysLeft
+          }
+        }
+      });
+
+      if (error) {
+        logger.error('[Debate] API error:', error);
+        throw error;
+      }
+
+      logger.log('[Debate] Debate result:', data);
+      setDebateResult(data as DebateResult);
+      setIsDebating(false);
+      toast.success('Debate complete!');
+    } catch (error) {
+      logger.error('[Debate] Failed:', error);
+      toast.error('Failed to get debate results');
+      setIsDebating(false);
+      setShowDebateResult(false);
+    }
+  }, [conversationStarted, budget]);
+
   // Handle keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -755,108 +914,6 @@ const Index = () => {
     toast.success("Finora forgot everything. Fresh start!");
   }, [voiceState, stt, currentAudio]);
 
-  // Handle camera capture and vision analysis
-  const handleCameraCapture = useCallback(async () => {
-    if (!conversationStarted) {
-      toast.error('Please start the conversation first');
-      return;
-    }
-
-    // Create file input
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.capture = 'environment'; // Use back camera on mobile
-
-    input.onchange = async (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
-      if (!file) return;
-
-      try {
-        setIsAnalyzingImage(true);
-        toast.info('Analyzing image...');
-
-        // Convert image to base64
-        const reader = new FileReader();
-        reader.onload = async (event) => {
-          try {
-            const base64 = event.target?.result as string;
-            const base64Data = base64.split(',')[1]; // Remove data:image/jpeg;base64, prefix
-            const mimeType = file.type;
-
-            logger.log('[Vision] Sending image to Claude Vision API...');
-
-            // Call Vision API
-            const { data, error } = await supabase.functions.invoke('claude-vision', {
-              body: {
-                image_b64: base64Data,
-                mime_type: mimeType,
-                budget: {
-                  total: budget.total,
-                  spent: budget.spent,
-                  remaining_total: calculateRemainingTotal(budget),
-                  days_left: Math.ceil((new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate() - new Date().getDate()))
-                },
-                image_type: 'general'
-              }
-            });
-
-            if (error) {
-              logger.error('[Vision] API error:', error);
-              throw error;
-            }
-
-            logger.log('[Vision] Analysis result:', data);
-            setVisionResult(data as VisionAnalysisResult);
-            setShowVisionResult(true);
-            setIsAnalyzingImage(false);
-
-            // Speak the advice
-            if (data.advice) {
-              setVoiceState("speaking");
-              try {
-                const ttsResponse = await textToSpeech(data.advice, selectedVoice, "cheerful");
-                if (ttsResponse.audio_b64) {
-                  const audio = playAudioFromBase64(
-                    ttsResponse.audio_b64,
-                    ttsResponse.mime,
-                    () => {
-                      setVoiceState("idle");
-                      setCurrentAudio(null);
-                      setAudioAmplitude(0);
-                    },
-                    (amplitude) => {
-                      setAudioAmplitude(amplitude);
-                    }
-                  );
-                  setCurrentAudio(audio);
-                } else {
-                  setVoiceState("idle");
-                }
-              } catch (ttsError) {
-                logger.error('[Vision] TTS failed:', ttsError);
-                setVoiceState("idle");
-              }
-            }
-
-            toast.success('Image analyzed!');
-          } catch (error) {
-            logger.error('[Vision] Processing failed:', error);
-            toast.error('Failed to analyze image');
-            setIsAnalyzingImage(false);
-          }
-        };
-        reader.readAsDataURL(file);
-      } catch (error) {
-        logger.error('[Vision] Camera capture failed:', error);
-        toast.error('Failed to capture image');
-        setIsAnalyzingImage(false);
-      }
-    };
-
-    input.click();
-  }, [conversationStarted, budget, selectedVoice]);
-
   // Handle log expense from vision
   const handleLogVisionExpense = useCallback(() => {
     if (!visionResult) return;
@@ -878,63 +935,6 @@ const Index = () => {
     setVisionResult(null);
     checkAchievements();
   }, [visionResult, refreshData, checkAchievements]);
-
-  // Handle start debate
-  const handleStartDebate = useCallback(async () => {
-    if (!conversationStarted) {
-      toast.error('Please start the conversation first');
-      return;
-    }
-
-    // Prompt user for the question
-    const question = prompt("What purchase are you considering? (e.g., 'Should I buy that $80 jacket?')");
-
-    if (!question || question.trim() === '') {
-      return;
-    }
-
-    try {
-      setIsDebating(true);
-      setShowDebateResult(true);
-      setDebateResult(null); // Clear previous result
-      toast.info('Finora is debating...');
-
-      logger.log('[Debate] Starting debate for:', question);
-
-      // Calculate budget info
-      const totalSpent = Object.values(budget.spent).reduce((sum, val) => sum + val, 0);
-      const remaining = calculateRemainingTotal(budget);
-      const daysLeft = Math.ceil((new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate() - new Date().getDate()));
-
-      // Call Finora Debates Edge Function
-      const { data, error } = await supabase.functions.invoke('finora-debates', {
-        body: {
-          question: question,
-          budget: {
-            total: budget.total,
-            totalSpent: totalSpent,
-            remaining: remaining,
-            daysLeft: daysLeft
-          }
-        }
-      });
-
-      if (error) {
-        logger.error('[Debate] API error:', error);
-        throw error;
-      }
-
-      logger.log('[Debate] Debate result:', data);
-      setDebateResult(data as DebateResult);
-      setIsDebating(false);
-      toast.success('Debate complete!');
-    } catch (error) {
-      logger.error('[Debate] Failed:', error);
-      toast.error('Failed to get debate results');
-      setIsDebating(false);
-      setShowDebateResult(false);
-    }
-  }, [conversationStarted, budget]);
 
   const getStateIcon = () => {
     switch (voiceState) {
