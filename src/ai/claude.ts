@@ -53,6 +53,19 @@ export async function getIntent(
 
     if (error) {
       logger.error('Edge function error:', error);
+
+      const errorMsg = error.message || JSON.stringify(error);
+      const errorStr = JSON.stringify(error);
+
+      // Check if it's a deployment error
+      if (errorMsg.includes('FunctionsRelayError') || errorMsg.includes('Not Found') || errorMsg.includes('404') ||
+          errorStr.includes('FunctionsRelayError') || errorStr.includes('Not Found') || errorStr.includes('404') ||
+          errorMsg.includes('non-2xx') || errorMsg.includes('non 2xx') || errorMsg.includes('2XX') ||
+          errorMsg.includes('FunctionsHttpError')) {
+        logger.error('🚨 DEPLOYMENT ERROR: claude-intent function not deployed!');
+        return getFallbackResponse(transcript, budgetContext, 'DEPLOY_ERROR');
+      }
+
       throw error;
     }
 
@@ -61,12 +74,18 @@ export async function getIntent(
   } catch (error) {
     logger.error('Error calling Claude:', error);
     // Fallback to basic response on error
-    return getFallbackResponse(transcript, budgetContext);
+    return getFallbackResponse(transcript, budgetContext, 'UNKNOWN_ERROR');
   }
 }
 
 // Fallback response if API fails
-function getFallbackResponse(transcript: string, budgetState: any): ClaudeResponse {
+function getFallbackResponse(transcript: string, budgetState: any, errorType: string = 'UNKNOWN_ERROR'): ClaudeResponse {
+  let speechMessage = "I'm having trouble processing that. Could you try again?";
+
+  if (errorType === 'DEPLOY_ERROR') {
+    speechMessage = "Oops! My AI brain isn't deployed yet. Ask your developer to run: supabase functions deploy claude-intent";
+  }
+
   return {
     intent: "SMALL_TALK",
     entities: {
@@ -84,10 +103,10 @@ function getFallbackResponse(transcript: string, budgetState: any): ClaudeRespon
       days_left: budgetState.days_left,
       forecast: budgetState.forecast,
       buffer: budgetState.buffer,
-      notes: "Error connecting to AI",
+      notes: errorType === 'DEPLOY_ERROR' ? "Edge function not deployed" : "Error connecting to AI",
     },
     recs: [],
-    speech: "I'm having trouble processing that. Could you try again?",
+    speech: speechMessage,
     tone: "neutral",
     gesture: "THINK",
     tts: {
