@@ -517,22 +517,20 @@ const Index = () => {
 
   // Show welcome message if demo data was just loaded
   useEffect(() => {
-    if (budget.total > 0 && transactions.length > 0) {
+    const hasShownWelcome = sessionStorage.getItem('finora_welcome_shown');
+
+    if (budget.total > 0 && transactions.length > 0 && !hasShownWelcome) {
       logger.log('[Demo] App loaded with data:', {
         budget: budget.total,
         transactions: transactions.length
       });
 
-      // Show welcome toast on first load
-      const hasShownWelcome = sessionStorage.getItem('finora_welcome_shown');
-      if (!hasShownWelcome) {
-        toast.success(`Welcome! Loaded demo budget: $${budget.total}/month with ${transactions.length} student expenses`, {
-          duration: 5000
-        });
-        sessionStorage.setItem('finora_welcome_shown', 'true');
-      }
+      toast.success(`Welcome! Loaded demo budget: $${budget.total}/month with ${transactions.length} student expenses`, {
+        duration: 5000
+      });
+      sessionStorage.setItem('finora_welcome_shown', 'true');
     }
-  }, []); // Only run once on mount
+  }, [budget.total, transactions.length]); // Run when budget or transactions change
 
   // Handle voice toggle (only when conversation started)
   const handleVoiceToggle = useCallback(async () => {
