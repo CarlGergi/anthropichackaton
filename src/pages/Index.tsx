@@ -132,6 +132,10 @@ const Index = () => {
   const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
   const [showDebateInput, setShowDebateInput] = useState(false);
   const [debateQuestion, setDebateQuestion] = useState("");
+  const [showModeSelection, setShowModeSelection] = useState(() => {
+    // Show mode selection if no mode has been chosen yet
+    return !localStorage.getItem('finora_mode_selected');
+  });
 
   // Handle voice change
   const handleVoiceChange = useCallback((voice: string) => {
@@ -955,6 +959,39 @@ const Index = () => {
     refreshData();
   }, []); // Only run once on mount
 
+  // Handle initial mode selection (onboarding)
+  const handleModeSelection = useCallback((enableDemo: boolean) => {
+    logger.log(`[Onboarding] Selected ${enableDemo ? 'DEMO' : 'NORMAL'} mode`);
+
+    // Set storage mode
+    setStorageMode(enableDemo ? "demo" : "normal");
+
+    if (enableDemo) {
+      // Load demo data
+      forceLoadDemoData();
+    }
+
+    // Mark that mode has been selected
+    localStorage.setItem('finora_mode_selected', 'true');
+
+    // Update state
+    setDemoMode(enableDemo);
+    setShowModeSelection(false);
+    refreshData();
+
+    // Show welcome message
+    const totalBudget = enableDemo ? 1000 : 0;
+    if (enableDemo) {
+      toast.success('Welcome to Finora Demo! Exploring Alex Chen\'s student budget', {
+        duration: 5000
+      });
+    } else {
+      toast.success('Welcome to Finora! Let\'s track your budget together', {
+        duration: 4000
+      });
+    }
+  }, [refreshData]);
+
   // Handle demo mode toggle
   const handleDemoModeToggle = useCallback((enableDemo: boolean) => {
     logger.log(`[Demo Mode] Switching to ${enableDemo ? 'DEMO' : 'NORMAL'} mode`);
@@ -1113,6 +1150,129 @@ const Index = () => {
         return "from-[hsl(var(--finora-gradient-start))] to-[hsl(var(--finora-gradient-end))] shadow-[0_0_60px_hsl(var(--glow-primary))/50]";
     }
   };
+
+  // Mode Selection Screen
+  if (showModeSelection) {
+    return (
+      <div className="relative w-screen min-h-screen overflow-hidden flex items-center justify-center font-sora bg-gradient-to-br from-gray-900 via-purple-900/30 to-gray-900">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+          className="w-full max-w-4xl mx-4 p-8 md:p-12"
+        >
+          {/* Logo and Title */}
+          <motion.div
+            initial={{ y: -20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="text-center mb-8"
+          >
+            <h1 className="text-6xl md:text-7xl font-bold text-white mb-4">
+              Finora
+            </h1>
+            <p className="text-xl md:text-2xl text-purple-200 mb-6">
+              Your Gen Z Budget Bestie 💜
+            </p>
+          </motion.div>
+
+          {/* Intro */}
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.4 }}
+            className="bg-gradient-to-br from-purple-600/20 to-pink-600/20 border-2 border-purple-500/30 rounded-3xl p-6 md:p-8 mb-8"
+          >
+            <p className="text-white/90 text-lg leading-relaxed text-center">
+              Finora is your <span className="font-bold text-purple-300">AI-powered budget buddy</span> who actually gets you.
+              She's funny, supportive, and keeps it 100% real about your spending. Track expenses with voice,
+              scan receipts with your camera, and get personalized advice that doesn't suck.
+            </p>
+          </motion.div>
+
+          {/* Mode Selection */}
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.6 }}
+          >
+            <h2 className="text-2xl font-bold text-white text-center mb-6">
+              Choose Your Experience
+            </h2>
+
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Demo Mode */}
+              <motion.button
+                onClick={() => handleModeSelection(true)}
+                className="relative group p-8 rounded-2xl bg-gradient-to-br from-blue-600/30 to-cyan-600/30
+                  border-2 border-blue-500/40 hover:border-blue-400/60
+                  transition-all duration-300
+                  hover:shadow-[0_0_40px_rgba(59,130,246,0.4)]"
+                whileHover={{ scale: 1.02, y: -5 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <div className="text-left">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="p-3 bg-blue-500/30 rounded-full">
+                      <Sparkles className="w-6 h-6 text-blue-300" />
+                    </div>
+                    <h3 className="text-2xl font-bold text-white">Demo Mode</h3>
+                  </div>
+                  <p className="text-white/80 mb-4 leading-relaxed">
+                    Explore with Alex Chen's realistic student budget. See how Finora works with
+                    <span className="font-bold text-blue-300"> $1,000/month</span> and
+                    <span className="font-bold text-blue-300"> 28 transactions</span>.
+                  </p>
+                  <div className="flex items-center gap-2 text-blue-300 font-semibold group-hover:gap-3 transition-all">
+                    Try Demo
+                    <span className="text-xl">→</span>
+                  </div>
+                </div>
+              </motion.button>
+
+              {/* Normal Mode */}
+              <motion.button
+                onClick={() => handleModeSelection(false)}
+                className="relative group p-8 rounded-2xl bg-gradient-to-br from-purple-600/30 to-pink-600/30
+                  border-2 border-purple-500/40 hover:border-purple-400/60
+                  transition-all duration-300
+                  hover:shadow-[0_0_40px_rgba(168,85,247,0.4)]"
+                whileHover={{ scale: 1.02, y: -5 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <div className="text-left">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="p-3 bg-purple-500/30 rounded-full">
+                      <Hand className="w-6 h-6 text-purple-300" />
+                    </div>
+                    <h3 className="text-2xl font-bold text-white">Normal Mode</h3>
+                  </div>
+                  <p className="text-white/80 mb-4 leading-relaxed">
+                    Start fresh with your own budget! Finora will ask about your monthly budget
+                    and help you track spending in <span className="font-bold text-purple-300">real-time</span>.
+                  </p>
+                  <div className="flex items-center gap-2 text-purple-300 font-semibold group-hover:gap-3 transition-all">
+                    Start Tracking
+                    <span className="text-xl">→</span>
+                  </div>
+                </div>
+              </motion.button>
+            </div>
+          </motion.div>
+
+          {/* Footer Note */}
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.8 }}
+            className="text-center text-white/50 text-sm mt-8"
+          >
+            You can switch between modes anytime from settings
+          </motion.p>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative w-screen min-h-screen overflow-y-auto flex flex-col items-center font-sora py-8 gap-8">
