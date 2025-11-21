@@ -1,13 +1,8 @@
 import { BudgetState, Transaction, CategoryType } from "@/types";
 import { logger } from "@/lib/logger";
 
-// Updated storage keys from old "pennypal" to "finora"
 const STORAGE_KEY = "finora_budget";
 const TRANSACTIONS_KEY = "finora_transactions";
-
-// Legacy keys for migration
-const LEGACY_STORAGE_KEY = "pennypal_budget";
-const LEGACY_TRANSACTIONS_KEY = "pennypal_transactions";
 
 export function getDefaultBudget(): BudgetState {
   const now = new Date();
@@ -37,20 +32,7 @@ export function getDefaultBudget(): BudgetState {
 
 export function loadBudget(): BudgetState {
   try {
-    // Try new key first
-    let stored = localStorage.getItem(STORAGE_KEY);
-
-    // Migrate from legacy key if needed
-    if (!stored) {
-      const legacyData = localStorage.getItem(LEGACY_STORAGE_KEY);
-      if (legacyData) {
-        logger.log("Migrating budget data from pennypal to finora");
-        localStorage.setItem(STORAGE_KEY, legacyData);
-        localStorage.removeItem(LEGACY_STORAGE_KEY);
-        stored = legacyData;
-      }
-    }
-
+    const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
       return JSON.parse(stored);
     }
@@ -70,20 +52,7 @@ export function saveBudget(budget: BudgetState): void {
 
 export function loadTransactions(): Transaction[] {
   try {
-    // Try new key first
-    let stored = localStorage.getItem(TRANSACTIONS_KEY);
-
-    // Migrate from legacy key if needed
-    if (!stored) {
-      const legacyData = localStorage.getItem(LEGACY_TRANSACTIONS_KEY);
-      if (legacyData) {
-        logger.log("Migrating transaction data from pennypal to finora");
-        localStorage.setItem(TRANSACTIONS_KEY, legacyData);
-        localStorage.removeItem(LEGACY_TRANSACTIONS_KEY);
-        stored = legacyData;
-      }
-    }
-
+    const stored = localStorage.getItem(TRANSACTIONS_KEY);
     if (stored) {
       return JSON.parse(stored);
     }
@@ -176,13 +145,8 @@ export function deleteTransaction(id: string): void {
 }
 
 export function clearAllData(): void {
-  // Clear current keys
   localStorage.removeItem(STORAGE_KEY);
   localStorage.removeItem(TRANSACTIONS_KEY);
-
-  // Also clear legacy keys if they exist
-  localStorage.removeItem(LEGACY_STORAGE_KEY);
-  localStorage.removeItem(LEGACY_TRANSACTIONS_KEY);
 }
 
 /**
