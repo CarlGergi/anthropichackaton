@@ -1033,113 +1033,107 @@ const Index = () => {
   }, []); // Only run once on mount
 
   // Handle initial mode selection (onboarding)
-  const handleModeSelection = useCallback(async (enableDemo: boolean) => {
+  const handleModeSelection = useCallback((enableDemo: boolean) => {
     console.log(`[Onboarding] Selected ${enableDemo ? 'DEMO' : 'NORMAL'} mode`);
     logger.log(`[Onboarding] Selected ${enableDemo ? 'DEMO' : 'NORMAL'} mode`);
 
-    try {
-      // Set storage mode FIRST
-      setStorageMode(enableDemo ? "demo" : "normal");
+    // Set storage mode FIRST
+    setStorageMode(enableDemo ? "demo" : "normal");
 
-      if (enableDemo) {
-        // Load demo data for demo mode
-        forceLoadDemoData();
-      } else {
-        // IMPORTANT: Clear normal mode to ensure fresh start
-        clearNormalModeData();
-        logger.log('[Onboarding] Cleared normal mode data for fresh start');
-      }
-
-      // Mark that mode has been selected
-      localStorage.setItem('finora_mode_selected', 'true');
-
-      // Update state
-      setDemoMode(enableDemo);
-      setShowModeSelection(false);
-      refreshData();
-
-      console.log('[Onboarding] Mode set, refreshed data. Starting conversation...');
-
-      // Set conversation as started FIRST - so UI shows even if there are errors
-      setConversationStarted(true);
-      console.log('[Onboarding] Conversation started - mic button should be visible now');
-
-      // Unlock audio on this user interaction
-      unlockAudio();
-
-      // Request mic permission
-      console.log('[Onboarding] Requesting microphone permission...');
-      try {
-        await navigator.mediaDevices.getUserMedia({ audio: true });
-        setSttSupport(prev => ({ ...prev, hasMicPermission: true }));
-        console.log('[Onboarding] Microphone permission granted');
-      } catch (error) {
-        console.error('[Onboarding] Mic permission denied:', error);
-        logger.error('[Onboarding] Mic permission denied:', error);
-        toast.error('Microphone access needed. Click the mic button to try again.', { duration: 6000 });
-        // Conversation is already started, so mic button is visible
-        setVoiceState("idle");
-        return;
-      }
-
-      // Small delay for UI transition
-      await new Promise(resolve => setTimeout(resolve, 600));
-
-      // Auto-play greeting
-      console.log('[Onboarding] Playing auto-greeting...');
-      setVoiceState("speaking");
-
-      const currentBudget = loadBudget();
-      let greetingText: string;
-
-      if (enableDemo) {
-        // Demo mode greeting
-        const totalSpent = Object.values(currentBudget.spent || {}).reduce((a, b) => a + b, 0);
-        greetingText = `Yooo what's good! I'm Finora, your AI budget bestie. I can see you already spent around $${Math.round(totalSpent)} this month out of your $${currentBudget.total || 1000} budget. Wanna see where your money's going, or should I suggest some cheap spots to check out? Just talk to me fr!`;
-      } else {
-        // Normal mode greeting
-        greetingText = `Hey! I'm Finora, your AI budget bestie who helps you manage your money without the stress. Before we get started, I need to know a couple things: What's your monthly budget? And how much have you already spent this month? Just tell me naturally, like you're texting a friend!`;
-      }
-
-      console.log('[Onboarding] Calling TTS API with greeting:', greetingText.substring(0, 50) + '...');
-      const ttsResponse = await textToSpeech(greetingText, selectedVoice, "cheerful");
-      console.log('[Onboarding] TTS Response received:', ttsResponse);
-
-      if (ttsResponse.audio_b64) {
-        console.log('[Onboarding] Playing audio...');
-        const audio = playAudioFromBase64(
-          ttsResponse.audio_b64,
-          ttsResponse.mime,
-          () => {
-            console.log('[Onboarding] Audio playback finished');
-            setVoiceState("idle");
-            setCurrentAudio(null);
-            setAudioAmplitude(0);
-          },
-          (amplitude) => setAudioAmplitude(amplitude)
-        );
-        setCurrentAudio(audio);
-        setLastTTSResponse(ttsResponse);
-        setFinoraState(prev => ({ ...prev, introShown: true }));
-        console.log('[Onboarding] Audio started playing');
-      } else {
-        console.error('[Onboarding] No audio_b64 in TTS response!');
-        setVoiceState("idle");
-        toast.error('Failed to generate audio. TTS might not be working.');
-      }
-
-      toast.success(enableDemo ? 'Welcome to Finora Demo! 🎤' : 'Welcome to Finora! 🎤', {
-        duration: 3000
-      });
-    } catch (error) {
-      console.error('[Onboarding] CRITICAL ERROR:', error);
-      logger.error('[Onboarding] Failed to play greeting:', error);
-      setVoiceState("idle");
-      setConversationStarted(true); // Still set this so UI shows
-      toast.error(`Failed to start: ${error instanceof Error ? error.message : 'Unknown error'}`, {
-        duration: 6000
-      });
+    if (enableDemo) {
+      // Load demo data for demo mode
+      forceLoadDemoData();
+    } else {
+      // IMPORTANT: Clear normal mode to ensure fresh start
+      clearNormalModeData();
+      logger.log('[Onboarding] Cleared normal mode data for fresh start');
     }
+
+    // Mark that mode has been selected
+    localStorage.setItem('finora_mode_selected', 'true');
+
+    // Update state - these are INSTANT, no lag
+    setDemoMode(enableDemo);
+    setShowModeSelection(false);
+    setConversationStarted(true); // Mic button shows immediately!
+    refreshData();
+
+    console.log('[Onboarding] ✅ Mode set! Mic button visible. Starting auto-greeting in background...');
+
+    // Do async operations in background WITHOUT blocking UI
+    setTimeout(async () => {
+      try {
+        // Unlock audio
+        unlockAudio();
+
+        // Request mic permission
+        console.log('[Onboarding] Requesting microphone permission...');
+        try {
+          await navigator.mediaDevices.getUserMedia({ audio: true });
+          setSttSupport(prev => ({ ...prev, hasMicPermission: true }));
+          console.log('[Onboarding] ✅ Microphone permission granted');
+        } catch (error) {
+          console.error('[Onboarding] ❌ Mic permission denied:', error);
+          toast.error('Microphone access needed. Click the mic button when ready.', { duration: 5000 });
+          setVoiceState("idle");
+          return;
+        }
+
+        // Wait a moment for UI to settle
+        await new Promise(resolve => setTimeout(resolve, 300));
+
+        // Play auto-greeting
+        console.log('[Onboarding] Playing auto-greeting...');
+        setVoiceState("speaking");
+
+        const currentBudget = loadBudget();
+        let greetingText: string;
+
+        if (enableDemo) {
+          const totalSpent = Object.values(currentBudget.spent || {}).reduce((a, b) => a + b, 0);
+          greetingText = `Yooo what's good! I'm Finora, your AI budget bestie. I can see you already spent around $${Math.round(totalSpent)} this month out of your $${currentBudget.total || 1000} budget. Wanna see where your money's going, or should I suggest some cheap spots to check out? Just talk to me fr!`;
+        } else {
+          greetingText = `Hey! I'm Finora, your AI budget bestie who helps you manage your money without the stress. Before we get started, I need to know a couple things: What's your monthly budget? And how much have you already spent this month? Just tell me naturally, like you're texting a friend!`;
+        }
+
+        console.log('[Onboarding] Calling TTS...');
+        const ttsResponse = await textToSpeech(greetingText, selectedVoice, "cheerful");
+        console.log('[Onboarding] TTS Response received');
+
+        if (ttsResponse.audio_b64) {
+          const audio = playAudioFromBase64(
+            ttsResponse.audio_b64,
+            ttsResponse.mime,
+            () => {
+              console.log('[Onboarding] ✅ Audio finished');
+              setVoiceState("idle");
+              setCurrentAudio(null);
+              setAudioAmplitude(0);
+            },
+            (amplitude) => setAudioAmplitude(amplitude)
+          );
+          setCurrentAudio(audio);
+          setLastTTSResponse(ttsResponse);
+          setFinoraState(prev => ({ ...prev, introShown: true }));
+          console.log('[Onboarding] ✅ Audio playing');
+        } else {
+          console.error('[Onboarding] ❌ No audio in response');
+          setVoiceState("idle");
+          toast.error('Audio generation failed. Try using the mic!');
+        }
+
+        toast.success(enableDemo ? '🎬 Welcome to Finora Demo!' : '👤 Welcome to Finora!', {
+          duration: 3000
+        });
+      } catch (error) {
+        console.error('[Onboarding] ❌ CRITICAL ERROR:', error);
+        logger.error('[Onboarding] Failed:', error);
+        setVoiceState("idle");
+        toast.error(`Error: ${error instanceof Error ? error.message : 'Unknown'}`, {
+          duration: 6000
+        });
+      }
+    }, 100); // Start async work after 100ms to let UI render first
   }, [refreshData, selectedVoice]);
 
   // Handle demo mode toggle
