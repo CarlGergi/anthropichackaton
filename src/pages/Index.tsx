@@ -1037,6 +1037,10 @@ const Index = () => {
 
       console.log('[Onboarding] Mode set, refreshed data. Starting conversation...');
 
+      // Set conversation as started FIRST - so UI shows even if there are errors
+      setConversationStarted(true);
+      console.log('[Onboarding] Conversation started - mic button should be visible now');
+
       // Unlock audio on this user interaction
       unlockAudio();
 
@@ -1049,15 +1053,11 @@ const Index = () => {
       } catch (error) {
         console.error('[Onboarding] Mic permission denied:', error);
         logger.error('[Onboarding] Mic permission denied:', error);
-        toast.error('Microphone access needed. Please allow and refresh.', { duration: 6000 });
-        // Still set conversation started so mic button shows
-        setConversationStarted(true);
+        toast.error('Microphone access needed. Click the mic button to try again.', { duration: 6000 });
+        // Conversation is already started, so mic button is visible
+        setVoiceState("idle");
         return;
       }
-
-      // Set conversation as started immediately
-      setConversationStarted(true);
-      console.log('[Onboarding] Conversation started');
 
       // Small delay for UI transition
       await new Promise(resolve => setTimeout(resolve, 600));
@@ -1649,6 +1649,11 @@ const Index = () => {
           </motion.div>
         </motion.div>
       )}
+
+      {/* DEBUG: Show conversation state */}
+      <div className="text-white text-center mb-4 text-sm opacity-50">
+        conversationStarted: {conversationStarted ? 'TRUE' : 'FALSE'} | voiceState: {voiceState}
+      </div>
 
       {/* Mic, Camera, and Debate Buttons - Active after conversation started */}
       {conversationStarted && (
