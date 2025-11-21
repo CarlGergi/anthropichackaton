@@ -60,21 +60,11 @@ const Index = () => {
   const [budget, setBudget] = useState(() => {
     try {
       const loadedBudget = loadBudget();
-      const loadedTransactions = loadTransactions();
-
-      // If no valid data, initialize demo data immediately
-      if (loadedBudget.total === 0 || loadedTransactions.length === 0) {
-        logger.log('[Index] No valid data found - initializing demo data immediately');
-        initializeDemoData();
-        return loadBudget(); // Return the newly loaded budget
-      }
-
+      logger.log('[Index] Loaded budget:', loadedBudget);
       return loadedBudget;
     } catch (error) {
       logger.error('[Index] Failed to load budget:', error);
-      // Initialize demo data as fallback
-      initializeDemoData();
-      return loadBudget();
+      return getDefaultBudget();
     }
   });
   const [transactions, setTransactions] = useState(() => {
@@ -327,16 +317,6 @@ const Index = () => {
             setBudget(newBudget);
             saveBudget(newBudget);
             toast.success(`Budget set to $${claudeResponse.state_patch.monthly_budget}`);
-
-            // Initialize demo data if budget is around $1000 (for demo purposes)
-            const budgetAmount = claudeResponse.state_patch.monthly_budget || 0;
-            const currentTransactions = loadTransactions(); // Load from localStorage, not state
-            if (budgetAmount >= 900 && budgetAmount <= 1100 && currentTransactions.length === 0) {
-              logger.log('[Finora] Initializing demo data for $1000 budget demo');
-              initializeDemoData();
-              refreshData(); // Reload transactions and budget
-              toast.success('Added realistic student expense examples for demo!', { duration: 5000 });
-            }
           }
         }
 
@@ -801,16 +781,16 @@ const Index = () => {
 
   // Show welcome message if demo data was just loaded
   useEffect(() => {
-    if (budget.total > 0 && transactions.length > 0) {
-      logger.log('[Demo] App loaded with data:', {
+    if (budget.total > 0 && transactions.length > 0 && demoMode) {
+      logger.log('[Demo] App loaded with demo data:', {
         budget: budget.total,
         transactions: transactions.length
       });
 
-      // Show welcome toast on first load
+      // Show welcome toast on first load of demo mode
       const hasShownWelcome = sessionStorage.getItem('finora_welcome_shown');
       if (!hasShownWelcome) {
-        toast.success(`Welcome! Loaded demo budget: $${budget.total}/month with ${transactions.length} student expenses`, {
+        toast.success(`Demo mode active! Budget: $${budget.total}/month with ${transactions.length} realistic transactions`, {
           duration: 5000
         });
         sessionStorage.setItem('finora_welcome_shown', 'true');
