@@ -1249,13 +1249,13 @@ const Index = () => {
   const getStateColor = () => {
     switch (voiceState) {
       case "listening":
-        return "from-[hsl(var(--voice-listening))] to-[hsl(var(--voice-listening))]/80 shadow-[0_0_60px_hsl(var(--voice-listening))/60]";
+        return "from-green-500 to-emerald-600 shadow-[0_0_60px_rgba(34,197,94,0.6)]";
       case "thinking":
-        return "from-[hsl(var(--voice-thinking))] to-[hsl(var(--voice-thinking))]/80 shadow-[0_0_60px_hsl(var(--voice-thinking))/60]";
+        return "from-yellow-500 to-orange-500 shadow-[0_0_60px_rgba(234,179,8,0.6)]";
       case "speaking":
-        return "from-[hsl(var(--voice-speaking))] to-[hsl(var(--voice-speaking))]/80 shadow-[0_0_60px_hsl(var(--voice-speaking))/60]";
+        return "from-blue-500 to-purple-600 shadow-[0_0_60px_rgba(59,130,246,0.6)]";
       default:
-        return "from-[hsl(var(--finora-gradient-start))] to-[hsl(var(--finora-gradient-end))] shadow-[0_0_60px_hsl(var(--glow-primary))/50]";
+        return "from-violet-600 to-purple-600 shadow-[0_0_60px_rgba(139,92,246,0.6)]";
     }
   };
 
