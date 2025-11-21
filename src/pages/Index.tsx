@@ -1636,11 +1636,6 @@ const Index = () => {
         </motion.div>
       )}
 
-      {/* DEBUG: Show conversation state */}
-      <div className="text-white text-center mb-4 text-sm opacity-50">
-        conversationStarted: {conversationStarted ? 'TRUE' : 'FALSE'} | voiceState: {voiceState}
-      </div>
-
       {/* Start Conversation Button - Shows after ending/resetting conversation */}
       {!conversationStarted && (
         <motion.div
