@@ -120,7 +120,7 @@ export class SpeechToText {
         this.onTranscript(interimTranscript, false);
       }
 
-      // Reset silence timeout
+      // Reset silence timeout - increased to 12 seconds for more speaking time
       if (this.silenceTimeout) {
         clearTimeout(this.silenceTimeout);
       }
@@ -128,7 +128,7 @@ export class SpeechToText {
         if (this.isListening && finalTranscript) {
           this.stop();
         }
-      }, 7000);
+      }, 12000);
     };
 
     this.recognition.onerror = (event: any) => {
