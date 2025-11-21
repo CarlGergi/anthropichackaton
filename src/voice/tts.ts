@@ -20,6 +20,30 @@ export async function textToSpeech(
 
     if (error) {
       logger.error('[TTS] Edge function error:', error);
+
+      const errorMsg = error.message || JSON.stringify(error);
+      const errorStr = JSON.stringify(error);
+
+      // Check if it's a NOT FOUND (404) error - function not deployed
+      if (errorMsg.includes('Not Found') || errorMsg.includes('404') ||
+          errorStr.includes('Not Found') || errorStr.includes('404')) {
+        logger.error('🚨 DEPLOYMENT ERROR: elevenlabs-tts function not deployed!');
+        throw new Error('TTS not deployed. Run: supabase functions deploy elevenlabs-tts');
+      }
+
+      // Check if it's an API key error
+      if (errorMsg.includes('ELEVENLABS_API_KEY')) {
+        logger.error('🚨 API KEY ERROR: ELEVENLABS_API_KEY not set in Supabase!');
+        throw new Error('ElevenLabs API key missing. Run: supabase secrets set ELEVENLABS_API_KEY=your-key');
+      }
+
+      // Check if it's a runtime error
+      if (errorMsg.includes('FunctionsRelayError') || errorMsg.includes('FunctionsHttpError') ||
+          errorMsg.includes('non-2xx') || errorMsg.includes('non 2xx')) {
+        logger.error('🚨 TTS RUNTIME ERROR:', errorMsg);
+        throw new Error(`TTS runtime error: ${errorMsg.substring(0, 100)}`);
+      }
+
       throw new Error(`TTS Error: ${error.message || 'Unknown error'}`);
     }
 
@@ -27,7 +51,7 @@ export async function textToSpeech(
       logger.error('[TTS] No audio data received:', data);
       throw new Error('No audio data in response');
     }
-    
+
     logger.log('[TTS] ✓ Success! Audio length:', data.audio_b64.length, 'bytes');
     return data as TTSResponse;
   } catch (error) {
