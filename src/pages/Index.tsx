@@ -244,6 +244,175 @@ const Index = () => {
     setTransactions(loadTransactions());
   }, []);
 
+  // Check for achievements
+  const checkAchievements = useCallback(() => {
+    const updatedBudget = loadBudget();
+    const updatedTransactions = loadTransactions();
+    const remaining = calculateRemainingTotal(updatedBudget);
+    const totalSpent = Object.values(updatedBudget.spent).reduce((sum, val) => sum + val, 0);
+
+    // Check food spending (Ramen Master)
+    const foodSpent = updatedBudget.spent.food || 0;
+    if (foodSpent < 20 && !localStorage.getItem('achievement_ramen_master')) {
+      setCurrentAchievement('ramen_master');
+      setConfettiTrigger(true);
+      localStorage.setItem('achievement_ramen_master', 'true');
+      setTimeout(() => setConfettiTrigger(false), 100);
+    }
+
+    // Check savings (No Cap Saver)
+    const savingsPercent = updatedBudget.total > 0 ? (remaining / updatedBudget.total) * 100 : 0;
+    if (savingsPercent >= 50 && !localStorage.getItem('achievement_no_cap_saver')) {
+      setCurrentAchievement('no_cap_saver');
+      setConfettiTrigger(true);
+      localStorage.setItem('achievement_no_cap_saver', 'true');
+      setTimeout(() => setConfettiTrigger(false), 100);
+    }
+
+    // Check if under budget (Budget King)
+    if (remaining > 0 && totalSpent > 0 && !localStorage.getItem('achievement_budget_king')) {
+      const daysLeft = Math.ceil((new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate() - new Date().getDate()));
+      if (daysLeft <= 3 && remaining > 0) {
+        setCurrentAchievement('budget_king');
+        setConfettiTrigger(true);
+        localStorage.setItem('achievement_budget_king', 'true');
+        setTimeout(() => setConfettiTrigger(false), 100);
+      }
+    }
+  }, []);
+
+  // Process transcript with Claude and TTS
+  const processTranscript = useCallback(
+    async (text: string) => {
+      try {
+        logger.log('[Finora] Processing transcript:', text);
+        logger.log('[Finora] Current state:', {
+          introShown: finoraState.introShown,
+          monthly_budget: finoraState.monthly_budget
+        });
+
+        setVoiceState("thinking");
+
+        const claudeResponse = await getIntent(text, budget, venuesData, finoraState);
+        setLastClaudeResponse(claudeResponse);
+
+        // Show recommendations panel if there are recommendations
+        if (claudeResponse.recs && claudeResponse.recs.length > 0) {
+          setShowRecommendations(true);
+        }
+
+        // Show analysis panel if there is analysis data
+        if (claudeResponse.analysis) {
+          setShowAnalysis(true);
+        }
+
+        logger.log('[Finora] Claude response:', {
+          intent: claudeResponse.intent,
+          speech: claudeResponse.speech.substring(0, 50) + '...',
+          state_patch: claudeResponse.state_patch,
+          recommendations: claudeResponse.recs?.length || 0
+        });
+
+        // Handle state_patch from Claude
+        if (claudeResponse.state_patch) {
+          const updatedState = mergeStatePatch(finoraState, claudeResponse.state_patch);
+          setFinoraState(updatedState);
+          saveFinoraState(updatedState);
+          logger.log('[Finora] State updated:', updatedState);
+
+          // Update budget if monthly_budget changed
+          if (claudeResponse.state_patch.monthly_budget !== undefined) {
+            const newBudget = { ...budget };
+            newBudget.total = claudeResponse.state_patch.monthly_budget || 0;
+            setBudget(newBudget);
+            saveBudget(newBudget);
+            toast.success(`Budget set to $${claudeResponse.state_patch.monthly_budget}`);
+
+            // Initialize demo data if budget is around $1000 (for demo purposes)
+            const budgetAmount = claudeResponse.state_patch.monthly_budget || 0;
+            const currentTransactions = loadTransactions(); // Load from localStorage, not state
+            if (budgetAmount >= 900 && budgetAmount <= 1100 && currentTransactions.length === 0) {
+              logger.log('[Finora] Initializing demo data for $1000 budget demo');
+              initializeDemoData();
+              refreshData(); // Reload transactions and budget
+              toast.success('Added realistic student expense examples for demo!', { duration: 5000 });
+            }
+          }
+        }
+
+        // Handle ADD_EXPENSE intent
+        if (claudeResponse.intent === "ADD_EXPENSE" && claudeResponse.entities.amount) {
+          addTransaction({
+            date: claudeResponse.entities.date || new Date().toISOString().split("T")[0],
+            amount: claudeResponse.entities.amount,
+            merchant: claudeResponse.entities.merchant || "Unknown",
+            category: claudeResponse.entities.category || "other",
+            source: "voice",
+            rawText: text,
+          });
+          refreshData();
+
+          // Check for achievements after adding transaction
+          checkAchievements();
+        }
+
+        setVoiceState("speaking");
+
+        // Stop and cleanup any currently playing audio
+        if (currentAudio) {
+          logger.log('[Finora] Stopping previous audio before playing new one');
+          currentAudio.pause();
+          currentAudio.currentTime = 0;
+
+          // Call cleanup if available to disconnect Web Audio nodes
+          if ((currentAudio as any).cleanup) {
+            (currentAudio as any).cleanup();
+          }
+
+          setCurrentAudio(null);
+          setAudioAmplitude(0);
+        }
+
+        try {
+          const ttsResponse = await textToSpeech(
+            claudeResponse.speech,
+            selectedVoice,
+            claudeResponse.tts.style
+          );
+          setLastTTSResponse(ttsResponse);
+
+          if (ttsResponse.audio_b64) {
+            const audio = playAudioFromBase64(
+              ttsResponse.audio_b64,
+              ttsResponse.mime,
+              () => {
+                setVoiceState("idle");
+                setCurrentAudio(null);
+                setAudioAmplitude(0);
+              },
+              (amplitude) => {
+                setAudioAmplitude(amplitude);
+              }
+            );
+            setCurrentAudio(audio);
+          } else {
+            toast.error('Could not generate speech');
+            setVoiceState("idle");
+          }
+        } catch (ttsError) {
+          logger.error('[Finora] TTS failed:', ttsError);
+          toast.error('Speech generation failed');
+          setVoiceState("idle");
+        }
+      } catch (error) {
+        logger.error("Processing error:", error);
+        toast.error("Oops! Something went wrong");
+        setVoiceState("idle");
+      }
+    },
+    [budget, refreshData, finoraState, selectedVoice, currentAudio, checkAchievements]
+  );
+
   // Handle voice toggle (only when conversation started)
   const handleVoiceToggle = useCallback(async () => {
     if (!conversationStarted) {
@@ -419,44 +588,7 @@ const Index = () => {
     refreshData();
     toast.success(`Added ${name} expense!`);
     checkAchievements();
-  }, [refreshData]);
-
-  // Check for achievements
-  const checkAchievements = useCallback(() => {
-    const updatedBudget = loadBudget();
-    const updatedTransactions = loadTransactions();
-    const remaining = calculateRemainingTotal(updatedBudget);
-    const totalSpent = Object.values(updatedBudget.spent).reduce((sum, val) => sum + val, 0);
-    
-    // Check food spending (Ramen Master)
-    const foodSpent = updatedBudget.spent.food || 0;
-    if (foodSpent < 20 && !localStorage.getItem('achievement_ramen_master')) {
-      setCurrentAchievement('ramen_master');
-      setConfettiTrigger(true);
-      localStorage.setItem('achievement_ramen_master', 'true');
-      setTimeout(() => setConfettiTrigger(false), 100);
-    }
-    
-    // Check savings (No Cap Saver)
-    const savingsPercent = updatedBudget.total > 0 ? (remaining / updatedBudget.total) * 100 : 0;
-    if (savingsPercent >= 50 && !localStorage.getItem('achievement_no_cap_saver')) {
-      setCurrentAchievement('no_cap_saver');
-      setConfettiTrigger(true);
-      localStorage.setItem('achievement_no_cap_saver', 'true');
-      setTimeout(() => setConfettiTrigger(false), 100);
-    }
-    
-    // Check if under budget (Budget King)
-    if (remaining > 0 && totalSpent > 0 && !localStorage.getItem('achievement_budget_king')) {
-      const daysLeft = Math.ceil((new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate() - new Date().getDate()));
-      if (daysLeft <= 3 && remaining > 0) {
-        setCurrentAchievement('budget_king');
-        setConfettiTrigger(true);
-        localStorage.setItem('achievement_budget_king', 'true');
-        setTimeout(() => setConfettiTrigger(false), 100);
-      }
-    }
-  }, []);
+  }, [refreshData, checkAchievements]);
 
   // Handle export data
   const handleExportData = useCallback(() => {
@@ -501,138 +633,6 @@ const Index = () => {
     };
     input.click();
   }, [refreshData]);
-
-  // Process transcript with Claude and TTS
-  const processTranscript = useCallback(
-    async (text: string) => {
-      try {
-        logger.log('[Finora] Processing transcript:', text);
-        logger.log('[Finora] Current state:', { 
-          introShown: finoraState.introShown, 
-          monthly_budget: finoraState.monthly_budget 
-        });
-        
-        setVoiceState("thinking");
-
-        const claudeResponse = await getIntent(text, budget, venuesData, finoraState);
-        setLastClaudeResponse(claudeResponse);
-
-        // Show recommendations panel if there are recommendations
-        if (claudeResponse.recs && claudeResponse.recs.length > 0) {
-          setShowRecommendations(true);
-        }
-
-        // Show analysis panel if there is analysis data
-        if (claudeResponse.analysis) {
-          setShowAnalysis(true);
-        }
-
-        logger.log('[Finora] Claude response:', {
-          intent: claudeResponse.intent,
-          speech: claudeResponse.speech.substring(0, 50) + '...',
-          state_patch: claudeResponse.state_patch,
-          recommendations: claudeResponse.recs?.length || 0
-        });
-
-        // Handle state_patch from Claude
-        if (claudeResponse.state_patch) {
-          const updatedState = mergeStatePatch(finoraState, claudeResponse.state_patch);
-          setFinoraState(updatedState);
-          saveFinoraState(updatedState);
-          logger.log('[Finora] State updated:', updatedState);
-          
-          // Update budget if monthly_budget changed
-          if (claudeResponse.state_patch.monthly_budget !== undefined) {
-            const newBudget = { ...budget };
-            newBudget.total = claudeResponse.state_patch.monthly_budget || 0;
-            setBudget(newBudget);
-            saveBudget(newBudget);
-            toast.success(`Budget set to $${claudeResponse.state_patch.monthly_budget}`);
-
-            // Initialize demo data if budget is around $1000 (for demo purposes)
-            const budgetAmount = claudeResponse.state_patch.monthly_budget || 0;
-            const currentTransactions = loadTransactions(); // Load from localStorage, not state
-            if (budgetAmount >= 900 && budgetAmount <= 1100 && currentTransactions.length === 0) {
-              logger.log('[Finora] Initializing demo data for $1000 budget demo');
-              initializeDemoData();
-              refreshData(); // Reload transactions and budget
-              toast.success('Added realistic student expense examples for demo!', { duration: 5000 });
-            }
-          }
-        }
-
-        // Handle ADD_EXPENSE intent
-        if (claudeResponse.intent === "ADD_EXPENSE" && claudeResponse.entities.amount) {
-          addTransaction({
-            date: claudeResponse.entities.date || new Date().toISOString().split("T")[0],
-            amount: claudeResponse.entities.amount,
-            merchant: claudeResponse.entities.merchant || "Unknown",
-            category: claudeResponse.entities.category || "other",
-            source: "voice",
-            rawText: text,
-          });
-          refreshData();
-          
-          // Check for achievements after adding transaction
-          checkAchievements();
-        }
-        
-        setVoiceState("speaking");
-
-        // Stop and cleanup any currently playing audio
-        if (currentAudio) {
-          logger.log('[Finora] Stopping previous audio before playing new one');
-          currentAudio.pause();
-          currentAudio.currentTime = 0;
-
-          // Call cleanup if available to disconnect Web Audio nodes
-          if ((currentAudio as any).cleanup) {
-            (currentAudio as any).cleanup();
-          }
-
-          setCurrentAudio(null);
-          setAudioAmplitude(0);
-        }
-
-        try {
-          const ttsResponse = await textToSpeech(
-            claudeResponse.speech,
-            selectedVoice,
-            claudeResponse.tts.style
-          );
-          setLastTTSResponse(ttsResponse);
-
-          if (ttsResponse.audio_b64) {
-            const audio = playAudioFromBase64(
-              ttsResponse.audio_b64,
-              ttsResponse.mime,
-              () => {
-                setVoiceState("idle");
-                setCurrentAudio(null);
-                setAudioAmplitude(0);
-              },
-              (amplitude) => {
-                setAudioAmplitude(amplitude);
-              }
-            );
-            setCurrentAudio(audio);
-          } else {
-            toast.error('Could not generate speech');
-            setVoiceState("idle");
-          }
-        } catch (ttsError) {
-          logger.error('[Finora] TTS failed:', ttsError);
-          toast.error('Speech generation failed');
-          setVoiceState("idle");
-        }
-      } catch (error) {
-        logger.error("Processing error:", error);
-        toast.error("Oops! Something went wrong");
-        setVoiceState("idle");
-      }
-    },
-    [budget, refreshData, finoraState, selectedVoice, currentAudio, checkAchievements]
-  );
 
   // Check support on mount
   useEffect(() => {
