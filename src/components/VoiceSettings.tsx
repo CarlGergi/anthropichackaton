@@ -1,4 +1,4 @@
-import { Settings, Globe, Volume2, Play, Loader2 } from "lucide-react";
+import { Settings, Globe, Volume2, Play, Loader2, RefreshCw } from "lucide-react";
 import { logger } from "@/lib/logger";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
@@ -12,6 +12,7 @@ interface VoiceSettingsProps {
   onLanguageChange: (lang: string) => void;
   selectedVoice: string;
   onVoiceChange: (voice: string) => void;
+  onShowOnboarding?: () => void;
 }
 
 const languages = [
@@ -86,11 +87,12 @@ const voices = [
   },
 ];
 
-export default function VoiceSettings({ 
-  language, 
+export default function VoiceSettings({
+  language,
   onLanguageChange,
   selectedVoice,
-  onVoiceChange
+  onVoiceChange,
+  onShowOnboarding
 }: VoiceSettingsProps) {
   const [playingVoice, setPlayingVoice] = useState<string | null>(null);
   const [currentAudio, setCurrentAudio] = useState<HTMLAudioElement | null>(null);
@@ -203,10 +205,23 @@ export default function VoiceSettings({
           </Select>
         </div>
 
+        {/* Show Onboarding */}
+        {onShowOnboarding && (
+          <div className="space-y-2">
+            <Button
+              onClick={onShowOnboarding}
+              className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white"
+            >
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Show Onboarding Screen
+            </Button>
+          </div>
+        )}
+
         {/* Info */}
         <div className="p-3 rounded-lg bg-white/5 border border-white/10">
           <p className="text-xs text-white/70 leading-relaxed">
-            <strong>Chrome over HTTPS</strong> is recommended for best results. 
+            <strong>Chrome over HTTPS</strong> is recommended for best results.
             Allow microphone access when prompted and speak clearly.
           </p>
         </div>

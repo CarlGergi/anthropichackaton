@@ -133,8 +133,20 @@ const Index = () => {
   const [showDebateInput, setShowDebateInput] = useState(false);
   const [debateQuestion, setDebateQuestion] = useState("");
   const [showModeSelection, setShowModeSelection] = useState(() => {
-    // Show mode selection if no mode has been chosen yet
-    return !localStorage.getItem('finora_mode_selected');
+    // Show mode selection if:
+    // 1. No mode has been selected yet, OR
+    // 2. This is a genuinely first visit (no budget data and no transactions)
+    const modeSelected = localStorage.getItem('finora_mode_selected');
+    const hasNormalBudget = localStorage.getItem('finora_budget');
+    const hasDemoBudget = localStorage.getItem('finora_budget_demo');
+    const hasNormalTransactions = localStorage.getItem('finora_transactions');
+    const hasDemoTransactions = localStorage.getItem('finora_transactions_demo');
+
+    // If no mode selected AND no data exists anywhere, definitely show onboarding
+    const isFirstVisit = !modeSelected && !hasNormalBudget && !hasDemoBudget && !hasNormalTransactions && !hasDemoTransactions;
+
+    // Also show if mode selected flag is explicitly missing (even if there's old data)
+    return isFirstVisit || !modeSelected;
   });
 
   // Handle voice change
@@ -144,6 +156,13 @@ const Index = () => {
     toast.success(`Voice changed to ${voice}`);
   }, []);
 
+  // Show onboarding screen handler
+  const handleShowOnboarding = useCallback(() => {
+    localStorage.removeItem('finora_mode_selected');
+    setShowModeSelection(true);
+    setSettingsOpen(false);
+    toast.success('Showing onboarding screen');
+  }, []);
 
   // Start conversation handler
   const handleStartConversation = useCallback(async () => {
@@ -678,6 +697,14 @@ const Index = () => {
 
       if (error) {
         logger.error('[Debate] API error:', error);
+        // Provide helpful error message
+        if (error.message?.includes('FunctionsRelayError') || error.message?.includes('Not Found')) {
+          toast.error('Debate feature not deployed yet. Please deploy finora-debates edge function.');
+        } else if (error.message?.includes('network') || error.message?.includes('fetch')) {
+          toast.error('Network error. Please check your connection.');
+        } else {
+          toast.error(`Debate failed: ${error.message || 'Unknown error'}`);
+        }
         throw error;
       }
 
@@ -1864,6 +1891,7 @@ const Index = () => {
           }}
           selectedVoice={selectedVoice}
           onVoiceChange={handleVoiceChange}
+          onShowOnboarding={handleShowOnboarding}
         />
       )}
 
