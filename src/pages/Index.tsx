@@ -284,7 +284,7 @@ const Index = () => {
 
         setVoiceState("thinking");
 
-        const claudeResponse = await getIntent(text, budget, venuesData, finoraState);
+        const claudeResponse = await getIntent(text, budget, venuesData, finoraState, demoMode);
         setLastClaudeResponse(claudeResponse);
 
         // Show recommendations panel if there are recommendations

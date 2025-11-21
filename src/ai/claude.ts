@@ -14,7 +14,8 @@ export async function getIntent(
   transcript: string,
   budget: BudgetState,
   venues: Venue[],
-  finoraState: FinoraState
+  finoraState: FinoraState,
+  demoMode: boolean = false
 ): Promise<ClaudeResponse> {
   logger.log('Calling Claude API with transcript:', transcript);
 
@@ -45,7 +46,8 @@ export async function getIntent(
         budget: budgetContext,
         venues,
         finora_state: finoraState,
-        now_date: new Date().toISOString()
+        now_date: new Date().toISOString(),
+        demo_mode: demoMode
       }
     });
 
