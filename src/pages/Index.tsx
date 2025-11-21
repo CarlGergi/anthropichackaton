@@ -685,6 +685,9 @@ const Index = () => {
       const remaining = calculateRemainingTotal(budget);
       const daysLeft = Math.ceil((new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate() - new Date().getDate()));
 
+      console.log('[Debate] Calling finora-debates edge function...');
+      console.log('[Debate] Budget data:', { total: budget.total, totalSpent, remaining, daysLeft });
+
       const { data, error } = await supabase.functions.invoke('finora-debates', {
         body: {
           question: question,
@@ -697,32 +700,52 @@ const Index = () => {
         }
       });
 
+      console.log('[Debate] Response received:', { data, error });
+
       if (error) {
+        console.error('[Debate] ❌ ERROR OCCURRED:');
+        console.error('[Debate] Error object:', error);
+        console.error('[Debate] Error message:', error.message);
+        console.error('[Debate] Error name:', error.name);
+        console.error('[Debate] Full error JSON:', JSON.stringify(error, null, 2));
+
         logger.error('[Debate] API error:', error);
-        console.error('[Debate] Full error details:', error);
 
         // Provide very specific error messages
         const errorMsg = error.message || JSON.stringify(error);
+        const errorStr = JSON.stringify(error);
 
-        if (errorMsg.includes('FunctionsRelayError') || errorMsg.includes('Not Found') || errorMsg.includes('404')) {
-          toast.error('⚠️ DEPLOYMENT REQUIRED: Run "supabase functions deploy finora-debates" in your terminal', {
-            duration: 8000
+        console.log('[Debate] Checking error type...');
+        console.log('[Debate] Error string includes FunctionsRelayError?', errorStr.includes('FunctionsRelayError'));
+        console.log('[Debate] Error string includes Not Found?', errorStr.includes('Not Found'));
+        console.log('[Debate] Error string includes 404?', errorStr.includes('404'));
+
+        if (errorMsg.includes('FunctionsRelayError') || errorMsg.includes('Not Found') || errorMsg.includes('404') ||
+            errorStr.includes('FunctionsRelayError') || errorStr.includes('Not Found') || errorStr.includes('404')) {
+          console.error('[Debate] 🚨 EDGE FUNCTION NOT DEPLOYED!');
+          toast.error('🚨 EDGE FUNCTION NOT DEPLOYED! Run: supabase functions deploy finora-debates', {
+            duration: 10000
           });
         } else if (errorMsg.includes('Failed to fetch') || errorMsg.includes('NetworkError')) {
+          console.error('[Debate] Network error detected');
           toast.error('Network error. Check your internet connection.', {
             duration: 5000
           });
         } else if (errorMsg.includes('ANTHROPIC_API_KEY')) {
+          console.error('[Debate] API key missing');
           toast.error('Missing API key. Set ANTHROPIC_API_KEY in Supabase secrets.', {
             duration: 6000
           });
         } else {
-          toast.error(`Debate failed: ${errorMsg.substring(0, 100)}`, {
-            duration: 6000
+          console.error('[Debate] Unknown error type');
+          toast.error(`Debate failed: ${errorMsg.substring(0, 150)}`, {
+            duration: 8000
           });
         }
         throw error;
       }
+
+      console.log('[Debate] ✅ Success! Debate data received:', data);
 
       logger.log('[Debate] Debate result:', data);
       setDebateResult(data as DebateResult);
