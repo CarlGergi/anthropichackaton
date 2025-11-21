@@ -221,6 +221,17 @@ const Index = () => {
   // Handle keyboard shortcuts
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
+      // Don't trigger shortcuts if user is typing in an input/textarea
+      const target = e.target as HTMLElement;
+      const isTyping = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable;
+
+      // Space key - Toggle voice input
+      if (e.key === " " && !isTyping) {
+        e.preventDefault(); // Prevent page scroll
+        handleVoiceToggle();
+        return;
+      }
+
       if (e.key === "d" || e.key === "D") {
         setDebugOpen((prev) => !prev);
       }
@@ -260,7 +271,7 @@ const Index = () => {
       window.removeEventListener("keypress", handleKeyPress);
       window.removeEventListener("keydown", handleKeyPress);
     };
-  }, [voiceState, stt, settingsOpen, debugOpen, showShortcutsHelp, showTransactionHistory, showVisionResult, showDebateResult, conversationStarted, isAnalyzingImage, isDebating]);
+  }, [voiceState, stt, settingsOpen, debugOpen, showShortcutsHelp, showTransactionHistory, showVisionResult, showDebateResult, conversationStarted, isAnalyzingImage, isDebating, handleVoiceToggle, handleCameraCapture, handleStartDebate]);
 
   // Refresh budget and transactions
   const refreshData = useCallback(() => {
