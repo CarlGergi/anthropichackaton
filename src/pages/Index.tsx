@@ -703,10 +703,13 @@ const Index = () => {
         const errorMsg = error.message || JSON.stringify(error);
         const errorStr = JSON.stringify(error);
 
+        // Check for deployment errors
         if (errorMsg.includes('FunctionsRelayError') || errorMsg.includes('Not Found') || errorMsg.includes('404') ||
-            errorStr.includes('FunctionsRelayError') || errorStr.includes('Not Found') || errorStr.includes('404')) {
-          toast.error('Debate feature not deployed. Deploy with: supabase functions deploy finora-debates', {
-            duration: 8000
+            errorStr.includes('FunctionsRelayError') || errorStr.includes('Not Found') || errorStr.includes('404') ||
+            errorMsg.includes('non-2xx') || errorMsg.includes('non 2xx') || errorMsg.includes('2XX') ||
+            errorMsg.includes('FunctionsHttpError')) {
+          toast.error('🚨 DEPLOY REQUIRED: supabase functions deploy finora-debates', {
+            duration: 12000
           });
         } else if (errorMsg.includes('Failed to fetch') || errorMsg.includes('NetworkError')) {
           toast.error('Network error. Check your internet connection.', {
@@ -717,8 +720,9 @@ const Index = () => {
             duration: 6000
           });
         } else {
-          toast.error(`Debate failed: ${errorMsg.substring(0, 100)}`, {
-            duration: 6000
+          // Default to deployment error message
+          toast.error('🚨 DEPLOY REQUIRED: supabase functions deploy finora-debates', {
+            duration: 12000
           });
         }
         throw error;
