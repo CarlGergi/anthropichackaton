@@ -1165,17 +1165,13 @@ const Index = () => {
     clearNormalModeData();
     localStorage.removeItem("finora_state");
 
-    // Reload demo data - keeps Alex Chen profile persistent
-    logger.log('[Finora] Reloading demo data after reset...');
-    initializeDemoData();
-
-    // Load the fresh demo data
+    // Reset to clean normal mode state (no budget, no transactions)
+    logger.log('[Finora] Resetting to clean normal mode state...');
     const loadedBudget = loadBudget();
     const loadedTransactions = loadTransactions();
 
-    // Reset finora state but keep demo budget info
+    // Reset finora state to clean normal mode
     const freshFinoraState = getDefaultFinoraState();
-    freshFinoraState.monthly_budget = 1000;
     freshFinoraState.introShown = false; // Reset intro so user gets greeted again
     saveFinoraState(freshFinoraState);
 
