@@ -834,34 +834,26 @@ const Index = () => {
     setSttSupport(support);
   }, []);
 
-  // Initialize storage mode on mount
+  // Initialize demo mode state on mount to match storage mode
   useEffect(() => {
-    // Check localStorage to determine which mode we should start in
+    // Storage mode is already set in budget.ts from localStorage
+    // We just need to sync the demoMode state
     const savedMode = localStorage.getItem('finora_current_mode');
+    const isDemo = savedMode === 'demo';
 
-    if (savedMode === 'demo') {
-      logger.log('[Init] Starting in DEMO mode');
-      setStorageMode('demo');
-      setDemoMode(true);
+    logger.log(`[Init] Syncing to ${isDemo ? 'DEMO' : 'NORMAL'} mode`);
+    setDemoMode(isDemo);
 
-      // Ensure demo data exists
+    // Ensure demo data exists if in demo mode
+    if (isDemo) {
       const demoBudget = loadBudget();
       if (demoBudget.total === 0) {
         forceLoadDemoData();
       }
-    } else {
-      logger.log('[Init] Starting in NORMAL mode');
-      setStorageMode('normal');
-      setDemoMode(false);
     }
 
     refreshData();
   }, []); // Only run once on mount
-
-  // Save current mode to localStorage whenever it changes
-  useEffect(() => {
-    localStorage.setItem('finora_current_mode', demoMode ? 'demo' : 'normal');
-  }, [demoMode]);
 
   // Handle demo mode toggle
   const handleDemoModeToggle = useCallback((enableDemo: boolean) => {

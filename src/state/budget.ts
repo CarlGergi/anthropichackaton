@@ -12,11 +12,20 @@ const DEMO_TRANSACTIONS_KEY = "finora_transactions_demo";
 const LEGACY_STORAGE_KEY = "pennypal_budget";
 const LEGACY_TRANSACTIONS_KEY = "pennypal_transactions";
 
-// Track current mode
-let currentMode: "normal" | "demo" = "normal";
+// Track current mode - initialize from localStorage to ensure correct mode on load
+let currentMode: "normal" | "demo" = (() => {
+  if (typeof localStorage !== 'undefined') {
+    const savedMode = localStorage.getItem('finora_current_mode');
+    return savedMode === 'demo' ? 'demo' : 'normal';
+  }
+  return 'normal';
+})();
+
+logger.log(`[Storage] Initialized in ${currentMode.toUpperCase()} mode`);
 
 export function setStorageMode(mode: "normal" | "demo"): void {
   currentMode = mode;
+  localStorage.setItem('finora_current_mode', mode);
   logger.log(`[Storage] Switched to ${mode.toUpperCase()} mode`);
 }
 
