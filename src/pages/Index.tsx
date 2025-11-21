@@ -1165,78 +1165,175 @@ const Index = () => {
   // Mode Selection Screen
   if (showModeSelection) {
     return (
-      <div className="relative w-screen min-h-screen overflow-hidden flex items-center justify-center font-sora bg-gradient-to-br from-gray-900 via-purple-900/30 to-gray-900">
+      <div className="relative w-screen min-h-screen overflow-hidden flex items-center justify-center font-sora bg-gradient-to-br from-purple-900 via-blue-900 to-pink-900">
+        {/* Animated Background Orbs */}
+        <motion.div
+          className="absolute top-20 left-10 w-72 h-72 bg-purple-500/30 rounded-full blur-3xl"
+          animate={{
+            x: [0, 100, 0],
+            y: [0, -50, 0],
+            scale: [1, 1.2, 1],
+          }}
+          transition={{
+            duration: 8,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+        />
+        <motion.div
+          className="absolute bottom-20 right-10 w-96 h-96 bg-blue-500/30 rounded-full blur-3xl"
+          animate={{
+            x: [0, -80, 0],
+            y: [0, 60, 0],
+            scale: [1, 1.3, 1],
+          }}
+          transition={{
+            duration: 10,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+        />
+
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5 }}
-          className="w-full max-w-4xl mx-4 p-8 md:p-12"
+          className="relative z-10 w-full max-w-6xl mx-4 p-8 md:p-12"
         >
           {/* Logo and Title */}
           <motion.div
             initial={{ y: -20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="text-center mb-8"
+            transition={{ delay: 0.2, type: "spring", stiffness: 150 }}
+            className="text-center mb-10"
           >
-            <h1 className="text-6xl md:text-7xl font-bold text-white mb-4">
+            <motion.h1
+              className="text-7xl md:text-8xl font-bold mb-4 bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent"
+              animate={{
+                backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
+              }}
+              transition={{
+                duration: 5,
+                repeat: Infinity,
+                ease: "linear"
+              }}
+              style={{
+                backgroundSize: "200% 200%"
+              }}
+            >
               Finora
-            </h1>
-            <p className="text-xl md:text-2xl text-purple-200 mb-6">
+            </motion.h1>
+            <motion.p
+              className="text-2xl md:text-3xl text-purple-200 mb-6"
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.3 }}
+            >
               Your Gen Z Budget Bestie 💜
-            </p>
+            </motion.p>
           </motion.div>
 
           {/* Intro */}
           <motion.div
-            initial={{ y: 20, opacity: 0 }}
+            initial={{ y: 30, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.4 }}
-            className="bg-gradient-to-br from-purple-600/20 to-pink-600/20 border-2 border-purple-500/30 rounded-3xl p-6 md:p-8 mb-8"
+            transition={{ delay: 0.4, type: "spring" }}
+            className="bg-gradient-to-br from-purple-600/20 to-pink-600/20 border-2 border-purple-500/30 rounded-3xl p-8 md:p-10 mb-10 backdrop-blur-xl shadow-2xl"
           >
-            <p className="text-white/90 text-lg leading-relaxed text-center">
-              Finora is your <span className="font-bold text-purple-300">AI-powered budget buddy</span> who actually gets you.
-              She's funny, supportive, and keeps it 100% real about your spending. Track expenses with voice,
-              scan receipts with your camera, and get personalized advice that doesn't suck.
+            <p className="text-white/95 text-xl md:text-2xl leading-relaxed text-center mb-6 font-medium">
+              Meet Finora — your <span className="font-bold text-purple-300 bg-purple-500/20 px-2 py-1 rounded">AI-powered budget companion</span> who actually gets you.
             </p>
+            <p className="text-white/80 text-lg leading-relaxed text-center mb-8">
+              She's funny, savage when needed, and keeps it 100% real about your spending.
+              No boring spreadsheets, no judgment — just real talk and smart advice.
+            </p>
+
+            {/* Feature Pills */}
+            <div className="flex flex-wrap justify-center gap-3">
+              {[
+                { icon: "🎤", text: "Voice tracking" },
+                { icon: "📸", text: "Receipt scanning" },
+                { icon: "⚖️", text: "Smart debates" },
+                { icon: "✨", text: "Gen Z vibes" },
+              ].map((feature, i) => (
+                <motion.div
+                  key={feature.text}
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ delay: 0.6 + i * 0.1, type: "spring", stiffness: 200 }}
+                  whileHover={{ scale: 1.1, y: -2 }}
+                  className="bg-white/10 backdrop-blur-md border border-white/20 rounded-full px-5 py-2.5 flex items-center gap-2 hover:bg-white/15 transition-colors cursor-default"
+                >
+                  <span className="text-2xl">{feature.icon}</span>
+                  <span className="text-white/90 font-medium">{feature.text}</span>
+                </motion.div>
+              ))}
+            </div>
           </motion.div>
 
           {/* Mode Selection */}
           <motion.div
-            initial={{ y: 20, opacity: 0 }}
+            initial={{ y: 30, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.6 }}
+            transition={{ delay: 0.8 }}
           >
-            <h2 className="text-2xl font-bold text-white text-center mb-6">
-              Choose Your Experience
+            <h2 className="text-3xl font-bold text-white text-center mb-8 flex items-center justify-center gap-3">
+              <span>Choose Your Experience</span>
+              <motion.span
+                animate={{ rotate: [0, 10, -10, 0] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              >
+                ✨
+              </motion.span>
             </h2>
 
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="grid md:grid-cols-2 gap-8">
               {/* Demo Mode */}
               <motion.button
                 onClick={() => handleModeSelection(true)}
-                className="relative group p-8 rounded-2xl bg-gradient-to-br from-blue-600/30 to-cyan-600/30
-                  border-2 border-blue-500/40 hover:border-blue-400/60
+                initial={{ opacity: 0, x: -50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.9, type: "spring", stiffness: 100 }}
+                className="relative group p-8 md:p-10 rounded-3xl bg-gradient-to-br from-blue-600/40 to-cyan-600/40
+                  border-2 border-blue-500/50 hover:border-blue-400/70
+                  backdrop-blur-xl shadow-2xl
                   transition-all duration-300
-                  hover:shadow-[0_0_40px_rgba(59,130,246,0.4)]"
-                whileHover={{ scale: 1.02, y: -5 }}
+                  hover:shadow-[0_0_50px_rgba(59,130,246,0.5)]
+                  overflow-hidden"
+                whileHover={{ scale: 1.03, y: -8 }}
                 whileTap={{ scale: 0.98 }}
               >
-                <div className="text-left">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="p-3 bg-blue-500/30 rounded-full">
-                      <Sparkles className="w-6 h-6 text-blue-300" />
-                    </div>
-                    <h3 className="text-2xl font-bold text-white">Demo Mode</h3>
+                {/* Glow effect */}
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-400/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+                <div className="relative text-left">
+                  <div className="flex items-center gap-4 mb-5">
+                    <motion.div
+                      className="p-4 bg-blue-500/30 rounded-2xl"
+                      whileHover={{ rotate: [0, -10, 10, 0], scale: 1.1 }}
+                      transition={{ duration: 0.5 }}
+                    >
+                      <Sparkles className="w-8 h-8 text-blue-300" />
+                    </motion.div>
+                    <h3 className="text-3xl font-bold text-white">Demo Mode</h3>
                   </div>
-                  <p className="text-white/80 mb-4 leading-relaxed">
-                    Explore with Alex Chen's realistic student budget. See how Finora works with
-                    <span className="font-bold text-blue-300"> $1,000/month</span> and
-                    <span className="font-bold text-blue-300"> 28 transactions</span>.
+                  <p className="text-white/90 text-lg mb-2 leading-relaxed">
+                    Explore with <span className="font-bold text-blue-300">Alex Chen's</span> realistic student budget
                   </p>
-                  <div className="flex items-center gap-2 text-blue-300 font-semibold group-hover:gap-3 transition-all">
-                    Try Demo
-                    <span className="text-xl">→</span>
+                  <p className="text-white/70 mb-6 leading-relaxed">
+                    See Finora in action with{" "}
+                    <span className="font-bold text-blue-300">$1,000/month</span> and{" "}
+                    <span className="font-bold text-blue-300">28 real transactions</span>
+                  </p>
+                  <div className="flex items-center gap-2 text-blue-300 font-bold text-lg group-hover:gap-4 transition-all">
+                    Try Demo Now
+                    <motion.span
+                      className="text-2xl"
+                      animate={{ x: [0, 5, 0] }}
+                      transition={{ duration: 1.5, repeat: Infinity }}
+                    >
+                      →
+                    </motion.span>
                   </div>
                 </div>
               </motion.button>
@@ -1244,27 +1341,48 @@ const Index = () => {
               {/* Normal Mode */}
               <motion.button
                 onClick={() => handleModeSelection(false)}
-                className="relative group p-8 rounded-2xl bg-gradient-to-br from-purple-600/30 to-pink-600/30
-                  border-2 border-purple-500/40 hover:border-purple-400/60
+                initial={{ opacity: 0, x: 50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.9, type: "spring", stiffness: 100 }}
+                className="relative group p-8 md:p-10 rounded-3xl bg-gradient-to-br from-purple-600/40 to-pink-600/40
+                  border-2 border-purple-500/50 hover:border-purple-400/70
+                  backdrop-blur-xl shadow-2xl
                   transition-all duration-300
-                  hover:shadow-[0_0_40px_rgba(168,85,247,0.4)]"
-                whileHover={{ scale: 1.02, y: -5 }}
+                  hover:shadow-[0_0_50px_rgba(168,85,247,0.5)]
+                  overflow-hidden"
+                whileHover={{ scale: 1.03, y: -8 }}
                 whileTap={{ scale: 0.98 }}
               >
-                <div className="text-left">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="p-3 bg-purple-500/30 rounded-full">
-                      <Hand className="w-6 h-6 text-purple-300" />
-                    </div>
-                    <h3 className="text-2xl font-bold text-white">Normal Mode</h3>
+                {/* Glow effect */}
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-400/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+                <div className="relative text-left">
+                  <div className="flex items-center gap-4 mb-5">
+                    <motion.div
+                      className="p-4 bg-purple-500/30 rounded-2xl"
+                      whileHover={{ rotate: [0, -10, 10, 0], scale: 1.1 }}
+                      transition={{ duration: 0.5 }}
+                    >
+                      <Hand className="w-8 h-8 text-purple-300" />
+                    </motion.div>
+                    <h3 className="text-3xl font-bold text-white">Normal Mode</h3>
                   </div>
-                  <p className="text-white/80 mb-4 leading-relaxed">
-                    Start fresh with your own budget! Finora will ask about your monthly budget
-                    and help you track spending in <span className="font-bold text-purple-300">real-time</span>.
+                  <p className="text-white/90 text-lg mb-2 leading-relaxed">
+                    Start fresh with <span className="font-bold text-purple-300">your own budget</span>
                   </p>
-                  <div className="flex items-center gap-2 text-purple-300 font-semibold group-hover:gap-3 transition-all">
+                  <p className="text-white/70 mb-6 leading-relaxed">
+                    Finora will guide you through setup and help you track spending in{" "}
+                    <span className="font-bold text-purple-300">real-time</span>
+                  </p>
+                  <div className="flex items-center gap-2 text-purple-300 font-bold text-lg group-hover:gap-4 transition-all">
                     Start Tracking
-                    <span className="text-xl">→</span>
+                    <motion.span
+                      className="text-2xl"
+                      animate={{ x: [0, 5, 0] }}
+                      transition={{ duration: 1.5, repeat: Infinity }}
+                    >
+                      →
+                    </motion.span>
                   </div>
                 </div>
               </motion.button>
@@ -1275,10 +1393,10 @@ const Index = () => {
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.8 }}
-            className="text-center text-white/50 text-sm mt-8"
+            transition={{ delay: 1.2 }}
+            className="text-center text-white/50 text-sm mt-10"
           >
-            You can switch between modes anytime from settings
+            💡 You can switch between modes anytime from settings
           </motion.p>
         </motion.div>
       </div>
