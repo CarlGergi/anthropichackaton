@@ -222,7 +222,7 @@ Plus confetti celebrations and animated badges!
 - **Parallel API processing** - 3 simultaneous Claude calls for debates
 - **Multimodal AI** - Claude Sonnet 4 Vision for image understanding
 - **Performance optimized** - Global AudioContext, debouncing, lazy loading
-- **78 TypeScript files** with 2,800+ lines of component code
+- **78 TypeScript files** with 1,374-line main app and 14 custom components
 
 ### Real User Impact
 
@@ -691,7 +691,7 @@ const [devilResponse, angelResponse, verdictResponse] = await Promise.all([
 - **React 18.3.1** + **TypeScript 5.9.3**
 - **Vite 5.4.19** - Lightning-fast build tool
 - **Tailwind CSS 3.4.17** - Utility-first styling
-- **shadcn/ui** - 40+ accessible components (Radix UI)
+- **shadcn/ui** - 47 accessible components (Radix UI)
 - **Framer Motion 11.18.2** - Smooth animations
 - **React Router 6.30.1** - Client-side routing
 - **React Hook Form** + **Zod** - Type-safe forms
@@ -729,6 +729,7 @@ anthropichackaton/
 │   │   └── finoraState.ts         # Conversation state management
 │   ├── components/
 │   │   ├── AnimatedFinoraCharacter.tsx    # 3D character with animations
+│   │   ├── FinoraCharacter.tsx            # Static character component
 │   │   ├── VisionResultPanel.tsx          # Vision analysis results
 │   │   ├── FinoraDebatesPanel.tsx         # Debate display
 │   │   ├── RecommendationsPanel.tsx       # Venue suggestions
@@ -741,14 +742,19 @@ anthropichackaton/
 │   │   ├── VoiceSettings.tsx              # Voice configuration
 │   │   ├── KeyboardShortcutsHelp.tsx      # Help overlay
 │   │   ├── DebugPanel.tsx                 # Development debugging
-│   │   └── ui/                            # 40+ shadcn/ui components
+│   │   └── ui/                            # 47 shadcn/ui components
 │   ├── pages/
-│   │   ├── Index.tsx              # Main app (1,280 lines!)
+│   │   ├── Index.tsx              # Main app (1,374 lines!)
 │   │   └── NotFound.tsx           # 404 page
+│   ├── hooks/
+│   │   ├── use-mobile.tsx         # Mobile detection hook
+│   │   └── use-toast.ts           # Toast notifications hook
 │   ├── types/
 │   │   └── index.ts               # TypeScript definitions
 │   ├── data/
 │   │   └── venues.json            # Toronto venues database
+│   ├── assets/
+│   │   └── finora-character.png   # Character image assets
 │   ├── lib/
 │   │   ├── utils.ts               # Utility functions
 │   │   └── logger.ts              # Logging utility
@@ -775,10 +781,10 @@ anthropichackaton/
 
 **Key Statistics:**
 - 78 TypeScript files
-- 2,824 lines in components
+- 1,374 lines in main app (Index.tsx)
 - 5 Edge Functions (4 active)
-- 16 custom components
-- 40+ UI components
+- 14 custom components
+- 47 UI components (shadcn/ui)
 - 6 achievements
 - 9 voice options
 - 20+ venue recommendations
