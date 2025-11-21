@@ -37,12 +37,14 @@ import {
   addTransaction,
   deleteTransaction,
   clearAllData,
+  clearNormalModeData,
   getDefaultBudget,
   calculateRemainingTotal,
   saveBudget,
   saveTransactions,
   initializeDemoData,
-  forceLoadDemoData
+  forceLoadDemoData,
+  setStorageMode
 } from "@/state/budget";
 import {
   loadFinoraState,
@@ -119,10 +121,9 @@ const Index = () => {
   const [showDebateResult, setShowDebateResult] = useState(false);
   const [debateResult, setDebateResult] = useState<DebateResult | null>(null);
   const [demoMode, setDemoMode] = useState(() => {
-    // Check if demo data is already loaded (Alex Chen profile with ~$1000 budget)
-    const currentBudget = loadBudget();
-    const currentTransactions = loadTransactions();
-    return currentBudget.total >= 900 && currentBudget.total <= 1100 && currentTransactions.length > 20;
+    // Start in normal mode by default
+    // We'll check and potentially switch in useEffect
+    return false;
   });
   const [isAnalyzingImage, setIsAnalyzingImage] = useState(false);
   const [isDebating, setIsDebating] = useState(false);
@@ -833,24 +834,34 @@ const Index = () => {
     setSttSupport(support);
   }, []);
 
-  // Show welcome message if demo data was just loaded
+  // Initialize storage mode on mount
   useEffect(() => {
-    if (budget.total > 0 && transactions.length > 0 && demoMode) {
-      logger.log('[Demo] App loaded with demo data:', {
-        budget: budget.total,
-        transactions: transactions.length
-      });
+    // Check localStorage to determine which mode we should start in
+    const savedMode = localStorage.getItem('finora_current_mode');
 
-      // Show welcome toast on first load of demo mode
-      const hasShownWelcome = sessionStorage.getItem('finora_welcome_shown');
-      if (!hasShownWelcome) {
-        toast.success(`Demo mode active! Budget: $${budget.total}/month with ${transactions.length} realistic transactions`, {
-          duration: 5000
-        });
-        sessionStorage.setItem('finora_welcome_shown', 'true');
+    if (savedMode === 'demo') {
+      logger.log('[Init] Starting in DEMO mode');
+      setStorageMode('demo');
+      setDemoMode(true);
+
+      // Ensure demo data exists
+      const demoBudget = loadBudget();
+      if (demoBudget.total === 0) {
+        forceLoadDemoData();
       }
+    } else {
+      logger.log('[Init] Starting in NORMAL mode');
+      setStorageMode('normal');
+      setDemoMode(false);
     }
+
+    refreshData();
   }, []); // Only run once on mount
+
+  // Save current mode to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('finora_current_mode', demoMode ? 'demo' : 'normal');
+  }, [demoMode]);
 
   // Handle demo mode toggle
   const handleDemoModeToggle = useCallback((enableDemo: boolean) => {
@@ -867,16 +878,18 @@ const Index = () => {
       setCurrentAudio(null);
     }
 
+    // Switch storage mode first
+    setStorageMode(enableDemo ? "demo" : "normal");
+
     if (enableDemo) {
-      // Load demo data (overwrites current data)
+      // Load demo data - ensure demo data exists
       forceLoadDemoData();
-      toast.success('Demo mode activated! Loaded realistic student budget with 28 transactions', {
+      toast.success('Demo mode activated! Loaded Alex Chen\'s student budget', {
         duration: 4000
       });
     } else {
-      // Switch to normal mode - just reload existing normal mode data (don't clear)
-      // Normal mode data persists across switches and only resets with Reset button
-      toast.info('Normal mode activated! Your data is preserved', {
+      // Switch to normal mode - load normal mode data (separate from demo)
+      toast.info('Normal mode activated! Your personal data loaded', {
         duration: 3000
       });
     }
@@ -887,7 +900,7 @@ const Index = () => {
     setFinoraState(freshFinoraState);
     saveFinoraState(freshFinoraState);
 
-    // Update state and refresh
+    // Update state and refresh with new mode's data
     setDemoMode(enableDemo);
     refreshData();
   }, [voiceState, stt, currentAudio, refreshData]);
@@ -913,9 +926,9 @@ const Index = () => {
     toast.info("Conversation ended. Press Start to talk again.");
   }, [voiceState, stt, currentAudio]);
 
-  // Handle reset
+  // Handle reset (only for Normal Mode)
   const handleReset = useCallback(() => {
-    logger.log('[Finora] Resetting all data...');
+    logger.log('[Finora] Resetting Normal Mode data...');
 
     // First end any active conversation
     if (voiceState === "listening") {
@@ -927,8 +940,8 @@ const Index = () => {
       setCurrentAudio(null);
     }
 
-    // Clear all localStorage data
-    clearAllData();
+    // Clear only normal mode data (not demo data)
+    clearNormalModeData();
     localStorage.removeItem("finora_state");
 
     // Reset all states to defaults
@@ -942,10 +955,10 @@ const Index = () => {
     setConversationStarted(false);
     setLastClaudeResponse(undefined);
 
-    logger.log('[Finora] Reset complete - fresh state:', freshFinoraState);
+    logger.log('[Finora] Reset complete - fresh Normal Mode state:', freshFinoraState);
 
     setShowResetDialog(false);
-    toast.success("Finora forgot everything. Fresh start!");
+    toast.success("Normal Mode reset! Fresh start for your personal data.");
   }, [voiceState, stt, currentAudio]);
 
   // Handle log expense from vision
