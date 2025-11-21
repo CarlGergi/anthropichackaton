@@ -58,22 +58,6 @@ import { Venue } from "@/types";
 const venuesData = venuesDataRaw as Venue[];
 
 const Index = () => {
-  const [voiceState, setVoiceState] = useState<VoiceState>("idle");
-  const [budget, setBudget] = useState(() => {
-    try {
-      const loadedBudget = loadBudget();
-      logger.log('[Index] Loaded budget:', loadedBudget);
-      return loadedBudget;
-    } catch (error) {
-      logger.error('[Index] Failed to load budget:', error);
-      return getDefaultBudget();
-    }
-  };
-})();
-
-const Index = () => {
-  // Ensure demo data is loaded before component initialization
-  ensureDemoDataLoaded();
 
   const [voiceState, setVoiceState] = useState<VoiceState>("idle");
   const [budget, setBudget] = useState(() => loadBudget());
@@ -1759,6 +1743,7 @@ const Index = () => {
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.5, type: "spring", stiffness: 200 }}
               whileHover={{ scale: 1.08, y: -5 }}
+              whileTap={{ scale: 0.95 }}
               className={`
                 relative w-24 h-24 md:w-32 md:h-32 rounded-full backdrop-blur-xl border-2 border-white/30
                 flex items-center justify-center
@@ -1769,8 +1754,6 @@ const Index = () => {
                 shadow-[0_0_40px_rgba(168,85,247,0.4)]
                 hover:shadow-[0_0_60px_rgba(168,85,247,0.6)]
               `}
-              whileTap={{ scale: 0.95 }}
-              whileHover={{ scale: 1.05 }}
             >
               {isDebating ? (
                 <Loader2 className="w-10 h-10 md:w-12 md:h-12 text-white animate-spin" />
