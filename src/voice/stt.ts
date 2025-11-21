@@ -120,15 +120,15 @@ export class SpeechToText {
         this.onTranscript(interimTranscript, false);
       }
 
-      // Reset silence timeout
+      // Reset silence timeout - increased to 15 seconds for more speaking time
       if (this.silenceTimeout) {
         clearTimeout(this.silenceTimeout);
       }
       this.silenceTimeout = window.setTimeout(() => {
-        if (this.isListening && finalTranscript) {
+        if (this.isListening) {
           this.stop();
         }
-      }, 7000);
+      }, 15000);
     };
 
     this.recognition.onerror = (event: any) => {
@@ -146,9 +146,10 @@ export class SpeechToText {
           
         case 'no-speech':
           if (!hasReceivedSpeech) {
-            this.onError?.("I didn't hear anything. Try again closer to the mic.", errorCode);
+            this.onError?.("I didn't hear anything. Speak clearly and closer to the mic.", errorCode);
           }
-          this.stop();
+          // Don't stop immediately, let user try again
+          this.isListening = false;
           break;
           
         case 'audio-capture':

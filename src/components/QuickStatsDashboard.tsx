@@ -34,21 +34,55 @@ export function QuickStatsDashboard({ budget }: QuickStatsDashboardProps) {
     return null; // Don't show stats if budget isn't set
   }
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.2
+      }
+    }
+  };
+
+  const cardVariants = {
+    hidden: {
+      opacity: 0,
+      y: 50,
+      scale: 0.8
+    },
+    visible: {
+      opacity: 1,
+      y: 0,
+      scale: 1,
+      transition: {
+        type: "spring",
+        stiffness: 100,
+        damping: 12
+      }
+    }
+  };
+
   return (
     <motion.div
-      initial={{ opacity: 0, y: -20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
+      variants={containerVariants}
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, margin: "-50px" }}
       className="w-full max-w-6xl px-4 mb-6"
     >
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Remaining Budget */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.1 }}
+          variants={cardVariants}
+          whileHover={{
+            scale: 1.05,
+            y: -10,
+            transition: { duration: 0.2 }
+          }}
+          whileTap={{ scale: 0.95 }}
         >
-          <Card className={`bg-gradient-to-br ${getStatusBg()} border-2 backdrop-blur-md shadow-lg`}>
+          <Card className={`bg-gradient-to-br ${getStatusBg()} border-2 backdrop-blur-md shadow-lg hover:shadow-2xl transition-shadow duration-300`}>
             <div className="p-4">
               <div className="flex items-center justify-between mb-2">
                 <p className="text-sm font-semibold text-white">Remaining</p>
