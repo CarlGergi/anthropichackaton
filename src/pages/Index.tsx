@@ -954,6 +954,13 @@ const Index = () => {
       if (demoBudget.total === 0) {
         forceLoadDemoData();
       }
+    } else {
+      // SAFETY: If in normal mode, make sure we don't have $1000 demo budget
+      const normalBudget = loadBudget();
+      if (normalBudget.total === 1000) {
+        logger.warn('[Init] Found demo data in normal mode! Clearing...');
+        clearNormalModeData();
+      }
     }
 
     refreshData();
@@ -963,12 +970,16 @@ const Index = () => {
   const handleModeSelection = useCallback((enableDemo: boolean) => {
     logger.log(`[Onboarding] Selected ${enableDemo ? 'DEMO' : 'NORMAL'} mode`);
 
-    // Set storage mode
+    // Set storage mode FIRST
     setStorageMode(enableDemo ? "demo" : "normal");
 
     if (enableDemo) {
-      // Load demo data
+      // Load demo data for demo mode
       forceLoadDemoData();
+    } else {
+      // IMPORTANT: Clear normal mode to ensure fresh start
+      clearNormalModeData();
+      logger.log('[Onboarding] Cleared normal mode data for fresh start');
     }
 
     // Mark that mode has been selected
