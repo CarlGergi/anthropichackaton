@@ -127,6 +127,9 @@ const Index = () => {
   });
   const [isAnalyzingImage, setIsAnalyzingImage] = useState(false);
   const [isDebating, setIsDebating] = useState(false);
+  const [showCameraOptions, setShowCameraOptions] = useState(false);
+  const [showCameraView, setShowCameraView] = useState(false);
+  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
 
   // Handle voice change
   const handleVoiceChange = useCallback((voice: string) => {
@@ -460,107 +463,168 @@ const Index = () => {
     }
   }, [conversationStarted, voiceState, stt, processTranscript]);
 
-  // Handle camera capture and vision analysis
-  const handleCameraCapture = useCallback(async () => {
-    if (!conversationStarted) {
-      toast.error('Please start the conversation first');
-      return;
-    }
+  // Process image for vision analysis
+  const processImageForVision = useCallback(async (file: File) => {
+    try {
+      setIsAnalyzingImage(true);
+      toast.info('Analyzing image...');
 
-    // Create file input
+      // Convert image to base64
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        try {
+          const base64 = event.target?.result as string;
+          const base64Data = base64.split(',')[1];
+          const mimeType = file.type;
+
+          logger.log('[Vision] Sending image to Claude Vision API...');
+
+          const { data, error } = await supabase.functions.invoke('claude-vision', {
+            body: {
+              image_b64: base64Data,
+              mime_type: mimeType,
+              budget: {
+                total: budget.total,
+                spent: budget.spent,
+                remaining_total: calculateRemainingTotal(budget),
+                days_left: Math.ceil((new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate() - new Date().getDate()))
+              },
+              image_type: 'general'
+            }
+          });
+
+          if (error) {
+            logger.error('[Vision] API error:', error);
+            throw error;
+          }
+
+          logger.log('[Vision] Analysis result:', data);
+          setVisionResult(data as VisionAnalysisResult);
+          setShowVisionResult(true);
+          setIsAnalyzingImage(false);
+
+          if (data.advice) {
+            setVoiceState("speaking");
+            try {
+              const ttsResponse: TTSResponse = await textToSpeech(data.advice, selectedVoice);
+              await playAudioFromBase64(
+                ttsResponse.audio,
+                () => setVoiceState("idle"),
+                (audio) => setCurrentAudio(audio)
+              );
+            } catch (error) {
+              logger.error('[Vision] TTS error:', error);
+              setVoiceState("idle");
+            }
+          }
+        } catch (error) {
+          logger.error('[Vision] Processing error:', error);
+          toast.error('Failed to analyze image. Please try again.');
+          setIsAnalyzingImage(false);
+        }
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      logger.error('[Vision] Error:', error);
+      toast.error('Failed to process image');
+      setIsAnalyzingImage(false);
+    }
+  }, [budget, selectedVoice]);
+
+  // Handle upload file option
+  const handleUploadFile = useCallback(() => {
+    setShowCameraOptions(false);
+
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';
-    input.capture = 'environment'; // Use back camera on mobile
 
     input.onchange = async (e) => {
       const file = (e.target as HTMLInputElement).files?.[0];
       if (!file) return;
-
-      try {
-        setIsAnalyzingImage(true);
-        toast.info('Analyzing image...');
-
-        // Convert image to base64
-        const reader = new FileReader();
-        reader.onload = async (event) => {
-          try {
-            const base64 = event.target?.result as string;
-            const base64Data = base64.split(',')[1]; // Remove data:image/jpeg;base64, prefix
-            const mimeType = file.type;
-
-            logger.log('[Vision] Sending image to Claude Vision API...');
-
-            // Call Vision API
-            const { data, error } = await supabase.functions.invoke('claude-vision', {
-              body: {
-                image_b64: base64Data,
-                mime_type: mimeType,
-                budget: {
-                  total: budget.total,
-                  spent: budget.spent,
-                  remaining_total: calculateRemainingTotal(budget),
-                  days_left: Math.ceil((new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate() - new Date().getDate()))
-                },
-                image_type: 'general'
-              }
-            });
-
-            if (error) {
-              logger.error('[Vision] API error:', error);
-              throw error;
-            }
-
-            logger.log('[Vision] Analysis result:', data);
-            setVisionResult(data as VisionAnalysisResult);
-            setShowVisionResult(true);
-            setIsAnalyzingImage(false);
-
-            // Speak the advice
-            if (data.advice) {
-              setVoiceState("speaking");
-              try {
-                const ttsResponse = await textToSpeech(data.advice, selectedVoice, "cheerful");
-                if (ttsResponse.audio_b64) {
-                  const audio = playAudioFromBase64(
-                    ttsResponse.audio_b64,
-                    ttsResponse.mime,
-                    () => {
-                      setVoiceState("idle");
-                      setCurrentAudio(null);
-                      setAudioAmplitude(0);
-                    },
-                    (amplitude) => {
-                      setAudioAmplitude(amplitude);
-                    }
-                  );
-                  setCurrentAudio(audio);
-                } else {
-                  setVoiceState("idle");
-                }
-              } catch (ttsError) {
-                logger.error('[Vision] TTS failed:', ttsError);
-                setVoiceState("idle");
-              }
-            }
-
-            toast.success('Image analyzed!');
-          } catch (error) {
-            logger.error('[Vision] Processing failed:', error);
-            toast.error('Failed to analyze image');
-            setIsAnalyzingImage(false);
-          }
-        };
-        reader.readAsDataURL(file);
-      } catch (error) {
-        logger.error('[Vision] Camera capture failed:', error);
-        toast.error('Failed to capture image');
-        setIsAnalyzingImage(false);
-      }
+      await processImageForVision(file);
     };
 
     input.click();
-  }, [conversationStarted, budget, selectedVoice]);
+  }, [processImageForVision]);
+
+  // Handle take photo option
+  const handleTakePhoto = useCallback(async () => {
+    setShowCameraOptions(false);
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment' }
+      });
+
+      setCameraStream(stream);
+      setShowCameraView(true);
+      toast.success('Camera activated! Position your receipt and click Capture');
+    } catch (error) {
+      logger.error('[Camera] Failed to access camera:', error);
+      toast.error('Failed to access camera. Please check permissions.');
+    }
+  }, []);
+
+  // Capture photo from camera stream
+  const handleCapturePhoto = useCallback(() => {
+    if (!cameraStream) return;
+
+    const video = document.getElementById('camera-video') as HTMLVideoElement;
+    if (!video) return;
+
+    // Create canvas to capture frame
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
+
+    if (ctx) {
+      ctx.drawImage(video, 0, 0);
+
+      // Convert to blob and process
+      canvas.toBlob(async (blob) => {
+        if (blob) {
+          const file = new File([blob], 'camera-capture.jpg', { type: 'image/jpeg' });
+
+          // Stop camera
+          cameraStream.getTracks().forEach(track => track.stop());
+          setCameraStream(null);
+          setShowCameraView(false);
+
+          // Process image
+          await processImageForVision(file);
+        }
+      }, 'image/jpeg', 0.9);
+    }
+  }, [cameraStream, processImageForVision]);
+
+  // Close camera view
+  const handleCloseCameraView = useCallback(() => {
+    if (cameraStream) {
+      cameraStream.getTracks().forEach(track => track.stop());
+      setCameraStream(null);
+    }
+    setShowCameraView(false);
+  }, [cameraStream]);
+
+  // Handle camera capture button click
+  const handleCameraCapture = useCallback(() => {
+    if (!conversationStarted) {
+      toast.error('Please start the conversation first');
+      return;
+    }
+    setShowCameraOptions(true);
+  }, [conversationStarted]);
+
+  // Cleanup camera stream on unmount
+  useEffect(() => {
+    return () => {
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, [cameraStream]);
 
   // Handle start debate
   const handleStartDebate = useCallback(async () => {
@@ -1479,6 +1543,110 @@ const Index = () => {
           isLoading={isDebating}
         />
       )}
+
+      {/* Camera Options Dialog */}
+      <AlertDialog open={showCameraOptions} onOpenChange={setShowCameraOptions}>
+        <AlertDialogContent className="bg-gradient-to-br from-gray-900 to-gray-800 border-white/10">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-white text-xl">Capture Receipt</AlertDialogTitle>
+            <AlertDialogDescription className="text-white/70">
+              Choose how you'd like to add an image
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="flex flex-col gap-3 py-4">
+            <motion.button
+              onClick={handleTakePhoto}
+              className="px-6 py-4 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600
+                text-white font-bold text-lg
+                hover:shadow-[0_0_30px_rgba(59,130,246,0.5)]
+                transition-all duration-300 ease-out
+                border border-white/20"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <span className="flex items-center justify-center gap-3">
+                <Camera className="w-6 h-6" />
+                Take Photo
+              </span>
+            </motion.button>
+            <motion.button
+              onClick={handleUploadFile}
+              className="px-6 py-4 rounded-xl bg-gradient-to-r from-violet-600 to-purple-600
+                text-white font-bold text-lg
+                hover:shadow-[0_0_30px_rgba(139,92,246,0.5)]
+                transition-all duration-300 ease-out
+                border border-white/20"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <span className="flex items-center justify-center gap-3">
+                <Upload className="w-6 h-6" />
+                Upload File
+              </span>
+            </motion.button>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="bg-white/10 text-white border-white/20 hover:bg-white/20">
+              Cancel
+            </AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Camera View */}
+      <AnimatePresence>
+        {showCameraView && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm"
+          >
+            <div className="relative w-full max-w-4xl mx-4">
+              <video
+                id="camera-video"
+                autoPlay
+                playsInline
+                ref={(video) => {
+                  if (video && cameraStream) {
+                    video.srcObject = cameraStream;
+                  }
+                }}
+                className="w-full h-auto rounded-2xl border-2 border-white/20"
+              />
+              <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex gap-4">
+                <motion.button
+                  onClick={handleCapturePhoto}
+                  className="px-8 py-4 rounded-full bg-gradient-to-r from-green-600 to-emerald-600
+                    text-white font-bold text-lg
+                    hover:shadow-[0_0_30px_rgba(34,197,94,0.5)]
+                    transition-all duration-300 ease-out
+                    border-2 border-white/30"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <span className="flex items-center gap-2">
+                    <Camera className="w-6 h-6" />
+                    Capture
+                  </span>
+                </motion.button>
+                <motion.button
+                  onClick={handleCloseCameraView}
+                  className="px-8 py-4 rounded-full bg-gradient-to-r from-red-600 to-orange-600
+                    text-white font-bold text-lg
+                    hover:shadow-[0_0_30px_rgba(239,68,68,0.5)]
+                    transition-all duration-300 ease-out
+                    border-2 border-white/30"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  Cancel
+                </motion.button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Reset Confirmation Dialog */}
       <AlertDialog open={showResetDialog} onOpenChange={setShowResetDialog}>
