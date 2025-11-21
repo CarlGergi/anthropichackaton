@@ -57,13 +57,25 @@ export async function getIntent(
       const errorMsg = error.message || JSON.stringify(error);
       const errorStr = JSON.stringify(error);
 
-      // Check if it's a deployment error
-      if (errorMsg.includes('FunctionsRelayError') || errorMsg.includes('Not Found') || errorMsg.includes('404') ||
-          errorStr.includes('FunctionsRelayError') || errorStr.includes('Not Found') || errorStr.includes('404') ||
-          errorMsg.includes('non-2xx') || errorMsg.includes('non 2xx') || errorMsg.includes('2XX') ||
-          errorMsg.includes('FunctionsHttpError')) {
+      // Check if it's a NOT FOUND (404) error - function not deployed
+      if (errorMsg.includes('Not Found') || errorMsg.includes('404') ||
+          errorStr.includes('Not Found') || errorStr.includes('404')) {
         logger.error('🚨 DEPLOYMENT ERROR: claude-intent function not deployed!');
         return getFallbackResponse(transcript, budgetContext, 'DEPLOY_ERROR');
+      }
+
+      // Check if it's an API key error
+      if (errorMsg.includes('ANTHROPIC_API_KEY')) {
+        logger.error('🚨 API KEY ERROR: ANTHROPIC_API_KEY not set in Supabase!');
+        return getFallbackResponse(transcript, budgetContext, 'API_KEY_ERROR');
+      }
+
+      // Check if it's a runtime error (500)
+      if (errorMsg.includes('FunctionsRelayError') || errorMsg.includes('FunctionsHttpError') ||
+          errorMsg.includes('non-2xx') || errorMsg.includes('non 2xx') || errorMsg.includes('2XX')) {
+        logger.error('🚨 RUNTIME ERROR: Edge function failed. Check console for error details.');
+        logger.error('Error details:', errorMsg);
+        return getFallbackResponse(transcript, budgetContext, 'RUNTIME_ERROR');
       }
 
       throw error;
@@ -81,9 +93,17 @@ export async function getIntent(
 // Fallback response if API fails
 function getFallbackResponse(transcript: string, budgetState: any, errorType: string = 'UNKNOWN_ERROR'): ClaudeResponse {
   let speechMessage = "I'm having trouble processing that. Could you try again?";
+  let notes = "Error connecting to AI";
 
   if (errorType === 'DEPLOY_ERROR') {
     speechMessage = "Oops! My AI brain isn't deployed yet. Ask your developer to run: supabase functions deploy claude-intent";
+    notes = "Edge function not deployed";
+  } else if (errorType === 'API_KEY_ERROR') {
+    speechMessage = "Hey bestie, my API key isn't set up! Tell your developer to add ANTHROPIC_API_KEY to Supabase secrets.";
+    notes = "ANTHROPIC_API_KEY not configured in Supabase";
+  } else if (errorType === 'RUNTIME_ERROR') {
+    speechMessage = "Oof, something broke on my end. Check the browser console for the error details!";
+    notes = "Runtime error in edge function - check console";
   }
 
   return {
@@ -103,7 +123,7 @@ function getFallbackResponse(transcript: string, budgetState: any, errorType: st
       days_left: budgetState.days_left,
       forecast: budgetState.forecast,
       buffer: budgetState.buffer,
-      notes: errorType === 'DEPLOY_ERROR' ? "Edge function not deployed" : "Error connecting to AI",
+      notes: notes,
     },
     recs: [],
     speech: speechMessage,
