@@ -1030,27 +1030,74 @@ const Index = () => {
     setShowModeSelection(false);
     refreshData();
 
-    // Show welcome message
-    if (enableDemo) {
-      toast.success('Welcome to Finora Demo! 🎤', {
-        duration: 3000
-      });
-    } else {
-      toast.success('Welcome to Finora! 🎤', {
-        duration: 3000
-      });
-    }
-
     // Automatically start conversation after mode selection
     // Unlock audio on this user interaction
     unlockAudio();
 
-    // Small delay to let the UI transition
-    await new Promise(resolve => setTimeout(resolve, 500));
+    // Request mic permission
+    try {
+      await navigator.mediaDevices.getUserMedia({ audio: true });
+      setSttSupport(prev => ({ ...prev, hasMicPermission: true }));
+    } catch (error) {
+      logger.error('[Onboarding] Mic permission denied:', error);
+      toast.error('Microphone access needed to continue. Please allow and refresh.');
+      return;
+    }
 
-    // Start conversation automatically
-    await handleStartConversation();
-  }, [refreshData, handleStartConversation]);
+    // Set conversation as started
+    setConversationStarted(true);
+
+    // Small delay to let the UI transition
+    await new Promise(resolve => setTimeout(resolve, 800));
+
+    // Greet the user with Finora's intro
+    if (!finoraState.introShown) {
+      logger.log('[Onboarding] Playing intro greeting for', enableDemo ? 'DEMO' : 'NORMAL', 'mode');
+      setVoiceState("speaking");
+
+      try {
+        const currentBudget = loadBudget();
+        let greetingText: string;
+
+        if (enableDemo) {
+          // Demo mode greeting
+          const totalSpent = Object.values(currentBudget.spent || {}).reduce((a, b) => a + b, 0);
+          greetingText = `Yooo what's good! I'm Finora, your AI budget bestie. I can see you already spent around $${Math.round(totalSpent)} this month out of your $${currentBudget.total || 1000} budget. Wanna see where your money's going, or should I suggest some cheap spots to check out? Just talk to me fr!`;
+        } else {
+          // Normal mode greeting
+          greetingText = `Hey! I'm Finora, your AI budget bestie who helps you manage your money without the stress. Before we get started, I need to know a couple things: What's your monthly budget? And how much have you already spent this month? Just tell me naturally, like you're texting a friend!`;
+        }
+
+        const ttsResponse = await textToSpeech(greetingText, selectedVoice, "cheerful");
+
+        if (ttsResponse.audio_b64) {
+          const audio = playAudioFromBase64(
+            ttsResponse.audio_b64,
+            ttsResponse.mime,
+            () => {
+              setVoiceState("idle");
+              setCurrentAudio(null);
+              setAudioAmplitude(0);
+            },
+            (amplitude) => setAudioAmplitude(amplitude)
+          );
+          setCurrentAudio(audio);
+          setLastTTSResponse(ttsResponse);
+          setFinoraState(prev => ({ ...prev, introShown: true }));
+        } else {
+          setVoiceState("idle");
+        }
+
+        toast.success(enableDemo ? 'Welcome to Finora Demo! 🎤' : 'Welcome to Finora! 🎤', {
+          duration: 3000
+        });
+      } catch (error) {
+        logger.error('[Onboarding] Failed to play greeting:', error);
+        setVoiceState("idle");
+        toast.error('Failed to start conversation. Please try again.');
+      }
+    }
+  }, [refreshData, finoraState, selectedVoice]);
 
   // Handle demo mode toggle
   const handleDemoModeToggle = useCallback((enableDemo: boolean) => {
@@ -1552,96 +1599,8 @@ const Index = () => {
         </motion.div>
       )}
 
-      {/* Start Conversation Button or Active Mic */}
-      {!conversationStarted ? (
-        <motion.div
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="flex flex-col items-center gap-6 mb-12"
-        >
-          {/* Demo Mode Toggle Buttons - Enhanced */}
-          <motion.div
-            className="flex items-center gap-3 mb-4"
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-          >
-            <motion.button
-              onClick={() => handleDemoModeToggle(true)}
-              disabled={demoMode}
-              whileHover={{ scale: demoMode ? 1 : 1.05, y: -2 }}
-              whileTap={{ scale: 0.95 }}
-              className={`px-6 py-3 rounded-full font-semibold transition-all duration-300
-                ${demoMode
-                  ? 'bg-gradient-to-r from-violet-600 to-purple-600 text-white shadow-lg shadow-purple-500/50 border-2 border-white/30'
-                  : 'bg-white/10 text-white/70 hover:bg-white/20 hover:shadow-lg border-2 border-white/20'
-                }`}
-            >
-              🎬 Demo Mode
-            </motion.button>
-            <motion.button
-              onClick={() => handleDemoModeToggle(false)}
-              disabled={!demoMode}
-              whileHover={{ scale: !demoMode ? 1 : 1.05, y: -2 }}
-              whileTap={{ scale: 0.95 }}
-              className={`px-6 py-3 rounded-full font-semibold transition-all duration-300
-                ${!demoMode
-                  ? 'bg-gradient-to-r from-teal-600 to-emerald-600 text-white shadow-lg shadow-teal-500/50 border-2 border-white/30'
-                  : 'bg-white/10 text-white/70 hover:bg-white/20 hover:shadow-lg border-2 border-white/20'
-                }`}
-            >
-              👤 Normal Mode
-            </motion.button>
-          </motion.div>
-
-          <motion.button
-            onClick={handleStartConversation}
-            className="group relative px-12 py-6 text-xl font-bold text-white rounded-full
-              bg-gradient-to-r from-violet-600 via-purple-600 to-teal-600
-              shadow-[0_0_40px_rgba(139,92,246,0.5)]
-              hover:shadow-[0_0_60px_rgba(139,92,246,0.7)]
-              transition-all duration-300 ease-out
-              hover:scale-105 active:scale-95
-              border-2 border-white/20"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            animate={{
-              boxShadow: [
-                "0 0 40px rgba(139,92,246,0.5)",
-                "0 0 60px rgba(139,92,246,0.7)",
-                "0 0 40px rgba(139,92,246,0.5)",
-              ],
-            }}
-            transition={{
-              boxShadow: {
-                repeat: Infinity,
-                duration: 2,
-              },
-            }}
-          >
-            <span className="flex items-center gap-3">
-              Start Conversation 🎤
-            </span>
-          </motion.button>
-          
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            className="text-sm text-white/60 text-center max-w-lg px-4 space-y-2"
-          >
-            <p className="font-medium">
-              {demoMode
-                ? '🎬 Demo mode active - showing realistic student budget with existing transactions'
-                : '👤 Normal mode - ready for your fresh start'}
-            </p>
-            <p>
-              Press Start to activate voice and begin chatting with Finora
-            </p>
-          </motion.div>
-        </motion.div>
-      ) : (
+      {/* Mic, Camera, and Debate Buttons - Active after mode selection */}
+      {conversationStarted && (
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
