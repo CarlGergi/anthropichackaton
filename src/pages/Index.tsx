@@ -685,9 +685,6 @@ const Index = () => {
       const remaining = calculateRemainingTotal(budget);
       const daysLeft = Math.ceil((new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate() - new Date().getDate()));
 
-      console.log('[Debate] Calling finora-debates edge function...');
-      console.log('[Debate] Budget data:', { total: budget.total, totalSpent, remaining, daysLeft });
-
       const { data, error } = await supabase.functions.invoke('finora-debates', {
         body: {
           question: question,
@@ -700,52 +697,32 @@ const Index = () => {
         }
       });
 
-      console.log('[Debate] Response received:', { data, error });
-
       if (error) {
-        console.error('[Debate] ❌ ERROR OCCURRED:');
-        console.error('[Debate] Error object:', error);
-        console.error('[Debate] Error message:', error.message);
-        console.error('[Debate] Error name:', error.name);
-        console.error('[Debate] Full error JSON:', JSON.stringify(error, null, 2));
-
         logger.error('[Debate] API error:', error);
 
-        // Provide very specific error messages
         const errorMsg = error.message || JSON.stringify(error);
         const errorStr = JSON.stringify(error);
 
-        console.log('[Debate] Checking error type...');
-        console.log('[Debate] Error string includes FunctionsRelayError?', errorStr.includes('FunctionsRelayError'));
-        console.log('[Debate] Error string includes Not Found?', errorStr.includes('Not Found'));
-        console.log('[Debate] Error string includes 404?', errorStr.includes('404'));
-
         if (errorMsg.includes('FunctionsRelayError') || errorMsg.includes('Not Found') || errorMsg.includes('404') ||
             errorStr.includes('FunctionsRelayError') || errorStr.includes('Not Found') || errorStr.includes('404')) {
-          console.error('[Debate] 🚨 EDGE FUNCTION NOT DEPLOYED!');
-          toast.error('🚨 EDGE FUNCTION NOT DEPLOYED! Run: supabase functions deploy finora-debates', {
-            duration: 10000
+          toast.error('Debate feature not deployed. Deploy with: supabase functions deploy finora-debates', {
+            duration: 8000
           });
         } else if (errorMsg.includes('Failed to fetch') || errorMsg.includes('NetworkError')) {
-          console.error('[Debate] Network error detected');
           toast.error('Network error. Check your internet connection.', {
             duration: 5000
           });
         } else if (errorMsg.includes('ANTHROPIC_API_KEY')) {
-          console.error('[Debate] API key missing');
-          toast.error('Missing API key. Set ANTHROPIC_API_KEY in Supabase secrets.', {
+          toast.error('Missing API key. Contact admin.', {
             duration: 6000
           });
         } else {
-          console.error('[Debate] Unknown error type');
-          toast.error(`Debate failed: ${errorMsg.substring(0, 150)}`, {
-            duration: 8000
+          toast.error(`Debate failed: ${errorMsg.substring(0, 100)}`, {
+            duration: 6000
           });
         }
         throw error;
       }
-
-      console.log('[Debate] ✅ Success! Debate data received:', data);
 
       logger.log('[Debate] Debate result:', data);
       setDebateResult(data as DebateResult);
@@ -1034,7 +1011,6 @@ const Index = () => {
 
   // Handle initial mode selection (onboarding)
   const handleModeSelection = useCallback((enableDemo: boolean) => {
-    console.log(`[Onboarding] Selected ${enableDemo ? 'DEMO' : 'NORMAL'} mode`);
     logger.log(`[Onboarding] Selected ${enableDemo ? 'DEMO' : 'NORMAL'} mode`);
 
     // Set storage mode FIRST
@@ -1046,7 +1022,6 @@ const Index = () => {
     } else {
       // IMPORTANT: Clear normal mode to ensure fresh start
       clearNormalModeData();
-      logger.log('[Onboarding] Cleared normal mode data for fresh start');
     }
 
     // Mark that mode has been selected
@@ -1058,8 +1033,6 @@ const Index = () => {
     setConversationStarted(true); // Mic button shows immediately!
     refreshData();
 
-    console.log('[Onboarding] ✅ Mode set! Mic button visible. Starting auto-greeting in background...');
-
     // Do async operations in background WITHOUT blocking UI
     setTimeout(async () => {
       try {
@@ -1067,13 +1040,11 @@ const Index = () => {
         unlockAudio();
 
         // Request mic permission
-        console.log('[Onboarding] Requesting microphone permission...');
         try {
           await navigator.mediaDevices.getUserMedia({ audio: true });
           setSttSupport(prev => ({ ...prev, hasMicPermission: true }));
-          console.log('[Onboarding] ✅ Microphone permission granted');
         } catch (error) {
-          console.error('[Onboarding] ❌ Mic permission denied:', error);
+          logger.error('[Onboarding] Mic permission denied:', error);
           toast.error('Microphone access needed. Click the mic button when ready.', { duration: 5000 });
           setVoiceState("idle");
           return;
@@ -1083,7 +1054,6 @@ const Index = () => {
         await new Promise(resolve => setTimeout(resolve, 300));
 
         // Play auto-greeting
-        console.log('[Onboarding] Playing auto-greeting...');
         setVoiceState("speaking");
 
         const currentBudget = loadBudget();
@@ -1096,16 +1066,13 @@ const Index = () => {
           greetingText = `Hey! I'm Finora, your AI budget bestie who helps you manage your money without the stress. Before we get started, I need to know a couple things: What's your monthly budget? And how much have you already spent this month? Just tell me naturally, like you're texting a friend!`;
         }
 
-        console.log('[Onboarding] Calling TTS...');
         const ttsResponse = await textToSpeech(greetingText, selectedVoice, "cheerful");
-        console.log('[Onboarding] TTS Response received');
 
         if (ttsResponse.audio_b64) {
           const audio = playAudioFromBase64(
             ttsResponse.audio_b64,
             ttsResponse.mime,
             () => {
-              console.log('[Onboarding] ✅ Audio finished');
               setVoiceState("idle");
               setCurrentAudio(null);
               setAudioAmplitude(0);
@@ -1115,9 +1082,7 @@ const Index = () => {
           setCurrentAudio(audio);
           setLastTTSResponse(ttsResponse);
           setFinoraState(prev => ({ ...prev, introShown: true }));
-          console.log('[Onboarding] ✅ Audio playing');
         } else {
-          console.error('[Onboarding] ❌ No audio in response');
           setVoiceState("idle");
           toast.error('Audio generation failed. Try using the mic!');
         }
@@ -1126,14 +1091,13 @@ const Index = () => {
           duration: 3000
         });
       } catch (error) {
-        console.error('[Onboarding] ❌ CRITICAL ERROR:', error);
         logger.error('[Onboarding] Failed:', error);
         setVoiceState("idle");
         toast.error(`Error: ${error instanceof Error ? error.message : 'Unknown'}`, {
           duration: 6000
         });
       }
-    }, 100); // Start async work after 100ms to let UI render first
+    }, 100);
   }, [refreshData, selectedVoice]);
 
   // Handle demo mode toggle
