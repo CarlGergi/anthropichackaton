@@ -531,12 +531,25 @@ const Index = () => {
           if (data.advice) {
             setVoiceState("speaking");
             try {
-              const ttsResponse: TTSResponse = await textToSpeech(data.advice, selectedVoice);
-              await playAudioFromBase64(
-                ttsResponse.audio,
-                () => setVoiceState("idle"),
-                (audio) => setCurrentAudio(audio)
-              );
+              const ttsResponse: TTSResponse = await textToSpeech(data.advice, selectedVoice, "cheerful");
+              if (ttsResponse.audio_b64) {
+                const audio = playAudioFromBase64(
+                  ttsResponse.audio_b64,
+                  ttsResponse.mime,
+                  () => {
+                    setVoiceState("idle");
+                    setCurrentAudio(null);
+                    setAudioAmplitude(0);
+                  },
+                  (amplitude) => {
+                    setAudioAmplitude(amplitude);
+                  }
+                );
+                setCurrentAudio(audio);
+                setLastTTSResponse(ttsResponse);
+              } else {
+                setVoiceState("idle");
+              }
             } catch (error) {
               logger.error('[Vision] TTS error:', error);
               setVoiceState("idle");
@@ -994,7 +1007,7 @@ const Index = () => {
   }, []); // Only run once on mount
 
   // Handle initial mode selection (onboarding)
-  const handleModeSelection = useCallback((enableDemo: boolean) => {
+  const handleModeSelection = useCallback(async (enableDemo: boolean) => {
     logger.log(`[Onboarding] Selected ${enableDemo ? 'DEMO' : 'NORMAL'} mode`);
 
     // Set storage mode FIRST
@@ -1019,19 +1032,25 @@ const Index = () => {
 
     // Show welcome message
     if (enableDemo) {
-      toast.success('Welcome to Finora Demo! Press the mic to start chatting 🎤', {
-        duration: 5000
+      toast.success('Welcome to Finora Demo! 🎤', {
+        duration: 3000
       });
     } else {
-      toast.success('Welcome to Finora! Press the mic to start 🎤', {
-        duration: 4000
+      toast.success('Welcome to Finora! 🎤', {
+        duration: 3000
       });
     }
 
-    // NOTE: We don't auto-start conversation here
-    // The mic button will be visible and the user can press it to start
-    // Finora will greet them when they press the mic (handled in handleStartConversation)
-  }, [refreshData]);
+    // Automatically start conversation after mode selection
+    // Unlock audio on this user interaction
+    unlockAudio();
+
+    // Small delay to let the UI transition
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    // Start conversation automatically
+    await handleStartConversation();
+  }, [refreshData, handleStartConversation]);
 
   // Handle demo mode toggle
   const handleDemoModeToggle = useCallback((enableDemo: boolean) => {
