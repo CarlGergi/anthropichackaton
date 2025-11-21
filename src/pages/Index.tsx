@@ -238,6 +238,58 @@ const Index = () => {
     }
   }, [finoraState, selectedVoice, demoMode]);
 
+  // Refresh budget and transactions
+  const refreshData = useCallback(() => {
+    setBudget(loadBudget());
+    setTransactions(loadTransactions());
+  }, []);
+
+  // Handle voice toggle (only when conversation started)
+  const handleVoiceToggle = useCallback(async () => {
+    if (!conversationStarted) {
+      toast.error('Please start the conversation first');
+      return;
+    }
+
+    // Unlock audio on mic click
+    unlockAudio();
+
+    if (voiceState === "idle") {
+      setVoiceState("listening");
+      toast.success("🎤 Listening...");
+
+      try {
+        await stt.start(
+          (text, isFinal) => {
+            if (isFinal) {
+              stt.stop();
+              processTranscript(text);
+            }
+          },
+          (error, code) => {
+            logger.error("[Voice] STT Error:", error, code);
+            toast.error(error, { duration: 5000 });
+            setVoiceState("idle");
+
+            if (code === 'not-allowed') {
+              setSttSupport(prev => ({ ...prev, hasMicPermission: false }));
+            }
+          }
+        );
+
+        setSttSupport(prev => ({ ...prev, hasMicPermission: true }));
+      } catch (error) {
+        logger.error('[Voice] Failed to start:', error);
+        toast.error('Failed to start voice input');
+        setVoiceState("idle");
+      }
+    } else if (voiceState === "listening") {
+      stt.stop();
+      setVoiceState("idle");
+      toast.info("Stopped listening");
+    }
+  }, [conversationStarted, voiceState, stt, processTranscript]);
+
   // Handle keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -340,12 +392,6 @@ const Index = () => {
     handleCameraCapture,
     handleStartDebate
   ]);
-
-  // Refresh budget and transactions
-  const refreshData = useCallback(() => {
-    setBudget(loadBudget());
-    setTransactions(loadTransactions());
-  }, []);
 
   // Handle delete transaction
   const handleDeleteTransaction = useCallback((id: string) => {
@@ -652,52 +698,6 @@ const Index = () => {
     setDemoMode(enableDemo);
     refreshData();
   }, [voiceState, stt, currentAudio, refreshData]);
-
-  // Handle voice toggle (only when conversation started)
-  const handleVoiceToggle = useCallback(async () => {
-    if (!conversationStarted) {
-      toast.error('Please start the conversation first');
-      return;
-    }
-    
-    // Unlock audio on mic click
-    unlockAudio();
-    
-    if (voiceState === "idle") {
-      setVoiceState("listening");
-      toast.success("🎤 Listening...");
-
-      try {
-        await stt.start(
-          (text, isFinal) => {
-            if (isFinal) {
-              stt.stop();
-              processTranscript(text);
-            }
-          },
-          (error, code) => {
-            logger.error("[Voice] STT Error:", error, code);
-            toast.error(error, { duration: 5000 });
-            setVoiceState("idle");
-            
-            if (code === 'not-allowed') {
-              setSttSupport(prev => ({ ...prev, hasMicPermission: false }));
-            }
-          }
-        );
-        
-        setSttSupport(prev => ({ ...prev, hasMicPermission: true }));
-      } catch (error) {
-        logger.error('[Voice] Failed to start:', error);
-        toast.error('Failed to start voice input');
-        setVoiceState("idle");
-      }
-    } else if (voiceState === "listening") {
-      stt.stop();
-      setVoiceState("idle");
-      toast.info("Stopped listening");
-    }
-  }, [conversationStarted, voiceState, stt, processTranscript]);
 
   // Handle end conversation
   const handleEndConversation = useCallback(() => {
