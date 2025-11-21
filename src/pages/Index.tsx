@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { logger } from "@/lib/logger";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mic, Loader2, Volume2, Settings, Hand, Sparkles, History, Download, Upload, Camera, Scale } from "lucide-react";
+import { Mic, Loader2, Volume2, Settings, Hand, Sparkles, History, Download, Upload, Camera, Scale, Home } from "lucide-react";
 import DebugPanel from "@/components/DebugPanel";
 import VoiceSettings from "@/components/VoiceSettings";
 import { AnimatedFinoraCharacter } from "@/components/AnimatedFinoraCharacter";
@@ -1904,19 +1904,37 @@ const Index = () => {
         <Settings className="w-5 h-5 text-white/70" />
       </motion.button>
 
-      {/* Transaction History Button - Enhanced */}
+      {/* Home Button - Back to Landing Page */}
+      {conversationStarted && (
+        <motion.button
+          initial={{ opacity: 0, scale: 0, x: 50 }}
+          animate={{ opacity: 1, scale: 1, x: 0 }}
+          exit={{ opacity: 0, scale: 0, x: 50 }}
+          transition={{ delay: 0.6, type: "spring", stiffness: 200 }}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={handleShowOnboarding}
+          className="absolute top-4 left-4 px-4 py-2 rounded-full bg-gradient-to-r from-purple-600 to-blue-600 backdrop-blur-md border-2 border-white/20 hover:from-purple-700 hover:to-blue-700 hover:shadow-[0_0_20px_rgba(147,51,234,0.5)] transition-all flex items-center gap-2"
+        >
+          <Home className="w-4 h-4 text-white" />
+          <span className="text-white text-sm font-semibold">Home</span>
+        </motion.button>
+      )}
+
+      {/* Transaction History Button - Enhanced & More Visible */}
       {conversationStarted && transactions.length > 0 && (
         <motion.button
           initial={{ opacity: 0, scale: 0, x: 50 }}
           animate={{ opacity: 1, scale: 1, x: 0 }}
           exit={{ opacity: 0, scale: 0, x: 50 }}
           transition={{ delay: 0.7, type: "spring", stiffness: 200 }}
-          whileHover={{ scale: 1.1, y: -2 }}
-          whileTap={{ scale: 0.9 }}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
           onClick={() => setShowTransactionHistory(!showTransactionHistory)}
-          className="absolute top-4 right-20 p-3 rounded-full bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/15 hover:shadow-lg transition-all"
+          className="absolute top-4 right-20 px-4 py-2 rounded-full bg-gradient-to-r from-teal-600 to-cyan-600 backdrop-blur-md border-2 border-white/20 hover:from-teal-700 hover:to-cyan-700 hover:shadow-[0_0_20px_rgba(20,184,166,0.5)] transition-all flex items-center gap-2"
         >
-          <History className="w-5 h-5 text-white/70" />
+          <History className="w-4 h-4 text-white" />
+          <span className="text-white text-sm font-semibold">History</span>
         </motion.button>
       )}
 
