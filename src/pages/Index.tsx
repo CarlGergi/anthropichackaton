@@ -41,7 +41,8 @@ import {
   calculateRemainingTotal,
   saveBudget,
   saveTransactions,
-  initializeDemoData
+  initializeDemoData,
+  forceLoadDemoData
 } from "@/state/budget";
 import {
   loadFinoraState,
@@ -127,6 +128,12 @@ const Index = () => {
   const [visionResult, setVisionResult] = useState<VisionAnalysisResult | null>(null);
   const [showDebateResult, setShowDebateResult] = useState(false);
   const [debateResult, setDebateResult] = useState<DebateResult | null>(null);
+  const [demoMode, setDemoMode] = useState(() => {
+    // Check if demo data is already loaded (Alex Chen profile with ~$1000 budget)
+    const currentBudget = loadBudget();
+    const currentTransactions = loadTransactions();
+    return currentBudget.total >= 900 && currentBudget.total <= 1100 && currentTransactions.length > 20;
+  });
   const [isAnalyzingImage, setIsAnalyzingImage] = useState(false);
   const [isDebating, setIsDebating] = useState(false);
 
@@ -182,8 +189,21 @@ const Index = () => {
           totalSpent = Object.values(currentBudget.spent).reduce((a, b) => a + b, 0);
         }
 
-        // Always acknowledge the demo data that was auto-loaded
-        const greetingText = `Yooo what's good! I'm Finora, your AI budget bestie. I loaded up a demo profile for you — Alex Chen, a student with a $${currentBudget.total || 1000} monthly budget and ${currentTransactions.length} realistic transactions! You're currently spending around $${Math.round(totalSpent)} across different categories. Wanna see where your money's going, or should I suggest some places to check out? Just talk to me fr!`;
+        // Different greetings for demo mode vs normal mode
+        let greetingText: string;
+
+        if (demoMode) {
+          // Demo mode: acknowledge existing spending data
+          const topCategory = Object.entries(currentBudget.spent || {})
+            .sort(([,a], [,b]) => b - a)[0];
+          const topCategoryName = topCategory ? topCategory[0] : 'food';
+          const topCategoryAmount = topCategory ? Math.round(topCategory[1]) : 0;
+
+          greetingText = `Yooo what's good! I'm Finora, your AI budget bestie. I can see you already spent around $${Math.round(totalSpent)} this month out of your $${currentBudget.total || 1000} budget. Most of that went to ${topCategoryName} — about $${topCategoryAmount}. Wanna see where else your money's going, or should I suggest some cheap spots to check out? Just talk to me fr!`;
+        } else {
+          // Normal mode: ask for budget setup
+          greetingText = `Hey! I'm Finora, your AI budget bestie who helps you manage your money without the stress. Before we get started, I need to know a couple things: What's your monthly budget? And how much have you already spent this month? Just tell me naturally, like you're texting a friend!`;
+        }
 
         const ttsResponse = await textToSpeech(greetingText, selectedVoice, "cheerful");
 
@@ -216,7 +236,7 @@ const Index = () => {
     } else {
       logger.log('[Finora] Returning user - skipping intro (introShown=true)');
     }
-  }, [finoraState, selectedVoice]);
+  }, [finoraState, selectedVoice, demoMode]);
 
   // Handle keyboard shortcuts
   useEffect(() => {
@@ -592,6 +612,46 @@ const Index = () => {
       }
     }
   }, []); // Only run once on mount
+
+  // Handle demo mode toggle
+  const handleDemoModeToggle = useCallback((enableDemo: boolean) => {
+    logger.log(`[Demo Mode] Switching to ${enableDemo ? 'DEMO' : 'NORMAL'} mode`);
+
+    // Stop any active conversation
+    if (voiceState === "listening") {
+      stt.stop();
+      setVoiceState("idle");
+    }
+    if (currentAudio) {
+      currentAudio.pause();
+      currentAudio.currentTime = 0;
+      setCurrentAudio(null);
+    }
+
+    if (enableDemo) {
+      // Load demo data
+      forceLoadDemoData();
+      toast.success('Demo mode activated! Loaded realistic student budget with 28 transactions', {
+        duration: 4000
+      });
+    } else {
+      // Clear data for normal mode
+      clearAllData();
+      toast.info('Normal mode activated! Ready for fresh start', {
+        duration: 3000
+      });
+    }
+
+    // Reset conversation state to show new greeting
+    setConversationStarted(false);
+    const freshFinoraState = getDefaultFinoraState();
+    setFinoraState(freshFinoraState);
+    saveFinoraState(freshFinoraState);
+
+    // Update state and refresh
+    setDemoMode(enableDemo);
+    refreshData();
+  }, [voiceState, stt, currentAudio, refreshData]);
 
   // Handle voice toggle (only when conversation started)
   const handleVoiceToggle = useCallback(async () => {
@@ -1000,6 +1060,32 @@ const Index = () => {
           transition={{ duration: 0.6, delay: 0.2 }}
           className="flex flex-col items-center gap-6 mb-12"
         >
+          {/* Demo Mode Toggle Buttons */}
+          <div className="flex items-center gap-3 mb-4">
+            <button
+              onClick={() => handleDemoModeToggle(true)}
+              disabled={demoMode}
+              className={`px-6 py-3 rounded-full font-semibold transition-all duration-300
+                ${demoMode
+                  ? 'bg-gradient-to-r from-violet-600 to-purple-600 text-white shadow-lg border-2 border-white/30'
+                  : 'bg-white/10 text-white/70 hover:bg-white/20 border-2 border-white/20'
+                }`}
+            >
+              🎬 Demo Mode
+            </button>
+            <button
+              onClick={() => handleDemoModeToggle(false)}
+              disabled={!demoMode}
+              className={`px-6 py-3 rounded-full font-semibold transition-all duration-300
+                ${!demoMode
+                  ? 'bg-gradient-to-r from-teal-600 to-emerald-600 text-white shadow-lg border-2 border-white/30'
+                  : 'bg-white/10 text-white/70 hover:bg-white/20 border-2 border-white/20'
+                }`}
+            >
+              👤 Normal Mode
+            </button>
+          </div>
+
           <motion.button
             onClick={handleStartConversation}
             className="group relative px-12 py-6 text-xl font-bold text-white rounded-full
@@ -1030,14 +1116,21 @@ const Index = () => {
             </span>
           </motion.button>
           
-          <motion.p
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5 }}
-            className="text-sm text-white/60 text-center max-w-md px-4"
+            className="text-sm text-white/60 text-center max-w-lg px-4 space-y-2"
           >
-            Press to activate voice and begin chatting with Finora
-          </motion.p>
+            <p className="font-medium">
+              {demoMode
+                ? '🎬 Demo mode active - showing realistic student budget with existing transactions'
+                : '👤 Normal mode - ready for your fresh start'}
+            </p>
+            <p>
+              Press Start to activate voice and begin chatting with Finora
+            </p>
+          </motion.div>
         </motion.div>
       ) : (
         <motion.div
