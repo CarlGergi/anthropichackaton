@@ -868,15 +868,15 @@ const Index = () => {
     }
 
     if (enableDemo) {
-      // Load demo data
+      // Load demo data (overwrites current data)
       forceLoadDemoData();
       toast.success('Demo mode activated! Loaded realistic student budget with 28 transactions', {
         duration: 4000
       });
     } else {
-      // Clear data for normal mode
-      clearAllData();
-      toast.info('Normal mode activated! Ready for fresh start', {
+      // Switch to normal mode - just reload existing normal mode data (don't clear)
+      // Normal mode data persists across switches and only resets with Reset button
+      toast.info('Normal mode activated! Your data is preserved', {
         duration: 3000
       });
     }
@@ -1310,23 +1310,25 @@ const Index = () => {
             </span>
           </motion.button>
 
-          {/* Reset Button */}
-          <motion.button
-            onClick={() => setShowResetDialog(true)}
-            className="px-6 py-3 rounded-full bg-gradient-to-r from-violet-600 to-teal-600
-              text-white font-bold text-sm
-              hover:shadow-[0_0_30px_rgba(139,92,246,0.5)]
-              transition-all duration-300 ease-out
-              hover:scale-105 active:scale-95
-              border border-white/20"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <span className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4" />
-              Reset
-            </span>
-          </motion.button>
+          {/* Reset Button - Only show in Normal Mode */}
+          {!demoMode && (
+            <motion.button
+              onClick={() => setShowResetDialog(true)}
+              className="px-6 py-3 rounded-full bg-gradient-to-r from-violet-600 to-teal-600
+                text-white font-bold text-sm
+                hover:shadow-[0_0_30px_rgba(139,92,246,0.5)]
+                transition-all duration-300 ease-out
+                hover:scale-105 active:scale-95
+                border border-white/20"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <span className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4" />
+                Reset
+              </span>
+            </motion.button>
+          )}
 
           {/* Export Button - Share expenses with friends */}
           <motion.button
