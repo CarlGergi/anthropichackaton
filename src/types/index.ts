@@ -92,6 +92,7 @@ export interface ClaudeResponse {
   state_patch?: {
     introShown?: boolean;
     monthly_budget?: number | null;
+    initial_spent?: number;
     categories?: Partial<{
       rent: number | null;
       food: number | null;
