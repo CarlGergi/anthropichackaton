@@ -93,6 +93,14 @@ export interface ClaudeResponse {
     introShown?: boolean;
     monthly_budget?: number | null;
     initial_spent?: number;
+    category_breakdown?: Partial<{
+      food: number;
+      transport: number;
+      fun: number;
+      essentials: number;
+      clothes: number;
+      other: number;
+    }>;
     categories?: Partial<{
       rent: number | null;
       food: number | null;

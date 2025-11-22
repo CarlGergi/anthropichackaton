@@ -335,6 +335,31 @@ const Index = () => {
             logger.log(`[Finora] Recorded initial spending: $${spentAmount} in ${category}`);
             toast.success(`Recorded $${spentAmount} already spent`);
           }
+
+          // Handle category breakdown (when user breaks down spending by category)
+          if (claudeResponse.state_patch.category_breakdown) {
+            const breakdown = claudeResponse.state_patch.category_breakdown;
+            let totalAdded = 0;
+
+            // Add a transaction for each category with spending
+            Object.entries(breakdown).forEach(([category, amount]) => {
+              if (amount && amount > 0) {
+                addTransaction({
+                  date: new Date().toISOString().split("T")[0],
+                  amount: amount,
+                  merchant: `Initial ${category} spending`,
+                  category: category as CategoryType,
+                  source: "voice",
+                  rawText: text,
+                });
+                totalAdded += amount;
+                logger.log(`[Finora] Recorded initial spending: $${amount} in ${category}`);
+              }
+            });
+
+            refreshData();
+            toast.success(`Recorded $${totalAdded} across ${Object.keys(breakdown).length} categories`);
+          }
         }
 
         // Handle ADD_EXPENSE intent
