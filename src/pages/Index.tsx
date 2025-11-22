@@ -470,8 +470,12 @@ const Index = () => {
         await stt.start(
           (text, isFinal) => {
             if (isFinal) {
-              stt.stop();
+              // User manually stopped - process the transcript
+              logger.log('[Voice] Final transcript received:', text);
               processTranscript(text);
+            } else {
+              // Interim results - just show in UI (if you want to display it)
+              logger.log('[Voice] Interim transcript:', text);
             }
           },
           (error, code) => {
@@ -492,9 +496,9 @@ const Index = () => {
         setVoiceState("idle");
       }
     } else if (voiceState === "listening") {
-      stt.stop();
-      setVoiceState("idle");
-      toast.info("Stopped listening");
+      // User pressed mic again - stop listening and process
+      toast.info("Processing...");
+      stt.stop(); // This will trigger the callback with isFinal=true
     }
   }, [conversationStarted, voiceState, stt, processTranscript]);
 
