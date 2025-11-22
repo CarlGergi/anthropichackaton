@@ -341,6 +341,23 @@ const Index = () => {
             const breakdown = claudeResponse.state_patch.category_breakdown;
             let totalAdded = 0;
 
+            // Calculate total from breakdown
+            const breakdownTotal = Object.values(breakdown).reduce((sum, val) => sum + (val || 0), 0);
+
+            // Check if there's a recent "Initial spending" in "other" category that matches
+            const recentTransactions = loadTransactions();
+            const recentInitialSpending = recentTransactions.find(tx =>
+              tx.merchant === "Initial spending" &&
+              tx.category === "other" &&
+              tx.amount === breakdownTotal
+            );
+
+            // Remove the old "other" transaction if it exists (user is now breaking it down)
+            if (recentInitialSpending) {
+              deleteTransaction(recentInitialSpending.id);
+              logger.log(`[Finora] Removed old "other" transaction, replacing with category breakdown`);
+            }
+
             // Add a transaction for each category with spending
             Object.entries(breakdown).forEach(([category, amount]) => {
               if (amount && amount > 0) {
@@ -453,8 +470,12 @@ const Index = () => {
         await stt.start(
           (text, isFinal) => {
             if (isFinal) {
-              stt.stop();
+              // User manually stopped - process the transcript
+              logger.log('[Voice] Final transcript received:', text);
               processTranscript(text);
+            } else {
+              // Interim results - just show in UI (if you want to display it)
+              logger.log('[Voice] Interim transcript:', text);
             }
           },
           (error, code) => {
@@ -475,9 +496,9 @@ const Index = () => {
         setVoiceState("idle");
       }
     } else if (voiceState === "listening") {
-      stt.stop();
-      setVoiceState("idle");
-      toast.info("Stopped listening");
+      // User pressed mic again - stop listening and process
+      toast.info("Processing...");
+      stt.stop(); // This will trigger the callback with isFinal=true
     }
   }, [conversationStarted, voiceState, stt, processTranscript]);
 

@@ -27,6 +27,7 @@ export class SpeechToText {
   private silenceTimeout: number | null = null;
   private stream: MediaStream | null = null;
   private lastError: string | null = null;
+  private currentTranscript: string = '';
 
   constructor(config?: STTConfig) {
     this.config = { ...this.config, ...config };
@@ -114,22 +115,18 @@ export class SpeechToText {
         }
       }
 
-      if (finalTranscript && this.onTranscript) {
-        this.onTranscript(finalTranscript, true);
-      } else if (interimTranscript && this.onTranscript) {
-        this.onTranscript(interimTranscript, false);
+      // Build up the current transcript from all final results
+      if (finalTranscript) {
+        this.currentTranscript += (this.currentTranscript ? ' ' : '') + finalTranscript;
       }
 
-      // Reset silence timeout - wait 2.5 seconds after speech stops to finalize
-      if (this.silenceTimeout) {
-        clearTimeout(this.silenceTimeout);
+      // Show interim results to user (not final, just for display)
+      const displayTranscript = this.currentTranscript + (interimTranscript ? ' ' + interimTranscript : '');
+      if (displayTranscript && this.onTranscript) {
+        this.onTranscript(displayTranscript, false);
       }
-      this.silenceTimeout = window.setTimeout(() => {
-        if (this.isListening && finalTranscript) {
-          // User has stopped speaking for 2.5 seconds, finalize the transcript
-          this.stop();
-        }
-      }, 2500);
+
+      // NO AUTO-STOP - user controls when to stop by pressing mic button again
     };
 
     this.recognition.onerror = (event: any) => {
@@ -208,6 +205,7 @@ export class SpeechToText {
     this.onError = onError || null;
     this.retryCount = 0;
     this.lastError = null;
+    this.currentTranscript = ''; // Clear transcript from previous session
 
     // Request mic permission first
     logger.log('[STT] Requesting microphone permission...');
@@ -245,12 +243,17 @@ export class SpeechToText {
   stop(): void {
     this.isListening = false;
     this.retryCount = 0;
-    
+
+    // Send final transcript before stopping
+    if (this.currentTranscript && this.onTranscript) {
+      this.onTranscript(this.currentTranscript, true);
+    }
+
     if (this.retryTimeout) {
       clearTimeout(this.retryTimeout);
       this.retryTimeout = null;
     }
-    
+
     if (this.silenceTimeout) {
       clearTimeout(this.silenceTimeout);
       this.silenceTimeout = null;
@@ -268,6 +271,9 @@ export class SpeechToText {
       this.stream.getTracks().forEach(track => track.stop());
       this.stream = null;
     }
+
+    // Clear transcript for next session
+    this.currentTranscript = '';
   }
 
   isActive(): boolean {
