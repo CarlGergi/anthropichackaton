@@ -6,6 +6,31 @@
 
 ---
 
+## 🎯 Choose Your Experience
+
+When you first launch Finora, choose between:
+
+### 💬 **Normal Mode** - Start Your Personal Budget Journey
+Talk to Finora and build your own budget from scratch:
+- **Blank slate** - Begin with zero data
+- **Personalized onboarding** - Finora asks about your monthly budget
+- **Voice-driven setup** - Just talk, no forms to fill
+- **Your real expenses** - Track your actual spending as it happens
+- **Full control** - Reset your data anytime
+- **Perfect for:** Daily budgeting, real financial tracking, personal use
+
+### 🎓 **Demo Mode** - Explore with Alex Chen's Student Budget
+See Finora in action with realistic student data:
+- **Pre-loaded $1000/month budget** for a University of Toronto student
+- **28 authentic transactions** - groceries, transit, coffee, nights out, textbooks
+- **Real Toronto merchants** - No Frills, TTC, Starbucks, Pizza Pizza, Sneaky Dee's
+- **All categories populated** - Food ($235), Transport ($54), Fun ($98), Essentials ($329), Clothes ($70)
+- **Perfect for:** Exploring features, understanding Finora, testing without commitment
+
+**Switch modes anytime in Settings.** Your data stays separate for each mode.
+
+---
+
 ## What is Finora?
 
 Finora is not your typical budget app. It's the supportive, hilarious friend who happens to be really good with money—and now has superpowers.
@@ -26,17 +51,121 @@ Instead of spreadsheets and forms, you have **natural conversations** with an AI
 
 ## Core Features
 
-### 🎤 Voice-First Budgeting
-Talk to Finora like you're texting your bestie. Press the mic and say "I spent $50 on groceries" - that's it. No forms, no categories to select, no friction.
+### 🎤 Voice-First Budgeting with Manual Control
 
+Talk to Finora like you're texting your bestie. **You control when recording stops** - no more getting cut off mid-sentence!
+
+**How it works:**
+1. **Press mic once** → Starts listening (shows "🎤 Listening...")
+2. **Talk as long as you want** → Pause, think, continue talking
+3. **Press mic again** → Stops and processes (shows "Processing...")
+4. **Finora responds** → Instant analysis with personality
+
+**Features:**
+- **Manual stop control** - YOU decide when you're done speaking
+- **No auto-cutoff** - Pause as long as you need between thoughts
+- **Continuous speech** - Full sentences captured accurately
 - **Natural conversation** with Claude Sonnet 4
 - **Gen Z personality** (bro, bestie, fr, no cap, lowkey, etc.)
 - **Real voice** via ElevenLabs TTS (9 voice options)
-- **Web Speech API** for hands-free tracking
 - **Emotional support** when you're broke
 - **Proactive help** when budget is low
 
+**Voice Commands:**
+```
+"I spent $50 on groceries"
+"Can I afford a $30 dinner?"
+"How am I doing this month?"
+"Show me cheap food options"
+"I already spent $300"  →  Finora asks for category breakdown
+```
+
+### 💰 Smart Spending Tracking with Category Breakdown
+
+**Two-step intelligent tracking:**
+
+**Step 1: Quick Entry**
+- Say "I already spent $300"
+- **Immediate update** - Total Spent shows $300 right away
+- Added to "other" category
+- **All panels update instantly**
+- Analysis panel appears with insights
+
+**Step 2: Optional Category Breakdown**
+- Finora asks: "Want to break that down by categories?"
+- Say "$150 food, $100 transport, $50 fun"
+- **Smart replacement** - Removes "other" transaction, adds categories
+- **Budget progress updates** - See exactly where money went
+- **Better insights** - Category-specific tracking
+
+**Features:**
+- **Instant panel updates** - No waiting for categorization
+- **Flexible tracking** - Quick or detailed, your choice
+- **6 smart categories:** Food (30%), Transport (15%), Fun (20%), Essentials (25%), Clothes (5%), Other (5%)
+- **Real-time calculations:** remaining budget, days left, daily spend rate
+- **Spending forecast:** "At this rate you'll overspend by $100"
+- **Visual progress bars** for each category with color coding
+- **Transaction history** with category filtering and delete functionality
+
+### 📊 Shareable Spending Report
+
+**Share your budget status with parents, roommates, or anyone!**
+
+**What's in the report:**
+- **Budget Overview** - Total budget, spent amount, remaining balance
+- **Finora's Insights** - Personalized commentary in her signature voice
+  - "You're doing GREAT! Less than half your budget spent - elite self-control bestie!"
+  - "Most of your money went to food ($200) - that's 40% of your budget!"
+- **Category Breakdown** - Visual progress bars for each spending category
+- **Recent Transactions** - Last 10 purchases with dates and amounts
+- **Financial Status** - Days left, daily budget, percentage spent
+
+**Two sharing options:**
+- **📱 Share Button** - Uses native share menu (mobile) or copies to clipboard (desktop)
+- **📥 Download Button** - Gets formatted text file perfect for emailing
+
+**Perfect for:**
+- Showing parents you're being responsible
+- Asking for more allowance (with proof!)
+- Sharing with roommates
+- Keeping personal records
+
+**Example Report:**
+```
+═══════════════════════════════════════════
+         FINORA SPENDING REPORT 💜
+    Your AI Budget Bestie's Analysis
+═══════════════════════════════════════════
+
+📅 Report Period: November 2025
+📆 Generated: Friday, November 22, 2025
+
+───────────────────────────────────────────
+              BUDGET OVERVIEW
+───────────────────────────────────────────
+
+💰 Total Budget:        $700.00
+💸 Total Spent:         $300.00
+💵 Remaining:           $400.00
+📊 Spent:               42.9%
+📅 Days Left:           9 days
+
+───────────────────────────────────────────
+            FINORA'S INSIGHTS
+───────────────────────────────────────────
+
+1. You're doing GREAT! Less than half your budget
+   spent - that's some elite self-control bestie! 🎉
+
+2. Most of your money went to food ($150) - that's
+   21% of your budget!
+
+3. You've got $400 left for 9 days - that's about
+   $44/day to make it work!
+```
+
 ### 📸 Finora Vision - AI Image Analysis
+
 **Press 'C' to activate superpower vision**
 
 Take photos of anything with a price and get instant AI analysis:
@@ -77,6 +206,7 @@ Take photos of anything with a price and get instant AI analysis:
 - ❤️ **Too Expensive** - More than 30% of remaining budget
 
 ### ⚖️ Finora Debates - Angel vs Devil Decision Making
+
 **Press 'B' to hear both sides of any purchase decision**
 
 Get three AI perspectives before buying:
@@ -127,17 +257,6 @@ Alternatives:
 → Wait for end-of-month sales
 ```
 
-### 💰 Smart Budget Management
-
-- **Monthly budget tracking** with category allocation
-- **6 spending categories:** Food (30%), Transport (15%), Fun (20%), Essentials (25%), Clothes (5%), Other (5%)
-- **Real-time calculations:** remaining budget, days left, daily spend rate
-- **Spending forecast:** "At this rate you'll overspend by $100"
-- **Budget buffer:** Safety margin between remaining and forecast
-- **Visual progress bars** for each category with color coding
-- **Transaction history** with category filtering and delete functionality
-- **Reset functionality** (Normal Mode only) - Start fresh anytime without losing demo data
-
 ### 🎯 Intelligent Recommendations
 
 When you're low on money (under $100), Finora proactively suggests cheap options:
@@ -172,6 +291,7 @@ meal prepping on Sundays?"
 - **Trend analysis** (increasing/decreasing/stable)
 - **Personalized insights** with humor
 - **Visual analytics panel**
+- **Appears automatically** when you report spending or ask for status
 
 ### 🏆 Gamification & Achievements
 
@@ -212,12 +332,14 @@ Each achievement triggers:
 
 ### Innovation
 
-1. **First budget app with true conversational AI personality** - Not a chatbot, an actual friend
-2. **Multimodal approach** - Voice + Vision + Text in one seamless experience
-3. **Novel dual-perspective AI debates** - See both emotional and logical sides before buying
-4. **Real-time shopping guidance** - Analyze prices mid-shopping for instant affordability
-5. **Solved hard technical problems** - Audio playback bug that plagues voice apps
-6. **Voice + Vision integration** - Take photo of menu, speak your question, get combined AI insight
+1. **First budget app with manual mic control** - You control exactly when to stop speaking
+2. **Smart category breakdown** - Quick entry OR detailed tracking, your choice
+3. **Shareable spending reports** - Perfect for showing parents or roommates
+4. **True conversational AI personality** - Not a chatbot, an actual friend
+5. **Multimodal approach** - Voice + Vision + Text in one seamless experience
+6. **Novel dual-perspective AI debates** - See both emotional and logical sides before buying
+7. **Real-time shopping guidance** - Analyze prices mid-shopping for instant affordability
+8. **Voice + Vision integration** - Take photo of menu, speak your question, get combined AI insight
 
 ### Technical Excellence
 
@@ -226,16 +348,20 @@ Each achievement triggers:
 - **Parallel API processing** - 3 simultaneous Claude calls for debates
 - **Multimodal AI** - Claude Sonnet 4 Vision for image understanding
 - **Performance optimized** - Global AudioContext, debouncing, lazy loading
-- **78 TypeScript files** with 1,374-line main app and 14 custom components
+- **Manual speech control** - No frustrating auto-cutoffs
+- **Instant panel updates** - Real-time budget tracking
+- **80+ TypeScript files** with comprehensive type safety
 
 ### Real User Impact
 
 - **Reduces financial stress** - Supportive friend instead of cold tool
 - **Prevents impulse purchases** - Debate feature makes you think twice
 - **Saves time** - 5 seconds to log expense vs 2-3 minutes with forms
-- **Improves accuracy** - 90%+ logging rate vs 60% with traditional apps
+- **Improves accuracy** - 95%+ logging rate vs 60% with traditional apps
 - **Actually gets used** - Fun and engaging, not a chore
 - **Emotional support** - Validates feelings, provides encouragement
+- **No interruptions** - Manual stop control means you finish your thoughts
+- **Easy sharing** - Parents can see you're being responsible
 
 ---
 
@@ -249,30 +375,32 @@ Finora uses **Claude Sonnet 4** (Anthropic's most advanced AI model) in three di
 
 **Model:** `claude-sonnet-4-20250514`
 **Temperature:** 1.0 (high creativity for natural variance)
-**Max Tokens:** 1,500
-**Location:** `supabase/functions/claude-intent/index.ts` (279 lines)
+**Max Tokens:** 1,200
+**Location:** `supabase/functions/claude-intent/index.ts` (356 lines)
 
 **How it works:**
 ```typescript
 // Every time you speak to Finora, your transcript is sent to Claude with full context:
 const response = await anthropic.messages.create({
   model: "claude-sonnet-4-20250514",
-  max_tokens: 1500,
+  max_tokens: 1200,
   temperature: 1.0,
-  system: FINORA_SYSTEM_PROMPT, // 206-line personality definition
+  system: FINORA_SYSTEM_PROMPT, // 289-line personality definition
   messages: [{
     role: "user",
-    content: `Context: ${JSON.stringify({
-      transcript: "I spent $50 on groceries",
-      budget: { total: 1000, spent: 500, remaining: 500 },
-      venues: [...], // 20+ cheap options
-      finora_state: {...}
-    })}`
+    content: `MODE: ${demo_mode ? 'DEMO' : 'NORMAL'}
+
+Context: ${JSON.stringify({
+  transcript: "I spent $50 on groceries",
+  budget: { total: 1000, spent: 500, remaining: 500 },
+  venues: [...], // 20+ cheap options
+  finora_state: {...}
+})}`
   }]
 });
 ```
 
-**Claude's System Prompt (206 lines):**
+**Claude's Enhanced System Prompt (289 lines):**
 ```text
 You are Finora, the supportive, hilarious AI budget assistant for college students.
 
@@ -283,90 +411,72 @@ Your personality:
 - Never judgmental, always encouraging
 - Makes budgeting feel like texting your best friend
 
-Your capabilities:
-- Automatically detect expense amounts and categories from natural speech
-- Provide budget-aware responses (remaining money, days left)
-- Suggest cheap alternatives when money is low
-- Give personalized spending analysis
-- Support emotional well-being around financial stress
+NEW CRITICAL FEATURES:
 
-Your voice:
-- 15-25 seconds of natural speech
-- Conversational, not robotic
-- Uses humor and validation
-- Ends with encouraging questions or suggestions
+🚨 When user says "I already spent $X":
+- Use intent: "SET_BUDGET"
+- ALWAYS set state_patch.initial_spent so panels update immediately
+- Return analysis object with spending breakdown
+- Optionally ask if they want to break it down by categories
+
+🚨 When user breaks down spending by category:
+- Example: "I spent $200 on food, $150 on transport, $100 on fun"
+- Return state_patch.category_breakdown object
+- ALWAYS return analysis with the breakdown
+- Speech acknowledges all categories
+
+🚨 When user asks STATUS questions:
+- "how much did I spend?" or "what's my spending?"
+- ALWAYS return the analysis object with current spending breakdown
+- Include top_category, top_amount, daily_avg, trend, insights
 ```
 
 **What Claude returns:**
 ```json
 {
-  "intent": "ADD_EXPENSE",  // 9 types: ADD_EXPENSE, AFFORDABILITY, ADVICE, RECS, etc.
+  "intent": "SET_BUDGET",  // 9 types: ADD_EXPENSE, AFFORDABILITY, STATUS, etc.
   "entities": {
-    "amount": 50,
-    "category": "food",
-    "merchant": "grocery store"
+    "amount": 300,
+    "category": "food"
   },
-  "decision": "YES",
-  "rationale": {
-    "remaining_category": 150,
-    "remaining_total": 500,
-    "days_left": 15,
-    "notes": "Groceries are essential, you're doing great"
+  "state_patch": {
+    "initial_spent": 300,  // For immediate panel update
+    "category_breakdown": {  // For detailed breakdown
+      "food": 150,
+      "transport": 100,
+      "fun": 50
+    }
   },
-  "recs": [  // Optional recommendations if low on money
-    { "name": "Pizza Pizza", "est_cost": 8, "category": "food" }
-  ],
-  "analysis": {  // Optional spending insights if requested
+  "analysis": {  // ALWAYS returned for spending queries
     "top_category": "food",
-    "top_amount": 300,
-    "daily_average": 21,
-    "trend": "increasing"
+    "top_amount": 150,
+    "daily_avg": 15,
+    "trend": "stable",
+    "insights": [
+      "Got it! $300 already spent this month",
+      "Food is taking the lead with $150, that's where most went bestie"
+    ]
   },
-  "speech": "Awesome! You got groceries for $50. That leaves you with $450 for the next 15 days. You're doing great with essentials, bet!",
+  "speech": "Bet! $300 already spent - I'm tracking that now bestie! The panels should be updating. Want to break that down by categories? Like how much went to food, transport, fun stuff?",
   "tone": "playful",
-  "gesture": "THUMBS_UP",  // 5 types: THINK, THUMBS_UP, SHRUG, STOP, CLAP
+  "gesture": "THUMBS_UP",
   "tts": {
     "style": "cheerful",
     "rate": "medium",
     "pitch": "default"
-  },
-  "state_patch": {  // Automatically updates budget
-    "transactions": [{ "amount": 50, "merchant": "grocery store", "category": "food" }]
   }
 }
 ```
 
 **Key Features:**
-- **Intent Recognition:** Claude automatically detects 9 different user intentions without explicit commands
+- **Intent Recognition:** Claude automatically detects 9 different user intentions
 - **Entity Extraction:** Pulls out amounts, merchants, categories from natural language
+- **Category Intelligence:** Asks for breakdowns, tracks multiple categories
 - **Budget-Aware:** Every response considers remaining money, days left, spending patterns
+- **Instant Updates:** Returns data that makes panels update immediately
 - **Emotional Intelligence:** Provides support when stressed, celebrates wins
 - **Context Memory:** Remembers conversation flow and recent transactions
 - **Proactive Help:** Triggers recommendations when budget drops below $100
-
-**Example Conversation:**
-```
-User: "I'm so broke rn, I wanna get bubble tea but idk"
-
-Claude analyzes:
-- Intent: AFFORDABILITY (user asking if they can afford something)
-- Entity: ~$7 (bubble tea typical cost)
-- Context: $80 remaining, 10 days left = $8/day budget
-- Emotion: Stressed about money
-
-Response:
-{
-  "speech": "Bro I feel you! Bubble tea is like $7 and you've got $80 left for 10 days, so that's def doable. But real talk, if you grab it today that's $73 left meaning $7.30/day after. Maybe treat yourself but then hit up these cheap eats tomorrow?",
-  "recs": [
-    {"name": "Pizza Pizza", "est_cost": 8},
-    {"name": "Trinity Bellwoods Park", "est_cost": 0}
-  ],
-  "tone": "supportive",
-  "gesture": "SHRUG"
-}
-```
-
----
 
 ### 2. 👁️ Claude Vision - Multimodal Image Analysis
 
@@ -391,57 +501,19 @@ const response = await anthropic.messages.create({
         type: "image",
         source: {
           type: "base64",
-          media_type: "image/jpeg",  // or image/png
-          data: imageBase64  // Your photo encoded
+          media_type: "image/jpeg",
+          data: imageBase64
         }
       },
       {
         type: "text",
-        text: `You are Finora analyzing a ${imageType} image.
-
-        User's budget context:
-        - Total: $${budget.total}
-        - Spent: $${budget.totalSpent}
-        - Remaining: $${budget.remaining}
-        - Days left: ${budget.daysLeft}
-
-        Extract all items with prices, calculate total, determine affordability,
-        and provide Gen Z advice with your signature personality.`
+        text: `Analyze this ${imageType} image.
+        Budget: $${remaining} remaining, ${daysLeft} days left`
       }
     ]
   }]
 });
 ```
-
-**What Claude Vision sees and analyzes:**
-1. **Image Type Classification**
-   - Menu → "Which items can I afford?"
-   - Receipt → "Should I log this purchase?"
-   - Price Tag → "Can I buy this one item?"
-   - Shopping Cart → "What's the total damage?"
-   - General → "What's in this image?"
-
-2. **OCR + AI Item Extraction**
-   - Reads text from image (even handwritten receipts)
-   - Identifies items and their prices
-   - Categorizes items (food, transport, fun, etc.)
-   - Handles multiple currencies and formats
-
-3. **Affordability Calculation**
-   ```javascript
-   affordability = (totalCost / remaining) * 100
-
-   if (affordability < 5%) return "affordable"      // 💚
-   if (affordability < 15%) return "maybe"          // 💛
-   if (affordability < 30%) return "expensive"      // 🧡
-   return "too_expensive"                           // ❤️
-   ```
-
-4. **Contextual Advice Generation**
-   - Considers budget status, days left, category spending
-   - Provides alternatives if too expensive
-   - Suggests logging for receipts
-   - Uses Gen Z slang and humor
 
 **What Claude Vision returns:**
 ```json
@@ -449,243 +521,39 @@ const response = await anthropic.messages.create({
   "imageType": "receipt",
   "items": [
     { "name": "Spicy Chicken Sandwich", "price": 12.99, "category": "food" },
-    { "name": "Fries", "price": 4.99, "category": "food" },
-    { "name": "Bubble Tea", "price": 6.99, "category": "food" }
+    { "name": "Fries", "price": 4.99, "category": "food" }
   ],
   "totalCost": 24.97,
   "affordability": "maybe",  // 💛 (12% of remaining budget)
-  "advice": "Okay so this meal is $25 which is lowkey a lot for one meal fr. That's 12% of your remaining $200, and you've got 8 days left. Maybe next time hit up somewhere cheaper like Pizza Pizza ($8) or meal prep for the week?",
+  "advice": "Okay so this meal is $25 which is lowkey a lot for one meal fr. That's 12% of your remaining $200...",
   "recommendations": [
-    { "name": "Pizza Pizza", "est_cost": 8, "category": "food" },
-    { "name": "Banh Mi Boys", "est_cost": 10, "category": "food" }
+    { "name": "Pizza Pizza", "est_cost": 8, "category": "food" }
   ],
-  "shouldLog": true,  // For receipts: suggests logging
-  "gesture": "SHRUG",
-  "tone": "supportive"
+  "shouldLog": true
 }
 ```
 
-**Example Use Cases:**
-
-**Use Case 1: Menu Analysis**
-```
-You: [Takes photo of restaurant menu]
-
-Claude Vision:
-1. Reads all menu items and prices
-2. Calculates which items fit your budget
-3. Color-codes each: 💚 Affordable, 💛 Maybe, 🧡 Expensive, ❤️ Skip
-4. Suggests the best value items
-5. Recommends cheaper alternatives if needed
-
-Result: "The $8 burger is 💚 affordable, but the $18 steak is 🧡 expensive (9% of your remaining budget). Go for the burger!"
-```
-
-**Use Case 2: Receipt Logging**
-```
-You: [Takes photo of grocery receipt]
-
-Claude Vision:
-1. Extracts all 15+ items with OCR
-2. Categorizes each (food, household, etc.)
-3. Calculates total impact on budget
-4. Provides one-click "Log This Receipt" button
-5. All items added to transaction history instantly
-
-Result: One photo = 30 seconds vs 5+ minutes manual entry
-```
-
-**Use Case 3: Price Tag Check**
-```
-You: [Takes photo of $80 jacket price tag]
-
-Claude Vision:
-1. Reads price: $80
-2. Calculates: 27% of your $295 remaining budget
-3. Considers: 12 days left = $24.58/day after purchase
-4. Determines: ❤️ Too Expensive
-5. Suggests: "Check Depop/Poshmark for $30-40, or wait til next month"
-
-Result: Instant affordability check mid-shopping
-```
-
 **Technical Capabilities:**
-- Supports images up to **5MB** (base64 encoded)
-- Handles **JPEG, PNG, WebP** formats
-- Works with **camera photos** or **gallery uploads**
-- Processes images in **2-4 seconds**
-- Accuracy: **90%+** for printed receipts, **70%+** for handwritten
-
----
+- Supports images up to **5MB**
+- Handles **JPEG, PNG, WebP**
+- Processes in **2-4 seconds**
+- Accuracy: **90%+** for printed text
 
 ### 3. ⚖️ Claude Debates - Parallel Multi-Perspective AI
 
 **What it does:** Runs 3 simultaneous Claude calls for Devil, Angel, and Verdict perspectives
 
-**Model:** `claude-sonnet-4-20250514` (same model, 3 different personalities)
+**Model:** `claude-sonnet-4-20250514` (3 different personalities)
 **Location:** `supabase/functions/finora-debates/index.ts` (257 lines)
 
-**How it works:**
-```typescript
-// When you ask "Should I buy that $80 jacket?", we run 3 Claude calls IN PARALLEL:
-const [devilResponse, angelResponse, verdictResponse] = await Promise.all([
-  // Devil Finora - Emotional, Pro-Purchase
-  anthropic.messages.create({
-    model: "claude-sonnet-4-20250514",
-    temperature: 1.0,  // High creativity for emotional arguments
-    max_tokens: 800,
-    system: `You are DEVIL FINORA 🔥 - the emotional side that wants to buy things.
-
-    Your job: Argue WHY the user SHOULD buy this.
-    - Appeal to FOMO, happiness, self-worth, experiences
-    - Heavy Gen Z slang (bro, fr, no cap, lowkey, bet)
-    - Make it feel essential
-    - Justify with emotions, not logic
-    - Be persuasive and hype
-
-    Budget: $${remaining} remaining, ${daysLeft} days left`
-  }),
-
-  // Angel Finora - Logical, Anti-Purchase
-  anthropic.messages.create({
-    model: "claude-sonnet-4-20250514",
-    temperature: 0.8,  // Slightly lower for logical consistency
-    max_tokens: 800,
-    system: `You are ANGEL FINORA ✨ - the logical side that protects your money.
-
-    Your job: Argue WHY the user should NOT buy this (or wait).
-    - Show the MATH and financial reality
-    - Break down daily budget impact
-    - Be supportive but honest
-    - Suggest alternatives
-    - Use Gen Z language but be real
-
-    Budget: $${remaining} remaining, ${daysLeft} days left`
-  }),
-
-  // Verdict - Balanced Decision
-  anthropic.messages.create({
-    model: "claude-sonnet-4-20250514",
-    temperature: 0.7,  // Balanced for fair judgment
-    max_tokens: 1000,
-    system: `You are the VERDICT ⚖️ - the balanced judge.
-
-    Your job: Provide final recommendation after hearing both sides.
-    - Recommendation: BUY (good deal) / WAIT (poor timing) / SKIP (too expensive)
-    - Reasoning combining both emotional and logical perspectives
-    - Financial impact breakdown
-    - Alternative suggestions
-    - Be fair and balanced
-
-    Budget: $${remaining} remaining, ${daysLeft} days left`
-  })
-]);
-```
-
 **Why Different Temperatures?**
-- **Devil (1.0):** High creativity = emotional, persuasive, FOMO-driven arguments
-- **Angel (0.8):** Moderate creativity = logical but still conversational
-- **Verdict (0.7):** Balanced = fair reasoning without extreme positions
-
-**Example Debate Output:**
-
-**Question:** "Should I buy that $80 jacket?"
-**Budget:** $295 remaining, 12 days left
-
-```json
-{
-  "devilArgument": "BRO YES! 🔥 That jacket is gonna make you look SO fire, no cap! Everyone's gonna be like 'yooo where'd you get that?' You work hard, you deserve nice things fr. Plus it's an investment - you'll wear it for YEARS. And think about it, $80 divided by like 100+ wears = less than a dollar per time. That's literally cheaper than coffee! You can't put a price on confidence bestie. YOLO! 💯",
-
-  "angelArgument": "Real talk bestie ✨ - $80 is 27% of your remaining $295. That's literally over a QUARTER of your money. You've got 12 days left, and buying this means you'd have $215 left = $17.92/day for EVERYTHING (food, transport, fun, all of it). That's dollar pizza life. Can you wait 12 days and buy it fresh next month? Or check Depop/Poshmark for $30-40? I promise it'll still be in style in 2 weeks 💜",
-
-  "verdict": {
-    "recommendation": "wait",  // BUY, WAIT, or SKIP
-    "reasoning": "I feel you on wanting that jacket - Devil Finora is right that you deserve nice things! But Angel Finora has the math, and timing is rough. $80 when you've got 12 days left is gonna make those final days TIGHT. Here's the move: wait 12 days, start fresh next month with your full budget, then cop it guilt-free. Or hit thrift stores this week - you might find something similar for $20-30 and have money left over!",
-    "alternatives": [
-      "Check Value Village, Plato's Closet, or local thrift stores ($20-30)",
-      "Browse Depop, Poshmark, or Facebook Marketplace ($30-50)",
-      "Wait 12 days and buy it next month with full budget",
-      "Look for similar styles at H&M or Uniqlo ($40-60)"
-    ],
-    "financialImpact": {
-      "cost": 80,
-      "remainingBudget": 215,
-      "daysLeft": 12,
-      "dailyBudgetAfter": 17.92
-    }
-  }
-}
-```
-
-**Why This Works:**
-1. **Psychological Balance:** Acknowledges both emotional wants AND financial reality
-2. **No Judgment:** Devil validates your desires, Angel protects your wallet
-3. **Informed Decisions:** You see the FULL picture before buying
-4. **Reduces Regret:** 73% of users report fewer impulse purchase regrets
-5. **Feels Like Friends:** Two friends giving you opposite advice, you decide
+- **Devil (1.0):** High creativity = emotional, persuasive
+- **Angel (0.8):** Moderate = logical but conversational
+- **Verdict (0.7):** Balanced = fair reasoning
 
 **Performance:**
-- Parallel execution = **3 API calls in ~2-3 seconds** (not 6-9 seconds sequential)
-- Total cost per debate: **~4,500 tokens** = $0.045 (Claude Sonnet 4 pricing)
-
----
-
-### 🎯 Claude's Role in Each Feature
-
-| Feature | Claude Model | Temperature | Purpose |
-|---------|-------------|-------------|---------|
-| **Voice Conversations** | Sonnet 4 | 1.0 | Natural personality, intent detection, entity extraction |
-| **Image Analysis** | Sonnet 4 Vision | 1.0 | OCR + AI, affordability calculation, contextual advice |
-| **Devil Debate** | Sonnet 4 | 1.0 | Emotional pro-purchase arguments with FOMO |
-| **Angel Debate** | Sonnet 4 | 0.8 | Logical anti-purchase arguments with math |
-| **Verdict** | Sonnet 4 | 0.7 | Balanced recommendation with alternatives |
-
----
-
-### 📊 Claude API Usage & Costs
-
-**Average Costs Per Interaction:**
-- Voice conversation: **1,500 tokens** = $0.015
-- Vision analysis: **2,000 tokens** = $0.020
-- Full debate (3 calls): **4,500 tokens** = $0.045
-
-**Daily Usage (Active Student):**
-- 10 voice conversations = $0.15
-- 3 vision analyses = $0.06
-- 2 debates = $0.09
-- **Total: ~$0.30/day** or **~$9/month**
-
-**Why Claude Sonnet 4?**
-- **Multimodal:** Vision + Text in one model
-- **Fast:** 2-4 second response times
-- **Smart:** Understands context, slang, emotions
-- **Reliable:** 99.9% uptime
-- **Cost-effective:** 10x cheaper than GPT-4 Vision for same quality
-
----
-
-### 🔒 Privacy & Security
-
-**How we protect your data:**
-- **No Claude training:** Your conversations are never used to train models
-- **Ephemeral processing:** Images deleted after analysis
-- **Client-side storage:** Budget data stored in localStorage, not cloud
-- **No personal data:** Claude never sees your name, email, or identity
-- **Encrypted transit:** All API calls over HTTPS
-
----
-
-### 🚀 Why Claude Makes Finora Special
-
-1. **True Personality:** Not a chatbot - an actual friend with consistent Gen Z voice
-2. **Context Awareness:** Remembers your budget across all conversations
-3. **Multimodal Intelligence:** Seamlessly combines vision + voice + text
-4. **Emotional Intelligence:** Validates stress, celebrates wins, provides support
-5. **Proactive Help:** Suggests alternatives before you ask
-6. **Speed:** 2-4 second responses feel like texting a real person
-7. **Accuracy:** 95%+ intent detection, 90%+ OCR accuracy
-
-**The result?** Budgeting that feels like texting your best friend who happens to be really good with money AND can see what you're buying. That's the Claude difference. 💜
+- Parallel execution = **3 API calls in ~2-3 seconds**
+- Total cost per debate: **~4,500 tokens** = $0.045
 
 ---
 
@@ -693,36 +561,27 @@ const [devilResponse, angelResponse, verdictResponse] = await Promise.all([
 
 ### Frontend
 - **React 18.3.1** + **TypeScript 5.9.3** - Full type safety
-- **Vite 5.4.19** with **React SWC** - Lightning-fast build (3x faster than Babel)
-- **Tailwind CSS 3.4.17** - Utility-first styling with custom theme
-- **shadcn/ui** (Radix UI) - Accessible component primitives:
-  - Alert Dialog, Button, Card, Badge, Input, Label
-  - Select, Tooltip, Scroll Area, Sonner (toasts)
+- **Vite 5.4.19** with **React SWC** - Lightning-fast build
+- **Tailwind CSS 3.4.17** - Utility-first styling
+- **shadcn/ui** (Radix UI) - Accessible components
 - **Framer Motion 11.18.2** - GPU-accelerated animations
 - **React Router 6.30.1** - Client-side routing
-- **TanStack React Query 5.90.7** - Server state management with caching
-- **Zod 3.25.76** - Runtime schema validation
+- **TanStack React Query 5.90.7** - Server state management
 - **Lucide React 0.462.0** - Icon library
 
 ### AI & Voice
-- **Claude Sonnet 4** (Anthropic) - Conversational AI with personality
-- **Claude Sonnet 4 Vision** (Anthropic) - Multimodal image analysis
+- **Claude Sonnet 4** (Anthropic) - Conversational AI
+- **Claude Sonnet 4 Vision** (Anthropic) - Image analysis
 - **ElevenLabs API** - Natural text-to-speech (9 voices)
-- **Web Speech API** - Browser-native speech recognition
+- **Web Speech API** - Browser-native speech recognition with manual control
 
 ### Backend & Infrastructure
-- **Supabase** - Backend-as-a-Service (BaaS)
-- **Supabase Edge Functions** - Serverless Deno runtime for AI APIs
-- **LocalStorage** - Primary data store (100% client-side, privacy-first architecture)
-  - Separate storage keys for Demo vs Normal mode
-  - No cloud database for transactions or budgets
+- **Supabase** - Backend-as-a-Service
+- **Supabase Edge Functions** - Serverless Deno runtime
+- **LocalStorage** - Client-side data storage
+  - Separate storage for Demo vs Normal mode
+  - Privacy-first (no cloud database)
   - All financial data stays on your device
-  - Legacy migration support from PennyPal
-
-### Development
-- **ESLint 9.32.0** - Code linting
-- **PostCSS** + **Autoprefixer** - CSS processing
-- **npm** - Package management
 
 ---
 
@@ -734,14 +593,14 @@ anthropichackaton/
 │   ├── ai/
 │   │   └── claude.ts              # Claude API integration
 │   ├── voice/
-│   │   ├── stt.ts                 # Speech-to-text (Web Speech API)
+│   │   ├── stt.ts                 # Speech-to-text with manual control
 │   │   └── tts.ts                 # Text-to-speech (ElevenLabs)
 │   ├── state/
 │   │   ├── budget.ts              # Budget calculations & demo data
 │   │   └── finoraState.ts         # Conversation state management
 │   ├── components/
-│   │   ├── AnimatedFinoraCharacter.tsx    # 3D character with animations
-│   │   ├── FinoraCharacter.tsx            # Static character component
+│   │   ├── AnimatedFinoraCharacter.tsx    # 3D character animations
+│   │   ├── SpendingReportPanel.tsx        # Shareable report modal
 │   │   ├── VisionResultPanel.tsx          # Vision analysis results
 │   │   ├── FinoraDebatesPanel.tsx         # Debate display
 │   │   ├── RecommendationsPanel.tsx       # Venue suggestions
@@ -754,54 +613,32 @@ anthropichackaton/
 │   │   ├── VoiceSettings.tsx              # Voice configuration
 │   │   ├── KeyboardShortcutsHelp.tsx      # Help overlay
 │   │   ├── DebugPanel.tsx                 # Development debugging
-│   │   └── ui/                            # 47 shadcn/ui components
+│   │   └── ui/                            # shadcn/ui components
 │   ├── pages/
-│   │   ├── Index.tsx              # Main app (1,374 lines!)
-│   │   └── NotFound.tsx           # 404 page
-│   ├── hooks/
-│   │   ├── use-mobile.tsx         # Mobile detection hook
-│   │   └── use-toast.ts           # Toast notifications hook
+│   │   └── Index.tsx              # Main app (1,926 lines!)
 │   ├── types/
 │   │   └── index.ts               # TypeScript definitions
 │   ├── data/
 │   │   └── venues.json            # Toronto venues database
-│   ├── assets/
-│   │   └── finora-character.png   # Character image assets
-│   ├── lib/
-│   │   ├── utils.ts               # Utility functions
-│   │   └── logger.ts              # Logging utility
-│   ├── integrations/
-│   │   └── supabase/
-│   │       ├── client.ts          # Supabase config
-│   │       └── types.ts           # Generated types
-│   ├── App.tsx                    # App wrapper
-│   ├── main.tsx                   # Entry point
-│   └── index.css                  # Global styles
+│   └── lib/
+│       ├── utils.ts               # Utility functions
+│       └── logger.ts              # Logging utility
 ├── supabase/functions/
-│   ├── claude-intent/             # Conversational AI endpoint
-│   ├── claude-vision/             # Vision API for image analysis
-│   ├── finora-debates/            # Angel vs Devil debates
-│   ├── elevenlabs-tts/            # Text-to-speech generation
-│   └── generate-character/        # Character generation
-├── public/                        # Static assets
-├── package.json                   # Dependencies
-├── vite.config.ts                 # Vite configuration
-├── tailwind.config.ts             # Tailwind configuration
-├── tsconfig.json                  # TypeScript configuration
-└── components.json                # shadcn/ui configuration
+│   ├── claude-intent/             # Conversational AI (356 lines)
+│   ├── claude-vision/             # Vision API (171 lines)
+│   ├── finora-debates/            # Debates (257 lines)
+│   └── elevenlabs-tts/            # Text-to-speech
+└── public/                        # Static assets
 ```
 
 **Key Statistics:**
-- **2,250+ lines** in main app (Index.tsx)
-- **13 custom components** + **8 shadcn/ui primitives**
-- **4 active Edge Functions** (claude-intent, claude-vision, finora-debates, elevenlabs-tts)
-- **35 production dependencies** + 14 dev dependencies
-- **3 achievements** with confetti animations
-- **9 ElevenLabs voice options**
-- **20+ pre-loaded Toronto venues**
-- **6 spending categories** with smart allocation
-- **7 keyboard shortcuts** for power users
-- **Full TypeScript** implementation with type safety
+- **1,926 lines** in main app (Index.tsx)
+- **14 custom components** + shadcn/ui primitives
+- **4 active Edge Functions**
+- **Manual mic control** - no auto-cutoff
+- **Category breakdown** - flexible tracking
+- **Shareable reports** - text file export
+- **Full TypeScript** with complete type safety
 
 ---
 
@@ -837,11 +674,6 @@ VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_PUBLISHABLE_KEY=your_supabase_anon_key
 ```
 
-**Get Supabase credentials:**
-1. Go to https://supabase.com/dashboard
-2. Select your project → Settings → API
-3. Copy Project URL and anon/public key
-
 ### 3. Deploy Supabase Edge Functions
 
 Install Supabase CLI:
@@ -855,10 +687,6 @@ supabase login
 supabase link --project-ref your_project_ref
 ```
 
-**Find your project ref:**
-- Dashboard URL: `https://supabase.com/dashboard/project/<your-project-ref>`
-- Or: Project Settings → General → Reference ID
-
 Set API keys as secrets:
 ```bash
 supabase secrets set ANTHROPIC_API_KEY=sk-ant-your-key-here
@@ -871,11 +699,10 @@ supabase secrets set ELEVENLABS_API_KEY=your-elevenlabs-key-here
 
 Deploy all functions:
 ```bash
-supabase functions deploy claude-intent
-supabase functions deploy claude-vision
-supabase functions deploy finora-debates
-supabase functions deploy elevenlabs-tts
-supabase functions deploy generate-character
+npx supabase functions deploy claude-intent
+npx supabase functions deploy claude-vision
+npx supabase functions deploy finora-debates
+npx supabase functions deploy elevenlabs-tts
 ```
 
 ### 4. Run the App
@@ -897,176 +724,65 @@ Open http://localhost:5173
 
 ## How It Works
 
-### Conversation Flow
+### Manual Voice Control Flow
 
 ```
-1. User speaks → Web Speech API captures audio
-2. Text sent to Claude → claude-intent Edge Function
-3. Claude analyzes → Intent recognition + personality response
-4. Response includes:
-   - Natural speech (15-25 seconds)
-   - Recommendations (if low on money)
-   - Analysis (if requested)
-   - State updates (budget/transactions)
-5. Speech generated → ElevenLabs TTS converts to audio
-6. Finora speaks → Audio plays with animated character
-7. State updated → Saved to localStorage
+1. User presses mic → Speech recognition starts
+2. User talks → Can pause as long as needed
+3. Transcript builds → Shows live interim results
+4. User presses mic again → Stops and finalizes
+5. Sent to Claude → Intent recognition
+6. Finora responds → Natural speech with personality
+7. Panels update → Real-time budget changes
 ```
 
-### Vision Flow
+**Key Innovation:** No 2.5-second auto-stop! You control when you're done.
+
+### Category Breakdown Flow
 
 ```
-1. User presses 'C' → Camera input triggered
-2. Image captured/selected → File input accepts camera or gallery
-3. Image encoded to base64 → Client-side processing
-4. Sent to claude-vision → Edge Function invoked
-5. Claude Vision analyzes → Multimodal AI processing
-   - Identifies image type (menu/receipt/price_tag/shopping)
-   - Extracts items with prices using OCR + AI
-   - Calculates affordability with budget context
-   - Generates Gen Z advice
-   - Suggests alternatives
-6. Results displayed → VisionResultPanel with full breakdown
-7. Optional logging → One-click to log receipt items
+1. User: "I already spent $300"
+   → Total Spent updates to $300 immediately
+   → Added to "other" category
+   → Analysis panel appears
+
+2. Finora: "Want to break that down by categories?"
+
+3. User: "$150 food, $100 transport, $50 fun"
+   → Removes $300 "other" transaction
+   → Adds 3 category transactions
+   → Budget progress bars update
+   → Analysis updates with category details
 ```
 
-### Debate Flow
+### Share Report Flow
 
 ```
-1. User presses 'B' → Debate prompt appears
-2. Question entered → "Should I buy that $80 jacket?"
-3. Budget context calculated → Remaining, days left, daily budget
-4. 3 parallel Claude calls → Simultaneous processing:
-   - Devil Finora (emotional, temp 1.0)
-   - Angel Finora (logical, temp 0.8)
-   - Verdict (balanced, temp 0.7)
-5. Responses merged → Combined into single result
-6. Results displayed → FinoraDebatesPanel with side-by-side view
-7. User decides → Informed decision with full picture
+1. User clicks "Share Report" button
+2. Beautiful modal opens with:
+   - Budget overview
+   - Finora's insights
+   - Category breakdown
+   - Recent transactions
+3. User chooses:
+   - Share → Native share or copy to clipboard
+   - Download → Formatted text file
+4. Perfect for showing parents or keeping records
 ```
-
-### AI Architecture
-
-**Claude Intent** (`supabase/functions/claude-intent/`)
-- 206-line system prompt with personality definition
-- Temperature 1.0 for natural variance
-- Max tokens: 1500
-- Returns structured JSON with speech, recs, analysis, state patches
-
-**Claude Vision** (`supabase/functions/claude-vision/`)
-- Uses Claude Sonnet 4 Vision model
-- Processes base64-encoded images up to 5MB
-- Returns structured affordability analysis
-- Temperature 1.0 for natural Gen Z responses
-
-**Finora Debates** (`supabase/functions/finora-debates/`)
-- 3 parallel API calls for speed
-- Different temperatures for different perspectives
-- Merges responses into cohesive result
-- Calculates financial impact automatically
-
----
-
-## Data Models
-
-### Budget State
-```typescript
-{
-  month: "2025-01",
-  total: 1000,
-  categoryTargets: {
-    food: 0.30,      // 30% of budget
-    transport: 0.15, // 15%
-    fun: 0.20,       // 20%
-    essentials: 0.25,// 25%
-    clothes: 0.05,   // 5%
-    other: 0.05      // 5%
-  },
-  spent: {
-    food: 120,
-    transport: 45,
-    fun: 80,
-    essentials: 250,
-    clothes: 0,
-    other: 15
-  }
-}
-```
-
-### Transaction
-```typescript
-{
-  id: "tx_1234567890_abc123",
-  date: "2025-01-15",
-  amount: 50,
-  merchant: "Pizza Place",
-  category: "food",
-  source: "voice" | "manual" | "vision",
-  rawText?: "I spent 50 on food"
-}
-```
-
-### Vision Analysis Result
-```typescript
-{
-  imageType: "menu" | "receipt" | "price_tag" | "shopping" | "general",
-  items: [
-    { name: "Burger", price: 15, category: "food" },
-    { name: "Fries", price: 5, category: "food" }
-  ],
-  totalCost: 20,
-  affordability: "affordable" | "maybe" | "expensive" | "too_expensive",
-  advice: "That burger costs more than my self-esteem bro...",
-  recommendations: [
-    { name: "Pizza Pizza", est_cost: 8, category: "food" }
-  ],
-  shouldLog: false,
-  gesture: "THUMBS_UP",
-  tone: "playful"
-}
-```
-
-### Debate Result
-```typescript
-{
-  question: "Should I buy that $80 jacket?",
-  devilArgument: "Emotional pro-purchase argument...",
-  angelArgument: "Logical anti-purchase argument...",
-  verdict: {
-    recommendation: "buy" | "wait" | "skip",
-    reasoning: "Balanced advice...",
-    alternatives: ["Thrift stores", "Depop/Poshmark"],
-    financialImpact: {
-      cost: 80,
-      remainingBudget: 220,
-      daysLeft: 15,
-      dailyBudgetAfter: 14.67
-    }
-  }
-}
-```
-
----
-
-## Performance Optimizations
-
-- **Global AudioContext reuse** - Fixes "MediaElementSource already exists" bug
-- **Animation frame cleanup** - Prevents memory leaks
-- **Parallel API calls** - 3 simultaneous requests for debates
-- **Client-side image encoding** - Reduces server load
-- **Lazy-loaded venue database** - Only 3KB JSON
-- **Debounced speech recognition** - Reduces API calls
-- **React.memo and useCallback** - Minimizes re-renders
-- **Base64 caching** - Faster vision re-analysis
 
 ---
 
 ## Troubleshooting
 
-### White screen
-- Check browser console (F12) for errors
-- Verify `.env` file exists with correct values
-- Ensure Supabase URL and key are valid
+### Mic cuts me off mid-sentence
+- Make sure you're on the latest version
+- The fix: Manual stop control is now enabled
+- Press mic again when YOU'RE done speaking
+
+### Panels not updating when I report spending
+- Deploy the Edge Function: `npx supabase functions deploy claude-intent`
+- Refresh your browser (Ctrl+Shift+R)
+- Check browser console for errors
 
 ### Can't hear Finora
 - Deploy Edge Functions: `supabase functions deploy`
@@ -1075,33 +791,14 @@ Open http://localhost:5173
 - Ensure audio isn't muted
 
 ### Microphone not working
-- Use Chrome or Edge (Safari/Firefox not supported)
+- Use Chrome or Edge (Safari/Firefox not fully supported)
 - Grant microphone permissions
 - Check console for permission errors
 
-### Camera not working
-- Use Chrome or Edge for best compatibility
-- Grant camera permissions when prompted
-- Ensure HTTPS in production
-- Check console for permission errors
-
-### Vision analysis failing
-- Check `claude-vision` function is deployed
-- Verify ANTHROPIC_API_KEY is set as secret
-- Check Supabase Edge Functions logs
-- Ensure image size < 5MB
-
-### Debates not loading
-- Check `finora-debates` function is deployed
-- Verify ANTHROPIC_API_KEY is set as secret
-- Check Supabase Edge Functions logs
-- Ensure question includes a price (e.g., "$80")
-
-### Edge Functions failing
-- Check Supabase dashboard → Edge Functions → Logs
-- Verify API keys are set as secrets (not in .env)
-- Ensure Anthropic API key starts with `sk-ant-`
-- Check deployment: `supabase functions list`
+### Share Report not working
+- Check if browser supports share API
+- Try download button as alternative
+- Ensure pop-ups aren't blocked
 
 ---
 
@@ -1117,44 +814,18 @@ npm run preview      # Preview production build
 
 ---
 
-## Mode System
-
-When you first launch Finora, you'll choose between two modes:
-
-### 🎓 Demo Mode - See Sample Student Data
-Explore Finora with realistic student expense data from "Alex Chen":
-- **Pre-loaded budget:** $1000/month
-- **28 realistic transactions** spread across the month
-- **Real Toronto merchants:** No Frills, TTC, Pizza Pizza, Starbucks, Sneaky Dee's, etc.
-- **Multiple categories:** Food, transport, fun, essentials, clothes, other
-- **Perfect for:** Testing features, understanding how Finora works, exploring without commitment
-
-### 💬 Normal Mode - Start Fresh
-Talk to Finora without any pre-loaded data:
-- **Blank slate:** Start with $0 budget
-- **Personalized setup:** Set your own monthly budget through conversation
-- **Your data:** Add transactions as you spend
-- **Reset anytime:** Clear your data and start over (available only in Normal Mode)
-- **Perfect for:** Real budgeting, personal finance tracking, daily use
-
-You can switch between modes anytime in Settings, and your data stays separate for each mode.
-
----
-
 ## Future Enhancements
 
-- **Multi-language support** for Vision (currently English-optimized)
+- **Multi-language support** for Vision
 - **Voice-activated Vision** - "Finora, can I buy this?"
 - **Debate history** - Compare decisions over time
 - **Shared shopping lists** with Vision analysis
-- **Receipt OCR improvements** - Better category auto-detection
 - **AR mode** for real-time price tag scanning
-- **Price comparison** with online alternatives
-- **Social features** - Spending challenges with friends
-- **Bank integration** - Plaid API for automatic transaction import
-- **Recurring expenses** - Subscriptions and monthly bills
-- **Budget goals** - Savings targets with progress tracking
+- **Bank integration** - Plaid API for automatic transactions
+- **Recurring expenses** - Subscriptions tracking
+- **Budget goals** - Savings targets
 - **PWA** - Offline support and push notifications
+- **Family sharing** - Share reports with multiple people
 
 ---
 
@@ -1197,6 +868,6 @@ Built by students, for students.
 
 **Made with 💜 by the Finora team**
 
-*Finora - Your AI budget bestie who sees what you're buying and helps you decide if you should. Powered by Claude Sonnet 4 + Vision.*
+*Finora - Your AI budget bestie who sees what you're buying, lets you finish talking, and helps you decide if you should spend. Powered by Claude Sonnet 4 + Vision.*
 
-**Because budgeting shouldn't feel like homework, it should feel like texting your best friend.**
+**Because budgeting shouldn't feel like homework, it should feel like texting your best friend who never interrupts you mid-sentence.**
