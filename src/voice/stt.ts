@@ -92,7 +92,7 @@ export class SpeechToText {
 
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     this.recognition = new SpeechRecognition();
-    this.recognition.continuous = false;
+    this.recognition.continuous = true;  // Allow continuous speech without premature cutoff
     this.recognition.interimResults = true;
     this.recognition.maxAlternatives = 1;
     this.recognition.lang = this.config.language || 'en-US';
@@ -120,15 +120,16 @@ export class SpeechToText {
         this.onTranscript(interimTranscript, false);
       }
 
-      // Reset silence timeout - increased to 15 seconds for more speaking time
+      // Reset silence timeout - wait 2.5 seconds after speech stops to finalize
       if (this.silenceTimeout) {
         clearTimeout(this.silenceTimeout);
       }
       this.silenceTimeout = window.setTimeout(() => {
-        if (this.isListening) {
+        if (this.isListening && finalTranscript) {
+          // User has stopped speaking for 2.5 seconds, finalize the transcript
           this.stop();
         }
-      }, 15000);
+      }, 2500);
     };
 
     this.recognition.onerror = (event: any) => {
@@ -190,15 +191,10 @@ export class SpeechToText {
       if (this.isListening && !hasReceivedSpeech && !this.lastError) {
         this.onError?.("No speech detected. Please try again.", 'no-speech');
       }
-      
-      if (this.isListening && this.retryCount === 0) {
-        // Auto-restart if still supposed to be listening and not in error state
-        try {
-          this.recognition.start();
-        } catch (e) {
-          logger.error('Auto-restart failed:', e);
-        }
-      } else {
+
+      // With continuous mode, onend means we've stopped listening intentionally
+      // Don't auto-restart, just clean up
+      if (this.isListening) {
         this.stop();
       }
     };
