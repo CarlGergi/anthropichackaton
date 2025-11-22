@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { logger } from "@/lib/logger";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mic, Loader2, Volume2, Settings, Hand, Sparkles, History, Download, Upload, Camera, Scale, Home } from "lucide-react";
+import { Mic, Loader2, Volume2, Settings, Hand, Sparkles, History, Share2, Camera, Scale, Home } from "lucide-react";
 import DebugPanel from "@/components/DebugPanel";
 import VoiceSettings from "@/components/VoiceSettings";
 import { AnimatedFinoraCharacter } from "@/components/AnimatedFinoraCharacter";
@@ -12,6 +12,7 @@ import { RecommendationsPanel } from "@/components/RecommendationsPanel";
 import { SpendingAnalysisPanel } from "@/components/SpendingAnalysisPanel";
 import { QuickStatsDashboard } from "@/components/QuickStatsDashboard";
 import { TransactionHistoryPanel } from "@/components/TransactionHistoryPanel";
+import { SpendingReportPanel } from "@/components/SpendingReportPanel";
 import { KeyboardShortcutsHelp } from "@/components/KeyboardShortcutsHelp";
 import { BudgetProgressIndicators } from "@/components/BudgetProgressIndicators";
 import { VisionResultPanel } from "@/components/VisionResultPanel";
@@ -91,6 +92,7 @@ const Index = () => {
   const [showRecommendations, setShowRecommendations] = useState(true);
   const [showAnalysis, setShowAnalysis] = useState(true);
   const [showTransactionHistory, setShowTransactionHistory] = useState(false);
+  const [showSpendingReport, setShowSpendingReport] = useState(false);
   const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
   const [confettiTrigger, setConfettiTrigger] = useState(false);
   const [currentAchievement, setCurrentAchievement] = useState<string | null>(null);
@@ -926,83 +928,11 @@ const Index = () => {
     checkAchievements();
   }, [refreshData, checkAchievements]);
 
-  // Handle export expenses to share with friends
-  const handleExportData = useCallback(() => {
-    const currentMonth = new Date().getMonth();
-    const currentYear = new Date().getFullYear();
-
-    // Filter transactions for current month only
-    const monthTransactions = loadTransactions().filter((t) => {
-      const transactionDate = new Date(t.date);
-      return transactionDate.getMonth() === currentMonth &&
-             transactionDate.getFullYear() === currentYear;
-    });
-
-    const data = {
-      type: "finora_expenses_share",
-      version: "1.0",
-      month: new Date().toLocaleString('default', { month: 'long', year: 'numeric' }),
-      exportDate: new Date().toISOString(),
-      totalExpenses: monthTransactions.reduce((sum, t) => sum + t.amount, 0),
-      transactionCount: monthTransactions.length,
-      transactions: monthTransactions,
-    };
-
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `finora-expenses-${new Date().toISOString().split("T")[0]}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast.success(`Exported ${monthTransactions.length} expenses to share!`);
+  // Handle showing spending report
+  const handleShowSpendingReport = useCallback(() => {
+    setShowSpendingReport(true);
+    toast.success('📊 Generating your spending report...');
   }, []);
-
-  // Handle import expenses from friends
-  const handleImportData = useCallback(() => {
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = ".json";
-    input.onchange = (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        try {
-          const data = JSON.parse(event.target?.result as string);
-
-          // Check if it's a Finora expenses share file
-          if (data.type === "finora_expenses_share" && data.transactions) {
-            const existingTransactions = loadTransactions();
-
-            // Merge imported transactions with existing ones
-            const mergedTransactions = [...existingTransactions, ...data.transactions];
-
-            // Remove duplicates based on date, amount, and merchant
-            const uniqueTransactions = mergedTransactions.filter((transaction, index, self) =>
-              index === self.findIndex((t) => (
-                t.date === transaction.date &&
-                t.amount === transaction.amount &&
-                t.merchant === transaction.merchant
-              ))
-            );
-
-            saveTransactions(uniqueTransactions);
-            refreshData();
-
-            const importedCount = uniqueTransactions.length - existingTransactions.length;
-            toast.success(`Imported ${importedCount} expenses from ${data.month}!`);
-          } else {
-            toast.error("Invalid Finora expenses file");
-          }
-        } catch (error) {
-          toast.error("Invalid file format");
-        }
-      };
-      reader.readAsText(file);
-    };
-    input.click();
-  }, [refreshData]);
 
   // Check support on mount
   useEffect(() => {
@@ -1875,47 +1805,25 @@ const Index = () => {
             </motion.button>
           )}
 
-          {/* Export Button - Share expenses with friends - Enhanced */}
+          {/* Share Report Button - Generate and share spending report */}
           <motion.button
-            onClick={handleExportData}
-            initial={{ opacity: 0, x: -30 }}
-            animate={{ opacity: 1, x: 0 }}
+            onClick={handleShowSpendingReport}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3, type: "spring", stiffness: 150 }}
-            className="px-6 py-3 rounded-full bg-gradient-to-r from-green-600 to-emerald-600
+            className="px-6 py-3 rounded-full bg-gradient-to-r from-purple-600 to-pink-600
               text-white font-bold text-sm
-              hover:shadow-[0_0_30px_rgba(34,197,94,0.5)]
+              hover:shadow-[0_0_30px_rgba(168,85,247,0.5)]
               transition-all duration-300 ease-out
               active:scale-95
               border border-white/20"
             whileHover={{ scale: 1.05, y: -3 }}
             whileTap={{ scale: 0.95 }}
-            title="Share your expenses with friends"
+            title="Generate spending report to share with parents"
           >
             <span className="flex items-center gap-2">
-              <Download className="w-4 h-4" />
-              Share Expenses
-            </span>
-          </motion.button>
-
-          {/* Import Button - Import friend's expenses - Enhanced */}
-          <motion.button
-            onClick={handleImportData}
-            initial={{ opacity: 0, x: 30 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.4, type: "spring", stiffness: 150 }}
-            className="px-6 py-3 rounded-full bg-gradient-to-r from-blue-600 to-cyan-600
-              text-white font-bold text-sm
-              hover:shadow-[0_0_30px_rgba(59,130,246,0.5)]
-              transition-all duration-300 ease-out
-              active:scale-95
-              border border-white/20"
-            whileHover={{ scale: 1.05, y: -3 }}
-            whileTap={{ scale: 0.95 }}
-            title="Import friend's expenses"
-          >
-            <span className="flex items-center gap-2">
-              <Upload className="w-4 h-4" />
-              Import Expenses
+              <Share2 className="w-4 h-4" />
+              Share Report
             </span>
           </motion.button>
         </motion.div>
@@ -2004,6 +1912,15 @@ const Index = () => {
             setSelectedCategory("all");
           }}
           initialCategoryFilter={selectedCategory}
+        />
+      )}
+
+      {/* Spending Report Panel */}
+      {showSpendingReport && (
+        <SpendingReportPanel
+          budget={budget}
+          transactions={transactions}
+          onClose={() => setShowSpendingReport(false)}
         />
       )}
 
