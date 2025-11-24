@@ -1,5 +1,7 @@
 # Finora - Your AI Budget Bestie 💜
 
+[▶️ **Live Demo**] (https://youtu.be/zAN5Ru6b67E)
+
 > A revolutionary voice-first financial assistant that combines conversational AI, computer vision, and dual-perspective reasoning to make budgeting actually enjoyable for students.
 
 **Built for the Anthropic Hackathon**
