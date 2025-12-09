@@ -1,4 +1,4 @@
-project_id = "zswophakchdpxtjvthos"
+project_id = "your-new-project-id"
 
 [functions.claude-intent]
 verify_jwt = false
