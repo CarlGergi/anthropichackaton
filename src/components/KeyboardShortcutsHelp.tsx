@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Keyboard, Mic, Settings, Bug, Camera, Scale } from "lucide-react";
+import { X, Keyboard, Mic, Settings, Camera, Scale } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
@@ -28,11 +28,6 @@ const shortcuts = [
     key: "S",
     description: "Open voice settings",
     icon: <Settings className="h-4 w-4" />,
-  },
-  {
-    key: "D",
-    description: "Toggle debug panel",
-    icon: <Bug className="h-4 w-4" />,
   },
   {
     key: "H / ?",

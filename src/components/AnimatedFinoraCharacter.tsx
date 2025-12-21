@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { VoiceState, GestureType } from '@/types';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, memo } from 'react';
 
 interface AnimatedFinoraCharacterProps {
   voiceState: VoiceState;
@@ -16,7 +16,7 @@ const mouthShapes = [
   { id: 'open3', path: 'M 35 80 Q 50 95 65 80' },
 ];
 
-export function AnimatedFinoraCharacter({ 
+export const AnimatedFinoraCharacter = memo(function AnimatedFinoraCharacter({ 
   voiceState, 
   gesture,
   audioAmplitude = 0 
@@ -24,15 +24,20 @@ export function AnimatedFinoraCharacter({
   const [mouthShape, setMouthShape] = useState(0);
   const [eyeBlink, setEyeBlink] = useState(false);
 
-  // Lip sync based on audio amplitude
+  // Lip sync based on audio amplitude - optimized with requestAnimationFrame
   useEffect(() => {
     if (voiceState === 'speaking' && audioAmplitude > 0) {
-      const interval = setInterval(() => {
+      let animationFrameId: number;
+      const updateMouth = () => {
         // Map amplitude (0-1) to mouth shape (0-3)
         const shape = Math.min(3, Math.floor(audioAmplitude * 4));
         setMouthShape(shape);
-      }, 100);
-      return () => clearInterval(interval);
+        animationFrameId = requestAnimationFrame(updateMouth);
+      };
+      animationFrameId = requestAnimationFrame(updateMouth);
+      return () => {
+        if (animationFrameId) cancelAnimationFrame(animationFrameId);
+      };
     } else {
       setMouthShape(0); // Closed mouth when not speaking
     }
@@ -342,5 +347,5 @@ export function AnimatedFinoraCharacter({
       </div>
     </div>
   );
-}
+});
 

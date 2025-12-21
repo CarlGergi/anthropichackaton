@@ -3,7 +3,6 @@ import { logger } from "@/lib/logger";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { Mic, Loader2, Volume2, Settings, Hand, Sparkles, History, Share2, Upload, Camera, Scale, Home } from "lucide-react";
-import DebugPanel from "@/components/DebugPanel";
 import VoiceSettings from "@/components/VoiceSettings";
 import { AnimatedFinoraCharacter } from "@/components/AnimatedFinoraCharacter";
 import { ConfettiCelebration } from "@/components/ConfettiCelebration";
@@ -76,7 +75,6 @@ const Index = () => {
     return state;
   });
   const [conversationStarted, setConversationStarted] = useState(false);
-  const [debugOpen, setDebugOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [lastClaudeResponse, setLastClaudeResponse] = useState<ClaudeResponse>();
   const [lastTTSResponse, setLastTTSResponse] = useState<TTSResponse>();
@@ -818,13 +816,6 @@ const Index = () => {
         return;
       }
 
-      // D - Debug panel
-      if (e.key === "d" || e.key === "D") {
-        e.preventDefault();
-        setDebugOpen((prev) => !prev);
-        return;
-      }
-
       // S - Settings
       if (e.key === "s" || e.key === "S") {
         e.preventDefault();
@@ -870,7 +861,6 @@ const Index = () => {
           toast.info("Stopped listening");
         }
         if (settingsOpen) setSettingsOpen(false);
-        if (debugOpen) setDebugOpen(false);
         if (showShortcutsHelp) setShowShortcutsHelp(false);
         if (showTransactionHistory) setShowTransactionHistory(false);
         if (showVisionResult) setShowVisionResult(false);
@@ -887,7 +877,6 @@ const Index = () => {
     voiceState,
     stt,
     settingsOpen,
-    debugOpen,
     showShortcutsHelp,
     showTransactionHistory,
     showVisionResult,
@@ -1211,7 +1200,8 @@ const Index = () => {
     }
   };
 
-  const getStateStyle = () => {
+  // Memoize state style to prevent recreation on every render
+  const getStateStyle = useCallback(() => {
     switch (voiceState) {
       case "listening":
         return {
@@ -1234,7 +1224,7 @@ const Index = () => {
           boxShadow: "0 0 60px rgba(139, 92, 246, 0.6)"
         };
     }
-  };
+  }, [voiceState]);
 
   // Mode Selection Screen
   if (showModeSelection) {
@@ -1891,17 +1881,6 @@ const Index = () => {
         />
       )}
 
-      {/* Debug Panel */}
-      <DebugPanel
-        isOpen={debugOpen}
-        onClose={() => setDebugOpen(false)}
-        lastClaudeResponse={lastClaudeResponse}
-        lastTTSResponse={lastTTSResponse}
-        sttSupport={sttSupport}
-        sttEngine={'webspeech'}
-        sttLastError={stt.getLastError()}
-      />
-      
       {/* Transaction History Panel */}
       {showTransactionHistory && (
         <TransactionHistoryPanel

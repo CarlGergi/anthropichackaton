@@ -1,7 +1,8 @@
 {
-  "name": "vite_react_shadcn_ts",
+  "name": "finora",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
+  "description": "Voice-first AI financial assistant for students. Track expenses, make smart spending decisions, and manage your budget through natural conversations.",
   "type": "module",
   "scripts": {
     "dev": "vite",

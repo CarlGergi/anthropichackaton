@@ -2,18 +2,19 @@ import { motion } from "framer-motion";
 import { BudgetState } from "@/types";
 import { calculateRemainingTotal, calculateDaysLeft, calculateForecast } from "@/state/budget";
 import { Card } from "@/components/ui/card";
+import { memo, useMemo } from "react";
 import { TrendingUp, TrendingDown, Calendar, DollarSign, AlertCircle } from "lucide-react";
 
 interface QuickStatsDashboardProps {
   budget: BudgetState;
 }
 
-export function QuickStatsDashboard({ budget }: QuickStatsDashboardProps) {
-  const remaining = calculateRemainingTotal(budget);
-  const daysLeft = calculateDaysLeft();
-  const forecast = calculateForecast(budget);
-  const totalSpent = Object.values(budget.spent).reduce((sum, val) => sum + val, 0);
-  const percentageSpent = budget.total > 0 ? (totalSpent / budget.total) * 100 : 0;
+export const QuickStatsDashboard = memo(function QuickStatsDashboard({ budget }: QuickStatsDashboardProps) {
+  const remaining = useMemo(() => calculateRemainingTotal(budget), [budget]);
+  const daysLeft = useMemo(() => calculateDaysLeft(), []);
+  const forecast = useMemo(() => calculateForecast(budget), [budget]);
+  const totalSpent = useMemo(() => Object.values(budget.spent).reduce((sum, val) => sum + val, 0), [budget.spent]);
+  const percentageSpent = useMemo(() => budget.total > 0 ? (totalSpent / budget.total) * 100 : 0, [budget.total, totalSpent]);
   
   // Determine status color
   const getStatusColor = () => {
@@ -208,5 +209,5 @@ export function QuickStatsDashboard({ budget }: QuickStatsDashboardProps) {
       )}
     </motion.div>
   );
-}
+});
 
